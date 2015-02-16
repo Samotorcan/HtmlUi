@@ -23,15 +23,6 @@ namespace Samotorcan.HtmlUi.Windows
         #region Properties
         #region Public
 
-        #region Form
-        /// <summary>
-        /// Gets the form.
-        /// </summary>
-        /// <value>
-        /// The form.
-        /// </value>
-        public Form Form { get; private set; }
-        #endregion
         #region Borderless
         /// <summary>
         /// Gets or sets a value indicating whether this <see cref="Window" /> is borderless.
@@ -53,6 +44,19 @@ namespace Samotorcan.HtmlUi.Windows
                     SyncFormBorderlessProperty();
             }
         }
+        #endregion
+
+        #endregion
+        #region Internal
+
+        #region Form
+        /// <summary>
+        /// Gets the form.
+        /// </summary>
+        /// <value>
+        /// The form.
+        /// </value>
+        internal Form Form { get; private set; }
         #endregion
 
         #endregion
@@ -105,20 +109,21 @@ namespace Samotorcan.HtmlUi.Windows
         public Window()
             : base()
         {
-            Form = new Form();
+            Application.Current.InvokeOnUi(true, () => {
+                Form = new Form();
 
-            // default values
-            Form.SetBounds(0, 0, 800, 600);
+                // default values
+                Form.SetBounds(0, 0, 800, 600);
 
-            // events
-            Form.HandleCreated += Form_HandleCreated;
-            Form.GotFocus += Form_GotFocus;
-            Form.Move += Form_Move;
-            Form.Resize += Form_Resize;
-            Form.FormClosed += Form_FormClosed;
+                // events
+                Form.HandleCreated += Form_HandleCreated;
+                Form.GotFocus += Form_GotFocus;
+                Form.Move += Form_Move;
+                Form.Resize += Form_Resize;
+                Form.FormClosed += Form_FormClosed;
+            });
 
             BrowserCreated += Window_BrowserCreated;
-
             Browser_MouseEventDelegate = new NativeMethods.HookProc(Browser_MouseEvent);
         }
 
@@ -137,7 +142,13 @@ namespace Samotorcan.HtmlUi.Windows
             FormHandle = Form.Handle;
 
             SyncFormBorderlessProperty();
-            CreateBrowser(Form.Handle, new CefRectangle(0, 0, Form.ClientSize.Width, Form.ClientSize.Height));
+
+            var width = Form.ClientSize.Width;
+            var height = Form.ClientSize.Height;
+
+            Application.Current.InvokeOnMain(() => {
+                CreateBrowser(FormHandle, new CefRectangle(0, 0, width, height));
+            });
         }
         #endregion
         #region Form_Resize
@@ -177,7 +188,12 @@ namespace Samotorcan.HtmlUi.Windows
         private void Form_Move(object sender, EventArgs e)
         {
             if (CefBrowser != null)
-                CefBrowser.GetHost().NotifyMoveOrResizeStarted();
+            {
+                CefUtility.ExecuteTask(CefThreadId.UI, () =>
+                {
+                    CefBrowser.GetHost().NotifyMoveOrResizeStarted();
+                });
+            }
         }
         #endregion
         #region Form_GotFocus
@@ -205,7 +221,13 @@ namespace Samotorcan.HtmlUi.Windows
         /// <param name="e">The <see cref="FormClosedEventArgs"/> instance containing the event data.</param>
         private void Form_FormClosed(object sender, FormClosedEventArgs e)
         {
-            Dispose();
+            Form.Dispose();
+
+            Application.Current.InvokeOnMain(() =>
+            {
+                Dispose();
+                Application.Current.Shutdown();
+            });
         }
         #endregion
 
@@ -280,34 +302,6 @@ namespace Samotorcan.HtmlUi.Windows
         #endregion
 
         #endregion
-        #endregion
-
-        #region IDisposable
-
-        /// <summary>
-        /// Was dispose already called.
-        /// </summary>
-        private bool _disposed = false;
-
-        /// <summary>
-        /// Releases unmanaged and - optionally - managed resources.
-        /// </summary>
-        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    Form.Dispose();
-                }
-
-                _disposed = true;
-            }
-        }
-
         #endregion
     }
 }

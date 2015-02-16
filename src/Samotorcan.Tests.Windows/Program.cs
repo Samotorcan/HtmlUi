@@ -9,7 +9,6 @@ namespace Samotorcan.Tests.Windows
 {
     class Program
     {
-        [STAThread]
         static void Main(string[] args)
         {
             using (var application = new Application())

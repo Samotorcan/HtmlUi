@@ -9,13 +9,12 @@ namespace Samotorcan.Tests.Windowsx64
 {
     class Program
     {
-        [STAThread]
         static void Main(string[] args)
         {
             using (var application = new Application())
             {
                 application.Window.Url = "http://stackoverflow.com";
-                application.Window.Borderless = true;
+                application.Window.Borderless = false;
 
                 application.Run();
             }

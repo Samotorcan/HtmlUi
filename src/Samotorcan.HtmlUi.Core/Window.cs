@@ -54,6 +54,8 @@ namespace Samotorcan.HtmlUi.Core
             }
             set
             {
+                Application.Current.EnsureMainThread();
+
                 if (IsBrowserCreated)
                     throw new InvalidOperationException("Url can only be changed before the window is created.");
 
@@ -62,13 +64,39 @@ namespace Samotorcan.HtmlUi.Core
         }
         #endregion
         #region Borderless
+        private bool _borderless;
         /// <summary>
         /// Gets or sets a value indicating whether this <see cref="Window"/> is borderless.
         /// </summary>
         /// <value>
         ///   <c>true</c> if borderless; otherwise, <c>false</c>.
         /// </value>
-        public virtual bool Borderless { get; set; }
+        public virtual bool Borderless
+        {
+            get
+            {
+                return _borderless;
+            }
+            set
+            {
+                Application.Current.EnsureMainThread();
+
+                _borderless = value;
+            }
+        }
+        #endregion
+
+        #endregion
+        #region Internal
+
+        #region IsBrowserCreated
+        /// <summary>
+        /// Gets a value indicating whether browser is created.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if browser is created; otherwise, <c>false</c>.
+        /// </value>
+        internal bool IsBrowserCreated { get; private set; }
         #endregion
 
         #endregion
@@ -81,16 +109,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The cef browser.
         /// </value>
-        protected CefBrowser CefBrowser { get; private set; }
-        #endregion
-        #region IsBrowserCreated
-        /// <summary>
-        /// Gets a value indicating whether browser is created.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if browser is created; otherwise, <c>false</c>.
-        /// </value>
-        internal protected bool IsBrowserCreated { get; private set; }
+        protected CefBrowser CefBrowser { get; set; }
         #endregion
 
         #endregion
@@ -130,6 +149,11 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="position">The position.</param>
         protected void CreateBrowser(IntPtr handle, CefRectangle position)
         {
+            Application.Current.EnsureMainThread();
+
+            if (IsBrowserCreated)
+                throw new InvalidOperationException("Browser already created.");
+
             var cefWindowInfo = CefWindowInfo.Create();
             cefWindowInfo.SetAsChild(handle, position);
 
@@ -166,6 +190,8 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
+            Application.Current.EnsureMainThread();
+
             if (!_disposed)
             {
                 if (disposing)
@@ -187,6 +213,8 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         public void Dispose()
         {
+            Application.Current.EnsureMainThread();
+
             Dispose(true);
             GC.SuppressFinalize(this);
         }

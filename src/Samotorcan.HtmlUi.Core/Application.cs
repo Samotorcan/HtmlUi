@@ -61,10 +61,36 @@ namespace Samotorcan.HtmlUi.Core
             }
             set
             {
+                EnsureMainThread();
+
                 if (Window.IsBrowserCreated)
                     throw new InvalidOperationException("EnableD3D11 can only be changed before the window is created.");
 
                 _enableD3D11 = value;
+            }
+        }
+        #endregion
+        #region IsRunning
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is running.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if this instance is running; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsRunning { get; private set; }
+        #endregion
+        #region IsMainThread
+        /// <summary>
+        /// Gets a value indicating whether current thread is main thread.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if current thread is main thread; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsMainThread
+        {
+            get
+            {
+                return Thread.CurrentThread.ManagedThreadId == ThreadId;
             }
         }
         #endregion
@@ -83,6 +109,46 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
 
         #endregion
+        #region Private
+
+        #region ExitMessageLoop
+        /// <summary>
+        /// Gets or sets a value indicating whether to exit message loop.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> to exit message loop; otherwise, <c>false</c>.
+        /// </value>
+        private bool ExitMessageLoop { get; set; }
+        #endregion
+        #region ThreadId
+        /// <summary>
+        /// Gets or sets the thread identifier.
+        /// </summary>
+        /// <value>
+        /// The thread identifier.
+        /// </value>
+        private int ThreadId { get; set; }
+        #endregion
+        #region InvokeQueue
+        /// <summary>
+        /// Gets or sets the invoke queue.
+        /// </summary>
+        /// <value>
+        /// The invoke queue.
+        /// </value>
+        private Queue<Action> InvokeQueue { get; set; }
+        #endregion
+        #region InvokeQueueLock
+        /// <summary>
+        /// Gets or sets the invoke queue lock.
+        /// </summary>
+        /// <value>
+        /// The invoke queue lock.
+        /// </value>
+        private object InvokeQueueLock { get; set; }
+        #endregion
+
+        #endregion
         #endregion
         #region Constructors
 
@@ -95,11 +161,11 @@ namespace Samotorcan.HtmlUi.Core
             if (Current != null)
                 throw new InvalidOperationException("You can only have one instance of Application at any given time.");
 
+            ThreadId = Thread.CurrentThread.ManagedThreadId;
             Current = this;
 
-            Initialize();
-
-            Window = CreateWindow();
+            InvokeQueue = new Queue<Action>();
+            InvokeQueueLock = new object();
         }
 
         #endregion
@@ -112,6 +178,13 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         public void Run()
         {
+            EnsureMainThread();
+
+            if (IsRunning)
+                throw new InvalidOperationException("Application is already running.");
+
+            IsRunning = true;
+
             try
             {
                 InitializeCef();
@@ -119,6 +192,7 @@ namespace Samotorcan.HtmlUi.Core
                 RegisterSchemes();
                 RegisterMessageRouter();
 
+                Initialize();
                 RunMessageLoop();
 
                 ShutdownInternal();
@@ -128,29 +202,41 @@ namespace Samotorcan.HtmlUi.Core
                 GeneralLog.Warn("Exception while trying to run the application.", e);
                 throw;
             }
+            finally
+            {
+                IsRunning = false;
+            }
+        }
+        #endregion
+        #region InvokeOnMain
+        /// <summary>
+        /// Invokes the specified action on the main thread.
+        /// </summary>
+        /// <param name="action">The action.</param>
+        /// <exception cref="System.ArgumentNullException">action</exception>
+        public void InvokeOnMain(Action action)
+        {
+            if (action == null)
+                throw new ArgumentNullException("action");
+
+            if (IsMainThread)
+                action();
+
+            lock (InvokeQueueLock)
+            {
+                InvokeQueue.Enqueue(action);
+            }
         }
         #endregion
 
         #endregion
         #region Protected
 
-        #region OnShutdown
+        #region Initialize
         /// <summary>
-        /// Called when the application is shutdown.
+        /// Initialize.
         /// </summary>
-        protected virtual void OnShutdown() { }
-        #endregion
-        #region OnInitialize
-        /// <summary>
-        /// Called when the application is initialized.
-        /// </summary>
-        protected virtual void OnInitialize() { }
-        #endregion
-        #region RunMessageLoop
-        /// <summary>
-        /// Runs the message loop.
-        /// </summary>
-        protected abstract void RunMessageLoop();
+        protected virtual void Initialize() { }
         #endregion
         #region CreateWindow
         /// <summary>
@@ -158,6 +244,54 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <returns></returns>
         protected abstract Window CreateWindow();
+        #endregion
+        #region InitializeWindow
+        /// <summary>
+        /// Initializes the window.
+        /// </summary>
+        protected void InitializeWindow()
+        {
+            if (Window != null)
+                throw new InvalidOperationException("Window already initialized.");
+
+            Window = CreateWindow();
+        }
+        #endregion
+        #region OnShutdown
+        /// <summary>
+        /// Called when shutdown is called.
+        /// </summary>
+        protected virtual void OnShutdown() { }
+        #endregion
+
+        #endregion
+        #region internal
+
+        #region EnsureMainThread
+        /// <summary>
+        /// Ensures that it's called from the main thread.
+        /// </summary>
+        /// <exception cref="System.InvalidOperationException">Must be called from the main thread.</exception>
+        internal void EnsureMainThread()
+        {
+            if (Thread.CurrentThread.ManagedThreadId != ThreadId)
+                throw new InvalidOperationException("Must be called from the main thread.");
+        }
+        #endregion
+        #region Shutdown
+        /// <summary>
+        /// Shutdowns this instance.
+        /// </summary>
+        /// <exception cref="System.InvalidOperationException">Application is not running.</exception>
+        internal void Shutdown()
+        {
+            EnsureMainThread();
+
+            if (!IsRunning)
+                throw new InvalidOperationException("Application is not running.");
+
+            ExitMessageLoop = true;
+        }
         #endregion
 
         #endregion
@@ -226,17 +360,51 @@ namespace Samotorcan.HtmlUi.Core
         private void ShutdownInternal()
         {
             CefRuntime.Shutdown();
-
-            OnShutdown();
         }
         #endregion
-        #region Initialize
+        #region RunMessageLoop
         /// <summary>
-        /// Initialize.
+        /// Runs the message loop.
         /// </summary>
-        private void Initialize()
+        private void RunMessageLoop()
         {
-            OnInitialize();
+            while (!ExitMessageLoop)
+            {
+                // process invoke actions
+                if (InvokeQueue.Count > 0)
+                {
+                    List<Action> actions = null;
+
+                    // copy actions to list
+                    lock (InvokeQueueLock)
+                    {
+                        actions = InvokeQueue.ToList();
+                        InvokeQueue.Clear();
+                    }
+
+                    // run actions
+                    foreach (var action in actions)
+                    {
+                        try
+                        {
+                            action();
+                        }
+                        catch (Exception e)
+                        {
+                            GeneralLog.Error("Application invoke exception.", e);
+                        }
+                    }
+
+                    Thread.Sleep(0);
+                }
+                else
+                {
+                    Thread.Sleep(1);
+                }
+            }
+
+            OnShutdown();
+            ExitMessageLoop = false;
         }
         #endregion
 
@@ -254,6 +422,8 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
+            EnsureMainThread();
+
             if (!_disposed)
             {
                 if (disposing)
@@ -279,6 +449,8 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         public void Dispose()
         {
+            EnsureMainThread();
+
             Dispose(true);
             GC.SuppressFinalize(this);
         }
