@@ -15,6 +15,7 @@ using System.Threading;
 using Samotorcan.HtmlUi.Core.Utilities;
 using Samotorcan.HtmlUi.Core;
 using Samotorcan.HtmlUi.Core.Exceptions;
+using System.Collections.Concurrent;
 
 namespace Samotorcan.HtmlUi.Core
 {
@@ -111,15 +112,6 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
         #region Private
 
-        #region ExitMessageLoop
-        /// <summary>
-        /// Gets or sets a value indicating whether to exit message loop.
-        /// </summary>
-        /// <value>
-        ///   <c>true</c> to exit message loop; otherwise, <c>false</c>.
-        /// </value>
-        private bool ExitMessageLoop { get; set; }
-        #endregion
         #region ThreadId
         /// <summary>
         /// Gets or sets the thread identifier.
@@ -136,16 +128,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The invoke queue.
         /// </value>
-        private Queue<Action> InvokeQueue { get; set; }
-        #endregion
-        #region InvokeQueueLock
-        /// <summary>
-        /// Gets or sets the invoke queue lock.
-        /// </summary>
-        /// <value>
-        /// The invoke queue lock.
-        /// </value>
-        private object InvokeQueueLock { get; set; }
+        private BlockingCollection<Action> InvokeQueue { get; set; }
         #endregion
 
         #endregion
@@ -164,8 +147,9 @@ namespace Samotorcan.HtmlUi.Core
             ThreadId = Thread.CurrentThread.ManagedThreadId;
             Current = this;
 
-            InvokeQueue = new Queue<Action>();
-            InvokeQueueLock = new object();
+            SynchronizationContext.SetSynchronizationContext(new HtmlUiSynchronizationContext());
+
+            InitializeInvokeQueue();
         }
 
         #endregion
@@ -197,35 +181,56 @@ namespace Samotorcan.HtmlUi.Core
 
                 ShutdownInternal();
             }
-            catch (Exception e)
-            {
-                GeneralLog.Warn("Exception while trying to run the application.", e);
-                throw;
-            }
             finally
             {
                 IsRunning = false;
+                InitializeInvokeQueue();
             }
         }
         #endregion
         #region InvokeOnMain
         /// <summary>
-        /// Invokes the specified action on the main thread.
+        /// Invokes the specified action on the main thread asynchronous.
         /// </summary>
         /// <param name="action">The action.</param>
+        /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">action</exception>
-        public void InvokeOnMain(Action action)
+        /// <exception cref="System.InvalidOperationException">Application is shutting down.</exception>
+        public Task<bool> InvokeOnMainAsync(Action action)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
 
-            if (IsMainThread)
-                action();
+            if (InvokeQueue.IsAddingCompleted)
+                throw new InvalidOperationException("Application is shutting down.");
 
-            lock (InvokeQueueLock)
+            var taskCompletionSource = new TaskCompletionSource<bool>();
+
+            InvokeQueue.Add(() =>
             {
-                InvokeQueue.Enqueue(action);
-            }
+                try
+                {
+                    action();
+
+                    taskCompletionSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskCompletionSource.SetException(e);
+                }
+            });
+
+            return taskCompletionSource.Task;
+        }
+
+        /// <summary>
+        /// Invokes the specified action on the main thread synchronous.
+        /// </summary>
+        /// <param name="action">The action.</param>
+        /// <returns></returns>
+        public bool InvokeOnMain(Action action)
+        {
+            return InvokeOnMainAsync(action).Result;
         }
         #endregion
 
@@ -285,12 +290,10 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.InvalidOperationException">Application is not running.</exception>
         internal void Shutdown()
         {
-            EnsureMainThread();
-
             if (!IsRunning)
                 throw new InvalidOperationException("Application is not running.");
 
-            ExitMessageLoop = true;
+            InvokeQueue.CompleteAdding();
         }
         #endregion
 
@@ -368,43 +371,23 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         private void RunMessageLoop()
         {
-            while (!ExitMessageLoop)
-            {
-                // process invoke actions
-                if (InvokeQueue.Count > 0)
-                {
-                    List<Action> actions = null;
+            foreach (var action in InvokeQueue.GetConsumingEnumerable())
+                action();
 
-                    // copy actions to list
-                    lock (InvokeQueueLock)
-                    {
-                        actions = InvokeQueue.ToList();
-                        InvokeQueue.Clear();
-                    }
-
-                    // run actions
-                    foreach (var action in actions)
-                    {
-                        try
-                        {
-                            action();
-                        }
-                        catch (Exception e)
-                        {
-                            GeneralLog.Error("Application invoke exception.", e);
-                        }
-                    }
-
-                    Thread.Sleep(0);
-                }
-                else
-                {
-                    Thread.Sleep(1);
-                }
-            }
-
+            InvokeQueue.Dispose();
             OnShutdown();
-            ExitMessageLoop = false;
+        }
+        #endregion
+        #region InitializeInvokeQueue
+        /// <summary>
+        /// Initializes the invoke queue.
+        /// </summary>
+        private void InitializeInvokeQueue()
+        {
+            if (InvokeQueue != null)
+                InvokeQueue.Dispose();
+
+            InvokeQueue = new BlockingCollection<Action>(new ConcurrentQueue<Action>(), 100);
         }
         #endregion
 
@@ -429,6 +412,9 @@ namespace Samotorcan.HtmlUi.Core
                 if (disposing)
                 {
                     Current = null;
+
+                    if (InvokeQueue != null)
+                        InvokeQueue.Dispose();
                 }
 
                 _disposed = true;

@@ -126,29 +126,42 @@ namespace Samotorcan.HtmlUi.Windows
 
         #region InvokeOnUi
         /// <summary>
-        /// Invokes the specified action on the UI thread.
+        /// Invokes the specified action on the UI thread asynchronous.
         /// </summary>
-        /// <param name="synchronous">if set to <c>true</c> invoke synchronous .</param>
         /// <param name="action">The action.</param>
+        /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">action</exception>
-        internal void InvokeOnUi(bool synchronous, Action action)
+        public Task<bool> InvokeOnUiAsync(Action action)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
 
-            if (synchronous)
-                UiSynchronizationContext.Send((state) => { action(); }, null);
-            else
-                UiSynchronizationContext.Post((state) => { action(); }, null);
+            var taskCompletionSource = new TaskCompletionSource<bool>();
+
+            UiSynchronizationContext.Post((state) =>
+            {
+                try
+                {
+                    action();
+
+                    taskCompletionSource.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    taskCompletionSource.SetException(e);
+                }
+            }, null);
+
+            return taskCompletionSource.Task;
         }
 
         /// <summary>
-        /// Invokes the specified action on the UI thread.
+        /// Invokes the specified action on the UI thread synchronous.
         /// </summary>
         /// <param name="action">The action.</param>
-        public void InvokeOnUi(Action action)
+        public bool InvokeOnUi(Action action)
         {
-            InvokeOnUi(false, action);
+            return InvokeOnUiAsync(action).Result;
         }
         #endregion
 
@@ -176,7 +189,7 @@ namespace Samotorcan.HtmlUi.Windows
         /// </summary>
         protected override void Initialize()
         {
-            InvokeOnUi(() =>
+            InvokeOnUiAsync(() =>
             {
                 Window.Form.Show();
             });
@@ -188,7 +201,7 @@ namespace Samotorcan.HtmlUi.Windows
         /// </summary>
         protected override void OnShutdown()
         {
-            InvokeOnUi(true, () =>
+            InvokeOnUi(() =>
             {
                 FormsApplication.Exit();
             });

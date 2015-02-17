@@ -109,7 +109,7 @@ namespace Samotorcan.HtmlUi.Windows
         public Window()
             : base()
         {
-            Application.Current.InvokeOnUi(true, () => {
+            Application.Current.InvokeOnUi(() => {
                 Form = new Form();
 
                 // default values
