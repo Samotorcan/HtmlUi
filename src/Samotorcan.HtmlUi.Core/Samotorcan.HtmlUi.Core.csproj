@@ -72,21 +72,28 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActionTask.cs" />
-    <Compile Include="Application.cs" />
+    <Compile Include="BaseApplication.cs" />
     <Compile Include="CefArgument.cs" />
+    <Compile Include="Events\BrowserCreatedEventArgs.cs" />
     <Compile Include="Exceptions\CefProcessException.cs" />
     <Compile Include="Handlers\Browser\DefaultCefClient.cs" />
     <Compile Include="Handlers\Browser\DefaultCefDisplayHandler.cs" />
     <Compile Include="Handlers\Browser\DefaultCefLifeSpanHandler.cs" />
     <Compile Include="Handlers\Browser\DefaultCefLoadHandler.cs" />
     <Compile Include="Handlers\Browser\DefaultCefRequestHandler.cs" />
+    <Compile Include="Handlers\Browser\DeveloperToolsCefClient.cs" />
+    <Compile Include="Handlers\Browser\ViewCefResourceHandler.cs" />
     <Compile Include="Handlers\DefaultBrowserProcessHandler.cs" />
     <Compile Include="Handlers\DefaultCefApp.cs" />
     <Compile Include="Handlers\DefaultRenderProcessHandler.cs" />
     <Compile Include="Handlers\Scheme\DefaultAppSchemeHandlerFactory.cs" />
     <Compile Include="Handlers\Scheme\DefaultRequestResourceHandler.cs" />
     <Compile Include="HtmlUiSynchronizationContext.cs" />
-    <Compile Include="Window.cs" />
+    <Compile Include="IViewProvider.cs" />
+    <Compile Include="FileAssemblyViewProvider.cs" />
+    <Compile Include="Utilities\ResourceUtility.cs" />
+    <Compile Include="ViewSearch.cs" />
+    <Compile Include="BaseWindow.cs" />
     <Compile Include="Logs\GeneralLog.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\CefUtility.cs" />
@@ -94,7 +101,11 @@
     <Compile Include="Utilities\UriUtility.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\ViewRequestException.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

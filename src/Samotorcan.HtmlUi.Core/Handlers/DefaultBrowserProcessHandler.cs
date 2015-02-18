@@ -25,6 +25,9 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         /// <param name="commandLine">The command line.</param>
         protected override void OnBeforeChildProcessLaunch(CefCommandLine commandLine)
         {
+            if (commandLine == null)
+                throw new ArgumentNullException("commandLine");
+
             // .NET in Windows treat assemblies as native images, so no any magic required.
             // Mono on any platform usually located far away from entry assembly, so we want prepare command line to call it correctly.
             if (Type.GetType("Mono.Runtime") != null)
@@ -41,7 +44,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers
                 }
             }
 
-            if (!Application.Current.EnableD3D11)
+            if (!BaseApplication.Current.EnableD3D11)
                 commandLine.AppendArgument(CefArgument.DisableD3D11.Value);
         }
         #endregion

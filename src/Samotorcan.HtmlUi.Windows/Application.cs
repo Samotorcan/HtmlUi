@@ -13,7 +13,7 @@ namespace Samotorcan.HtmlUi.Windows
     /// Application.
     /// </summary>
     [CLSCompliant(false)]
-    public class Application : Core.Application
+    public class Application : Core.BaseApplication
     {
         #region Properties
         #region Public
@@ -29,7 +29,7 @@ namespace Samotorcan.HtmlUi.Windows
         {
             get
             {
-                return (Application)Core.Application.Current;
+                return (Application)Core.BaseApplication.Current;
             }
         }
         #endregion
@@ -39,16 +39,20 @@ namespace Samotorcan.HtmlUi.Windows
 
         #region Window
         /// <summary>
-        /// Gets the window.
+        /// Gets or sets the window.
         /// </summary>
         /// <value>
         /// The window.
         /// </value>
-        internal new Window Window
+        public new Window Window
         {
             get
             {
                 return (Window)base.Window;
+            }
+            protected set
+            {
+                base.Window = value;
             }
         }
         #endregion
@@ -117,7 +121,7 @@ namespace Samotorcan.HtmlUi.Windows
 
             UiSynchronizationContextCreated.WaitOne();
 
-            InitializeWindow();
+            Window = new Window();
         }
 
         #endregion
@@ -183,11 +187,11 @@ namespace Samotorcan.HtmlUi.Windows
         #endregion
         #region Protected
 
-        #region Initialize
+        #region OnInitialize
         /// <summary>
         /// Called when the application is initialized.
         /// </summary>
-        protected override void Initialize()
+        protected override void OnInitialize()
         {
             InvokeOnUiAsync(() =>
             {
@@ -205,16 +209,6 @@ namespace Samotorcan.HtmlUi.Windows
             {
                 FormsApplication.Exit();
             });
-        }
-        #endregion
-        #region CreateWindow
-        /// <summary>
-        /// Creates the window.
-        /// </summary>
-        /// <returns></returns>
-        protected override Core.Window CreateWindow()
-        {
-            return new Window();
         }
         #endregion
 

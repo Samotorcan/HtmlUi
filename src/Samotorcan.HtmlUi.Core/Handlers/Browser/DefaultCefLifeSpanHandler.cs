@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Samotorcan.HtmlUi.Core.Events;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
     /// <summary>
     /// Default life span handler.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "LifeSpan", Justification = "The base class has the same name.")]
     [CLSCompliant(false)]
     public class DefaultCefLifeSpanHandler : CefLifeSpanHandler
     {
@@ -19,7 +21,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <summary>
         /// Occurs when the browser is created.
         /// </summary>
-        public event EventHandler<CefBrowser> BrowserCreated;
+        public event EventHandler<BrowserCreatedEventArgs> BrowserCreated;
         #endregion
 
         #endregion
@@ -38,7 +40,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <param name="browser"></param>
         protected override void OnBeforeClose(CefBrowser browser)
         {
-            Application.Current.BrowserMessageRouter.OnBeforeClose(browser);
+            BaseApplication.Current.BrowserMessageRouter.OnBeforeClose(browser);
         }
         #endregion
         #region OnAfterCreated
@@ -49,7 +51,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         protected override void OnAfterCreated(CefBrowser browser)
         {
             if (BrowserCreated != null)
-                BrowserCreated(this, browser);
+                BrowserCreated(this, new BrowserCreatedEventArgs(browser));
         }
         #endregion
 

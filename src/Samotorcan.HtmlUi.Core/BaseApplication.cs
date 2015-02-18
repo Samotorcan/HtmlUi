@@ -20,11 +20,21 @@ using System.Collections.Concurrent;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// The main application.
+    /// Base application.
     /// </summary>
     [CLSCompliant(false)]
-    public abstract class Application : IDisposable
+    public abstract class BaseApplication : IDisposable
     {
+        #region Constants
+
+        #region LogsDirectory
+        /// <summary>
+        /// The logs directory.
+        /// </summary>
+        internal const string LogsDirectory = "Logs";
+        #endregion
+
+        #endregion
         #region Properties
         #region Public
 
@@ -35,7 +45,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The current.
         /// </value>
-        public static Application Current { get; private set; }
+        public static BaseApplication Current { get; private set; }
         #endregion
         #region Window
         /// <summary>
@@ -44,7 +54,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The window.
         /// </value>
-        public Window Window { get; private set; }
+        public BaseWindow Window { get; protected set; }
         #endregion
         #region EnableD3D11
         private bool _enableD3D11;
@@ -95,6 +105,114 @@ namespace Samotorcan.HtmlUi.Core
             }
         }
         #endregion
+        #region ViewProvider
+        private IViewProvider _viewProvider;
+        /// <summary>
+        /// Gets or sets the view provider.
+        /// </summary>
+        /// <value>
+        /// The view provider.
+        /// </value>
+        public IViewProvider ViewProvider
+        {
+            get
+            {
+                return _viewProvider;
+            }
+            set
+            {
+                EnsureMainThread();
+
+                if (value == null)
+                    throw new ArgumentNullException("value");
+
+                _viewProvider = value;
+            }
+        }
+        #endregion
+
+        #region RequestHostname
+        private string _requestHostname;
+        /// <summary>
+        /// Gets or sets the request hostname.
+        /// </summary>
+        /// <value>
+        /// The request hostname.
+        /// </value>
+        /// <exception cref="System.ArgumentException">Invalid request hostname.;RequestHostname</exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "Hostname", Justification = "Hostname is better.")]
+        public string RequestHostname
+        {
+            get
+            {
+                return _requestHostname;
+            }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+
+                if (Uri.CheckHostName(value) != UriHostNameType.Dns)
+                    throw new ArgumentException("Invalid request hostname.", "value");
+
+                _requestHostname = value;
+            }
+        }
+        #endregion
+        #region RequestPort
+        private int _requestPort;
+        /// <summary>
+        /// Gets or sets the port.
+        /// </summary>
+        /// <value>
+        /// The port.
+        /// </value>
+        /// <exception cref="System.ArgumentException">Invalid request port.;Port</exception>
+        public int RequestPort
+        {
+            get
+            {
+                return _requestPort;
+            }
+            set
+            {
+                if (value < 0 || value > 65535)
+                    throw new ArgumentException("Invalid request port.", "value");
+
+                _requestPort = value;
+            }
+        }
+        #endregion
+        #region RequestViewPath
+        private string _requestViewPath;
+        /// <summary>
+        /// Gets or sets the request view path.
+        /// </summary>
+        /// <value>
+        /// The request view path.
+        /// </value>
+        /// <exception cref="System.ArgumentException">Invalid request view path;RequestViewsPath</exception>
+        public string RequestViewPath
+        {
+            get
+            {
+                return _requestViewPath;
+            }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+
+                if (!PathUtility.IsFilePath(value))
+                    throw new ArgumentException("Invalid request view path", "value");
+
+                if (value.StartsWith("/") || value.EndsWith("/"))
+                    throw new ArgumentException("RequestViewPath can't start or end with a slash.", "value");
+
+                _requestViewPath = value;
+            }
+        }
+        #endregion
 
         #endregion
         #region Internal
@@ -107,6 +225,15 @@ namespace Samotorcan.HtmlUi.Core
         /// The browser message router.
         /// </value>
         internal CefMessageRouterBrowserSide BrowserMessageRouter { get; set; }
+        #endregion
+        #region LogsDirectoryPath
+        /// <summary>
+        /// Gets or sets the logs directory path.
+        /// </summary>
+        /// <value>
+        /// The logs directory path.
+        /// </value>
+        internal string LogsDirectoryPath { get; set; }
         #endregion
 
         #endregion
@@ -136,13 +263,16 @@ namespace Samotorcan.HtmlUi.Core
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Application"/> class.
+        /// Initializes a new instance of the <see cref="BaseApplication"/> class.
         /// </summary>
         /// <exception cref="System.InvalidOperationException">You can only have one instance of Application at any given time.</exception>
-        public Application()
+        protected BaseApplication()
         {
             if (Current != null)
                 throw new InvalidOperationException("You can only have one instance of Application at any given time.");
+
+            LogsDirectoryPath = PathUtility.NormalizedWorkingDirectory + "/" + LogsDirectory;
+            EnsureLogsDirectory();
 
             ThreadId = Thread.CurrentThread.ManagedThreadId;
             Current = this;
@@ -150,6 +280,11 @@ namespace Samotorcan.HtmlUi.Core
             SynchronizationContext.SetSynchronizationContext(new HtmlUiSynchronizationContext());
 
             InitializeInvokeQueue();
+
+            ViewProvider = new FileAssemblyViewProvider();
+            RequestHostname = "localhost";
+            RequestPort = 80;
+            RequestViewPath = "Views";
         }
 
         #endregion
@@ -176,7 +311,7 @@ namespace Samotorcan.HtmlUi.Core
                 RegisterSchemes();
                 RegisterMessageRouter();
 
-                Initialize();
+                OnInitialize();
                 RunMessageLoop();
 
                 ShutdownInternal();
@@ -233,38 +368,71 @@ namespace Samotorcan.HtmlUi.Core
             return InvokeOnMainAsync(action).Result;
         }
         #endregion
+        #region GetAbsoluteViewUrl
+        /// <summary>
+        /// Gets the absolute view URL.
+        /// </summary>
+        /// <param name="viewPath">The view path.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">viewPath</exception>
+        public string GetAbsoluteViewUrl(string viewPath)
+        {
+            if (string.IsNullOrWhiteSpace(viewPath))
+                throw new ArgumentNullException("viewPath");
+
+            return string.Format("http://{0}{1}/{2}/{3}",
+                RequestHostname,
+                RequestPort != 80 ? ":" + RequestPort : string.Empty,
+                RequestViewPath,
+                ViewProvider.GetUrlFromViewPath(viewPath));
+        }
+        #endregion
+        #region GetViewPath
+        /// <summary>
+        /// Gets the view path.
+        /// </summary>
+        /// <param name="absoluteViewUrl">The absolute view URL.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">absoluteViewUrl</exception>
+        public string GetViewPath(string absoluteViewUrl)
+        {
+            if (string.IsNullOrWhiteSpace(absoluteViewUrl))
+                throw new ArgumentNullException("absoluteViewUrl");
+
+            var baseUrl = string.Format("http://{0}{1}/{2}/",
+                RequestHostname,
+                RequestPort != 80 ? ":" + RequestPort : string.Empty,
+                RequestViewPath);
+
+            var baseUrlWithPort = string.Format("http://{0}:{1}/{2}/",
+                RequestHostname,
+                RequestPort,
+                RequestViewPath);
+
+            string viewUrl = null;
+
+            if (absoluteViewUrl.StartsWith(baseUrl))
+                viewUrl = absoluteViewUrl.Substring(baseUrl.Length);
+
+            if (absoluteViewUrl.StartsWith(baseUrlWithPort))
+                viewUrl = absoluteViewUrl.Substring(baseUrlWithPort.Length);
+
+            return ViewProvider.GetViewPathFromUrl(viewUrl);
+        }
+        #endregion
 
         #endregion
         #region Protected
 
-        #region Initialize
+        #region OnInitialize
         /// <summary>
-        /// Initialize.
+        /// Called when initialize is triggered.
         /// </summary>
-        protected virtual void Initialize() { }
-        #endregion
-        #region CreateWindow
-        /// <summary>
-        /// Creates the window.
-        /// </summary>
-        /// <returns></returns>
-        protected abstract Window CreateWindow();
-        #endregion
-        #region InitializeWindow
-        /// <summary>
-        /// Initializes the window.
-        /// </summary>
-        protected void InitializeWindow()
-        {
-            if (Window != null)
-                throw new InvalidOperationException("Window already initialized.");
-
-            Window = CreateWindow();
-        }
+        protected virtual void OnInitialize() { }
         #endregion
         #region OnShutdown
         /// <summary>
-        /// Called when shutdown is called.
+        /// Called when shutdown is triggered.
         /// </summary>
         protected virtual void OnShutdown() { }
         #endregion
@@ -314,7 +482,7 @@ namespace Samotorcan.HtmlUi.Core
                 MultiThreadedMessageLoop = true,
                 SingleProcess = false,
                 LogSeverity = CefLogSeverity.Warning,
-                LogFile = "cef.log",
+                LogFile = LogsDirectoryPath + "/cef.log",
                 ResourcesDirPath = PathUtility.WorkingDirectory,
                 RemoteDebuggingPort = 20480,
                 NoSandbox = true,
@@ -390,6 +558,16 @@ namespace Samotorcan.HtmlUi.Core
             InvokeQueue = new BlockingCollection<Action>(new ConcurrentQueue<Action>(), 100);
         }
         #endregion
+        #region EnsureLogsDirectory
+        /// <summary>
+        /// Ensures the logs directory.
+        /// </summary>
+        private void EnsureLogsDirectory()
+        {
+            if (!Directory.Exists(LogsDirectoryPath))
+                Directory.CreateDirectory(LogsDirectoryPath);
+        }
+        #endregion
 
         #endregion
         #endregion
@@ -422,9 +600,9 @@ namespace Samotorcan.HtmlUi.Core
         }
 
         /// <summary>
-        /// Finalizes an instance of the <see cref="Application"/> class.
+        /// Finalizes an instance of the <see cref="BaseApplication"/> class.
         /// </summary>
-        ~Application()
+        ~BaseApplication()
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(false);
@@ -435,8 +613,6 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         public void Dispose()
         {
-            EnsureMainThread();
-
             Dispose(true);
             GC.SuppressFinalize(this);
         }

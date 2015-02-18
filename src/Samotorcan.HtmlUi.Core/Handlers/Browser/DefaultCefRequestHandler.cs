@@ -34,7 +34,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <returns></returns>
         protected override bool OnBeforeBrowse(CefBrowser browser, CefFrame frame, CefRequest request, bool isRedirect)
         {
-            Application.Current.BrowserMessageRouter.OnBeforeBrowse(browser, frame);
+            BaseApplication.Current.BrowserMessageRouter.OnBeforeBrowse(browser, frame);
 
             return false;
         }
@@ -49,7 +49,23 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <param name="status"></param>
         protected override void OnRenderProcessTerminated(CefBrowser browser, CefTerminationStatus status)
         {
-            Application.Current.BrowserMessageRouter.OnRenderProcessTerminated(browser);
+            BaseApplication.Current.BrowserMessageRouter.OnRenderProcessTerminated(browser);
+        }
+        #endregion
+        #region GetResourceHandler
+        /// <summary>
+        /// Called on the IO thread before a resource is loaded. To allow the resource
+        /// to load normally return NULL. To specify a handler for the resource return
+        /// a CefResourceHandler object. The |request| object should not be modified in
+        /// this callback.
+        /// </summary>
+        /// <param name="browser"></param>
+        /// <param name="frame"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        protected override CefResourceHandler GetResourceHandler(CefBrowser browser, CefFrame frame, CefRequest request)
+        {
+            return new ViewCefResourceHandler();
         }
         #endregion
 

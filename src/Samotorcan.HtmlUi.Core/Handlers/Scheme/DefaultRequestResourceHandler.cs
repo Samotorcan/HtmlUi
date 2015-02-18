@@ -34,6 +34,12 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Scheme
         /// <returns></returns>
         protected override bool ProcessRequest(CefRequest request, CefCallback callback)
         {
+            if (request == null)
+                throw new ArgumentNullException("request");
+
+            if (callback == null)
+                throw new ArgumentNullException("callback");
+
             var requestNo = Interlocked.Increment(ref _requestNo);
 
             var response = new StringBuilder();
@@ -79,11 +85,14 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Scheme
         /// <param name="redirectUrl"></param>
         protected override void GetResponseHeaders(CefResponse response, out long responseLength, out string redirectUrl)
         {
+            if (response == null)
+                throw new ArgumentNullException("response");
+
             response.MimeType = "text/html";
             response.Status = 200;
             response.StatusText = "OK, hello from handler!";
 
-            var headers = new NameValueCollection(StringComparer.InvariantCultureIgnoreCase);
+            var headers = new NameValueCollection(StringComparer.OrdinalIgnoreCase);
             headers.Add("Cache-Control", "private");
             response.SetHeaderMap(headers);
 
@@ -105,6 +114,9 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Scheme
         /// <returns></returns>
         protected override bool ReadResponse(Stream response, int bytesToRead, out int bytesRead, CefCallback callback)
         {
+            if (response == null)
+                throw new ArgumentNullException("response");
+
             if (bytesToRead == 0 || pos >= responseData.Length)
             {
                 bytesRead = 0;

@@ -12,13 +12,15 @@ using System.ComponentModel;
 using System.Drawing;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System.Runtime.InteropServices;
+using Samotorcan.HtmlUi.Core.Events;
 
 namespace Samotorcan.HtmlUi.Windows
 {
     /// <summary>
     /// Window.
     /// </summary>
-    internal class Window : Core.Window
+    [CLSCompliant(false)]
+    public class Window : Core.BaseWindow
     {
         #region Properties
         #region Public
@@ -121,6 +123,7 @@ namespace Samotorcan.HtmlUi.Windows
                 Form.Move += Form_Move;
                 Form.Resize += Form_Resize;
                 Form.FormClosed += Form_FormClosed;
+                Form.ProcessWndProc = Form_ProcessWndProc;
             });
 
             BrowserCreated += Window_BrowserCreated;
@@ -149,6 +152,8 @@ namespace Samotorcan.HtmlUi.Windows
             Application.Current.InvokeOnMain(() => {
                 CreateBrowser(FormHandle, new CefRectangle(0, 0, width, height));
             });
+
+            SetSystemContextMenu();
         }
         #endregion
         #region Form_Resize
@@ -230,6 +235,25 @@ namespace Samotorcan.HtmlUi.Windows
             });
         }
         #endregion
+        #region Form_ProcessWndProc
+        /// <summary>
+        /// Process the form WND proc.
+        /// </summary>
+        /// <param name="m">The m.</param>
+        private void Form_ProcessWndProc(ref Message m)
+        {
+            // developer tools
+            if ((m.Msg == NativeMethods.WM_SYSCOMMAND) && ((int)m.WParam == NativeMethods.SYSMENU_DEVTOOLS_ID))
+            {
+                Application.Current.InvokeOnMain(() => {
+                    var windowInfo = CefWindowInfo.Create();
+                    windowInfo.SetAsPopup(IntPtr.Zero, "Developer tools");
+
+                    CefBrowser.GetHost().ShowDevTools(windowInfo, new DeveloperToolsCefClient(), new CefBrowserSettings(), new CefPoint(0, 0));
+                });
+            }
+        }
+        #endregion
 
         #region Window_BrowserCreated
         /// <summary>
@@ -237,7 +261,7 @@ namespace Samotorcan.HtmlUi.Windows
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="e">The e.</param>
-        private void Window_BrowserCreated(object sender, CefBrowser e)
+        private void Window_BrowserCreated(object sender, BrowserCreatedEventArgs e)
         {
             // hook mouse events
             var threadId = NativeMethods.GetWindowThreadProcessId(CefBrowser.GetHost().GetWindowHandle(), IntPtr.Zero);
@@ -298,6 +322,18 @@ namespace Samotorcan.HtmlUi.Windows
         private void SyncFormBorderlessProperty()
         {
             Form.FormBorderStyle = Borderless ? FormBorderStyle.None : FormBorderStyle.Sizable;
+        }
+        #endregion
+        #region SetSystemContextMenu
+        /// <summary>
+        /// Sets the system context menu.
+        /// </summary>
+        private void SetSystemContextMenu()
+        {
+            IntPtr hSysMenu = NativeMethods.GetSystemMenu(FormHandle, false);
+
+            NativeMethods.AppendMenu(hSysMenu, NativeMethods.MF_SEPARATOR, 0, string.Empty);
+            NativeMethods.AppendMenu(hSysMenu, NativeMethods.MF_STRING, NativeMethods.SYSMENU_DEVTOOLS_ID, "Developer Tools");
         }
         #endregion
 

@@ -13,7 +13,7 @@ namespace Samotorcan.Tests.Windowsx64
         {
             using (var application = new Application())
             {
-                application.Window.Url = "http://stackoverflow.com";
+                application.Window.View = "Index.html";
                 application.Window.Borderless = false;
 
                 application.Run();

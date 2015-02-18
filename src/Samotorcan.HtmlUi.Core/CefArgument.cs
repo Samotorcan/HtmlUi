@@ -17,6 +17,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// The disable d3d11 argument.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "It's immutable.")]
         public static readonly CefArgument DisableD3D11 = new CefArgument("--disable-d3d11");
         #endregion
 

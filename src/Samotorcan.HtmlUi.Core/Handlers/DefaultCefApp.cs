@@ -64,6 +64,9 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         /// <param name="commandLine">The command line.</param>
         protected override void OnBeforeCommandLineProcessing(string processType, CefCommandLine commandLine)
         {
+            if (commandLine == null)
+                throw new ArgumentNullException("commandLine");
+
             // TODO: currently on linux platform location of locales and pack files are determined
             // incorrectly (relative to main module instead of libcef.so module).
             // Once issue http://code.google.com/p/chromiumembedded/issues/detail?id=668 will be resolved
@@ -77,7 +80,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers
                 commandLine.AppendSwitch("locales-dir-path", Path.Combine(path, "locales"));
             }
 
-            if (!Application.Current.EnableD3D11)
+            if (!BaseApplication.Current.EnableD3D11)
                 commandLine.AppendArgument(CefArgument.DisableD3D11.Value);
         }
         #endregion

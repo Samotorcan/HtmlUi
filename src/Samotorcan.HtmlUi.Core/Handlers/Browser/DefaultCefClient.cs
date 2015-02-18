@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Samotorcan.HtmlUi.Core.Events;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,7 +21,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <summary>
         /// Occurs when the browser is created.
         /// </summary>
-        public event EventHandler<CefBrowser> BrowserCreated;
+        public event EventHandler<BrowserCreatedEventArgs> BrowserCreated;
         #endregion
 
         #endregion
@@ -80,9 +81,9 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
             CefRequestHandler = new DefaultCefRequestHandler();
 
             // set events
-            CefLifeSpanHandler.BrowserCreated += (sender, browser) => {
+            CefLifeSpanHandler.BrowserCreated += (sender, e) => {
                 if (BrowserCreated != null)
-                    BrowserCreated(this, browser);
+                    BrowserCreated(this, e);
             };
         }
 
@@ -142,7 +143,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <returns></returns>
         protected override bool OnProcessMessageReceived(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage message)
         {
-            return Application.Current.BrowserMessageRouter.OnProcessMessageReceived(browser, sourceProcess, message);
+            return BaseApplication.Current.BrowserMessageRouter.OnProcessMessageReceived(browser, sourceProcess, message);
         }
         #endregion
 

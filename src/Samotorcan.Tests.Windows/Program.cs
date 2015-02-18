@@ -1,4 +1,6 @@
-﻿using Samotorcan.HtmlUi.Windows;
+﻿using Samotorcan.HtmlUi.Core;
+using Samotorcan.HtmlUi.Core.Logs;
+using Samotorcan.HtmlUi.Windows;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +15,11 @@ namespace Samotorcan.Tests.Windows
         {
             using (var application = new Application())
             {
-                application.Window.Url = "http://stackoverflow.com";
+                ((FileAssemblyViewProvider)application.ViewProvider).ViewSearch = ViewSearch.Assembly;
+
+                var view = application.ViewProvider.GetView("~/Views/Index.html");
+
+                application.Window.View = "Index.html";
                 application.Window.Borderless = false;
 
                 application.Run();

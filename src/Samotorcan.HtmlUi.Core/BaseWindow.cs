@@ -1,4 +1,5 @@
-﻿using Samotorcan.HtmlUi.Core.Handlers.Browser;
+﻿using Samotorcan.HtmlUi.Core.Events;
+using Samotorcan.HtmlUi.Core.Handlers.Browser;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
@@ -10,18 +11,18 @@ using Xilium.CefGlue;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// Window.
+    /// Base window.
     /// </summary>
     [CLSCompliant(false)]
-    public abstract class Window : IDisposable
+    public abstract class BaseWindow : IDisposable
     {
         #region Constants
 
-        #region DefaultUrl
+        #region DefaultView
         /// <summary>
-        /// The default URL.
+        /// The default view.
         /// </summary>
-        private const string DefaultUrl = "http://localhost/views/index.html";
+        private const string DefaultView = "Index.html";
         #endregion
 
         #endregion
@@ -31,42 +32,43 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Occurs when browser is created.
         /// </summary>
-        protected event EventHandler<CefBrowser> BrowserCreated;
+        protected event EventHandler<BrowserCreatedEventArgs> BrowserCreated;
         #endregion
 
         #endregion
         #region Properties
         #region Public
 
-        #region Url
-        private string _url;
+        #region View
+        private string _view;
         /// <summary>
-        /// Gets or sets the URL.
+        /// Gets or sets the view.
         /// </summary>
         /// <value>
-        /// The URL.
+        /// The view.
         /// </value>
-        public string Url
+        /// <exception cref="System.InvalidOperationException">View can only be changed before the window is created.</exception>
+        public string View
         {
             get
             {
-                return _url;
+                return _view;
             }
             set
             {
-                Application.Current.EnsureMainThread();
+                BaseApplication.Current.EnsureMainThread();
 
                 if (IsBrowserCreated)
-                    throw new InvalidOperationException("Url can only be changed before the window is created.");
+                    throw new InvalidOperationException("View can only be changed before the window is created.");
 
-                _url = value;
+                _view = value;
             }
         }
         #endregion
         #region Borderless
         private bool _borderless;
         /// <summary>
-        /// Gets or sets a value indicating whether this <see cref="Window"/> is borderless.
+        /// Gets or sets a value indicating whether this <see cref="BaseWindow"/> is borderless.
         /// </summary>
         /// <value>
         ///   <c>true</c> if borderless; otherwise, <c>false</c>.
@@ -79,7 +81,7 @@ namespace Samotorcan.HtmlUi.Core
             }
             set
             {
-                Application.Current.EnsureMainThread();
+                BaseApplication.Current.EnsureMainThread();
 
                 _borderless = value;
             }
@@ -117,25 +119,9 @@ namespace Samotorcan.HtmlUi.Core
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Window"/> class.
+        /// Initializes a new instance of the <see cref="BaseWindow"/> class.
         /// </summary>
-        public Window(string url)
-            : base()
-        {
-            if (string.IsNullOrEmpty(url))
-                throw new ArgumentNullException("url");
-
-            if (!UriUtility.IsAbsoluteUri(url))
-                throw new ArgumentException("Invalid url.", "url");
-
-            Url = url;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Window"/> class.
-        /// </summary>
-        public Window()
-            : this(DefaultUrl) { }
+        protected BaseWindow() { }
 
         #endregion
         #region Methods
@@ -149,7 +135,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="position">The position.</param>
         protected void CreateBrowser(IntPtr handle, CefRectangle position)
         {
-            Application.Current.EnsureMainThread();
+            BaseApplication.Current.EnsureMainThread();
 
             if (IsBrowserCreated)
                 throw new InvalidOperationException("Browser already created.");
@@ -158,17 +144,17 @@ namespace Samotorcan.HtmlUi.Core
             cefWindowInfo.SetAsChild(handle, position);
 
             var cefClient = new DefaultCefClient();
-            cefClient.BrowserCreated += (sender, browser) =>
+            cefClient.BrowserCreated += (sender, e) =>
             {
-                CefBrowser = browser;
+                CefBrowser = e.CefBrowser;
 
                 if (BrowserCreated != null)
-                    BrowserCreated(this, browser);
+                    BrowserCreated(this, e);
             };
 
             var cefSettings = new CefBrowserSettings();
 
-            CefBrowserHost.CreateBrowser(cefWindowInfo, cefClient, cefSettings, Url);
+            CefBrowserHost.CreateBrowser(cefWindowInfo, cefClient, cefSettings, BaseApplication.Current.GetAbsoluteViewUrl(View));
 
             IsBrowserCreated = true;
         }
@@ -190,7 +176,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            Application.Current.EnsureMainThread();
+            BaseApplication.Current.EnsureMainThread();
 
             if (!_disposed)
             {
@@ -213,8 +199,6 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         public void Dispose()
         {
-            Application.Current.EnsureMainThread();
-
             Dispose(true);
             GC.SuppressFinalize(this);
         }

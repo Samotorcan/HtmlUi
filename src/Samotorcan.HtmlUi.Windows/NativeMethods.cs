@@ -17,11 +17,17 @@ namespace Samotorcan.HtmlUi.Windows
         public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
 
         public const int HT_CAPTION = 0x2;
+        public const int WM_SYSCOMMAND = 0x112;
+        public const int MF_STRING = 0x0;
+        public const int MF_SEPARATOR = 0x800;
+
+        public const int SYSMENU_DEVTOOLS_ID = 0x1;
 
         [DllImportAttribute("user32.dll")]
         public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
         [DllImportAttribute("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool ReleaseCapture();
 
         [DllImport("user32.dll")]
@@ -38,7 +44,17 @@ namespace Samotorcan.HtmlUi.Windows
         public static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool AppendMenu(IntPtr hMenu, int uFlags, int uIDNewItem, string lpNewItem);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool InsertMenu(IntPtr hMenu, int uPosition, int uFlags, int uIDNewItem, string lpNewItem);
 
         public delegate IntPtr HookProc(int code, IntPtr wParam, IntPtr lParam);
 
@@ -64,6 +80,7 @@ namespace Samotorcan.HtmlUi.Windows
             WM_EXITSIZEMOVE = 0x0232
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "P/Invoke class.")]
         [StructLayout(LayoutKind.Sequential)]
         public class POINT
         {
