@@ -1,4 +1,5 @@
 ﻿using Samotorcan.HtmlUi.Core.Utilities;
+using Samotorcan.HtmlUi.Core.Validation;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -47,8 +48,7 @@ namespace Samotorcan.HtmlUi.Core
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "It's ok.")]
         public string GetView(string viewPath)
         {
-            if (string.IsNullOrEmpty(viewPath))
-                throw new ArgumentNullException("viewPath");
+            Argument.NullOrEmpty(viewPath, "viewPath");
 
             var absoluteFullViewPath = FileAssemblyViewProvider.GetAbsoluteFullViewPath(viewPath);
             var localViewPath = absoluteFullViewPath.Substring(1);
@@ -92,8 +92,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.ArgumentNullException">viewName</exception>
         public string GetUrlFromViewPath(string path)
         {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentNullException("path");
+            Argument.NullOrEmpty(path, "path");
 
             return FileAssemblyViewProvider.GetRelativeFullViewPath(path);
         }
@@ -108,8 +107,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.ArgumentException">Invalid view url.;viewUrl</exception>
         public string GetViewPathFromUrl(string url)
         {
-            if (string.IsNullOrEmpty(url))
-                throw new ArgumentNullException("url");
+            Argument.NullOrEmpty(url, "url");
 
             return FileAssemblyViewProvider.GetAbsoluteFullViewPath(url);
         }
@@ -124,19 +122,16 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.ArgumentException">Invalid view name.;viewName</exception>
         public static string GetAbsoluteFullViewPath(string viewName)
         {
-            if (string.IsNullOrEmpty(viewName))
-                throw new ArgumentNullException("viewName");
+            Argument.NullOrEmpty(viewName, "viewName");
 
             if (!viewName.StartsWith("~/Views/"))
             {
-                if (viewName.StartsWith("~"))
-                    throw new ArgumentException("Views must located in the Views directory.", "viewName");
+                Argument.InvalidArgument(viewName.StartsWith("~"), "Views must located in the Views directory.", "viewName");
 
                 viewName = "~/Views/" + viewName;
             }
 
-            if (!PathUtility.IsFullFileName(viewName.Substring(1)))
-                throw new ArgumentException("Invalid view name.", "viewName");
+            Argument.InvalidArgument(!PathUtility.IsFullFileName(viewName.Substring(1)), "Invalid view name.", "viewName");
 
             return viewName;
         }
@@ -151,17 +146,13 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.ArgumentException">Invalid view name.;viewName</exception>
         public static string GetRelativeFullViewPath(string viewName)
         {
-            if (string.IsNullOrEmpty(viewName))
-                throw new ArgumentNullException("viewName");
+            Argument.NullOrEmpty(viewName, "viewName");
 
             if (viewName.StartsWith("~/Views/"))
                 viewName = viewName.Substring(8);
 
-            if (viewName.StartsWith("~"))
-                throw new ArgumentException("Views must located in the Views directory.", "viewName");
-
-            if (!PathUtility.IsFullFileName(viewName))
-                throw new ArgumentException("Invalid view name.", "viewName");
+            Argument.InvalidArgument(viewName.StartsWith("~"), "Views must located in the Views directory.", "viewName");
+            Argument.InvalidArgument(!PathUtility.IsFullFileName(viewName), "Invalid view name.", "viewName");
 
             return viewName;
         }

@@ -248,6 +248,8 @@ namespace Samotorcan.HtmlUi.Windows
                 Application.Current.InvokeOnMain(() => {
                     var windowInfo = CefWindowInfo.Create();
                     windowInfo.SetAsPopup(IntPtr.Zero, "Developer tools");
+                    windowInfo.Width = 1200;
+                    windowInfo.Height = 500;
 
                     CefBrowser.GetHost().ShowDevTools(windowInfo, new DeveloperToolsCefClient(), new CefBrowserSettings(), new CefPoint(0, 0));
                 });

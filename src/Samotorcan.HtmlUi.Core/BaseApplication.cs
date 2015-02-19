@@ -16,6 +16,8 @@ using Samotorcan.HtmlUi.Core.Utilities;
 using Samotorcan.HtmlUi.Core;
 using Samotorcan.HtmlUi.Core.Exceptions;
 using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
+using Samotorcan.HtmlUi.Core.Validation;
 
 namespace Samotorcan.HtmlUi.Core
 {
@@ -72,10 +74,7 @@ namespace Samotorcan.HtmlUi.Core
             }
             set
             {
-                EnsureMainThread();
-
-                if (Window.IsBrowserCreated)
-                    throw new InvalidOperationException("EnableD3D11 can only be changed before the window is created.");
+                Argument.InvalidOperation(Window.IsBrowserCreated, "EnableD3D11 can only be changed before the window is created.");
 
                 _enableD3D11 = value;
             }
@@ -121,10 +120,7 @@ namespace Samotorcan.HtmlUi.Core
             }
             set
             {
-                EnsureMainThread();
-
-                if (value == null)
-                    throw new ArgumentNullException("value");
+                Argument.Null(value, "value");
 
                 _viewProvider = value;
             }
@@ -149,11 +145,8 @@ namespace Samotorcan.HtmlUi.Core
             }
             set
             {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-
-                if (Uri.CheckHostName(value) != UriHostNameType.Dns)
-                    throw new ArgumentException("Invalid request hostname.", "value");
+                Argument.Null(value, "value");
+                Argument.InvalidArgument(Uri.CheckHostName(value) != UriHostNameType.Dns, "Invalid request hostname.", "value");
 
                 _requestHostname = value;
             }
@@ -176,8 +169,7 @@ namespace Samotorcan.HtmlUi.Core
             }
             set
             {
-                if (value < 0 || value > 65535)
-                    throw new ArgumentException("Invalid request port.", "value");
+                Argument.InvalidArgument(value < 0 || value > 65535, "Invalid request port.", "value");
 
                 _requestPort = value;
             }
@@ -200,14 +192,9 @@ namespace Samotorcan.HtmlUi.Core
             }
             set
             {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-
-                if (!PathUtility.IsFilePath(value))
-                    throw new ArgumentException("Invalid request view path", "value");
-
-                if (value.StartsWith("/") || value.EndsWith("/"))
-                    throw new ArgumentException("RequestViewPath can't start or end with a slash.", "value");
+                Argument.Null(value, "value");
+                Argument.InvalidArgument(!PathUtility.IsFilePath(value), "Invalid request view path", "value");
+                Argument.InvalidArgument(value.StartsWith("/") || value.EndsWith("/"), "RequestViewPath can't start or end with a slash.", "value");
 
                 _requestViewPath = value;
             }
@@ -268,8 +255,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.InvalidOperationException">You can only have one instance of Application at any given time.</exception>
         protected BaseApplication()
         {
-            if (Current != null)
-                throw new InvalidOperationException("You can only have one instance of Application at any given time.");
+            Argument.InvalidOperation(Current != null, "You can only have one instance of Application at any given time.");
 
             LogsDirectoryPath = PathUtility.NormalizedWorkingDirectory + "/" + LogsDirectory;
             EnsureLogsDirectory();
@@ -299,8 +285,7 @@ namespace Samotorcan.HtmlUi.Core
         {
             EnsureMainThread();
 
-            if (IsRunning)
-                throw new InvalidOperationException("Application is already running.");
+            Argument.InvalidOperation(IsRunning, "Application is already running.");
 
             IsRunning = true;
 
@@ -333,11 +318,8 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.InvalidOperationException">Application is shutting down.</exception>
         public Task<bool> InvokeOnMainAsync(Action action)
         {
-            if (action == null)
-                throw new ArgumentNullException("action");
-
-            if (InvokeQueue.IsAddingCompleted)
-                throw new InvalidOperationException("Application is shutting down.");
+            Argument.Null(action, "action");
+            Argument.InvalidOperation(InvokeQueue.IsAddingCompleted, "Application is shutting down.");
 
             var taskCompletionSource = new TaskCompletionSource<bool>();
 
@@ -377,8 +359,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.ArgumentNullException">viewPath</exception>
         public string GetAbsoluteViewUrl(string viewPath)
         {
-            if (string.IsNullOrWhiteSpace(viewPath))
-                throw new ArgumentNullException("viewPath");
+            Argument.NullOrEmpty(viewPath, "viewPath");
 
             return string.Format("http://{0}{1}/{2}/{3}",
                 RequestHostname,
@@ -396,28 +377,52 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.ArgumentNullException">absoluteViewUrl</exception>
         public string GetViewPath(string absoluteViewUrl)
         {
-            if (string.IsNullOrWhiteSpace(absoluteViewUrl))
-                throw new ArgumentNullException("absoluteViewUrl");
+            Argument.NullOrEmpty(absoluteViewUrl, "absoluteViewUrl");
 
-            var baseUrl = string.Format("http://{0}{1}/{2}/",
-                RequestHostname,
-                RequestPort != 80 ? ":" + RequestPort : string.Empty,
-                RequestViewPath);
-
-            var baseUrlWithPort = string.Format("http://{0}:{1}/{2}/",
-                RequestHostname,
+            var match = Regex.Match(absoluteViewUrl, string.Format("^(http://)?{0}(:{1}){2}/{3}/(.+)$",
+                Regex.Escape(RequestHostname),
                 RequestPort,
-                RequestViewPath);
+                RequestPort == 80 ? "?" : "{1}",
+                Regex.Escape(RequestViewPath)), RegexOptions.IgnoreCase);
 
-            string viewUrl = null;
+            Argument.InvalidArgument(!match.Success, "Invalid url.", "absoluteViewUrl");
 
-            if (absoluteViewUrl.StartsWith(baseUrl))
-                viewUrl = absoluteViewUrl.Substring(baseUrl.Length);
+            return ViewProvider.GetViewPathFromUrl(match.Groups.OfType<Group>().Last().Value);
+        }
+        #endregion
+        #region IsLocalUrl
+        /// <summary>
+        /// Determines whether the specified URL is local.
+        /// </summary>
+        /// <param name="url">The URL.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">url</exception>
+        public bool IsLocalUrl(string url)
+        {
+            Argument.NullOrEmpty(url, "url");
 
-            if (absoluteViewUrl.StartsWith(baseUrlWithPort))
-                viewUrl = absoluteViewUrl.Substring(baseUrlWithPort.Length);
+            return Regex.IsMatch(url, string.Format("^(http://)?{0}(:{1}){2}(/.*)?$",
+                Regex.Escape(RequestHostname),
+                RequestPort,
+                RequestPort == 80 ? "?" : "{1}"), RegexOptions.IgnoreCase);
+        }
+        #endregion
+        #region IsViewFileUrl
+        /// <summary>
+        /// Determines whether the specified URL is view file url.
+        /// </summary>
+        /// <param name="url">The URL.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">url</exception>
+        public bool IsViewFileUrl(string url)
+        {
+            Argument.NullOrEmpty(url, "url");
 
-            return ViewProvider.GetViewPathFromUrl(viewUrl);
+            return Regex.IsMatch(url, string.Format("^(http://)?{0}(:{1}){2}/{3}/.+$",
+                Regex.Escape(RequestHostname),
+                RequestPort,
+                RequestPort == 80 ? "?" : "{1}",
+                RequestViewPath), RegexOptions.IgnoreCase);
         }
         #endregion
 
@@ -447,8 +452,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.InvalidOperationException">Must be called from the main thread.</exception>
         internal void EnsureMainThread()
         {
-            if (Thread.CurrentThread.ManagedThreadId != ThreadId)
-                throw new InvalidOperationException("Must be called from the main thread.");
+            Argument.InvalidOperation(Thread.CurrentThread.ManagedThreadId != ThreadId, "Must be called from the main thread.");
         }
         #endregion
         #region Shutdown
@@ -458,8 +462,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.InvalidOperationException">Application is not running.</exception>
         internal void Shutdown()
         {
-            if (!IsRunning)
-                throw new InvalidOperationException("Application is not running.");
+            Argument.InvalidOperation(!IsRunning, "Application is not running.");
 
             InvokeQueue.CompleteAdding();
         }

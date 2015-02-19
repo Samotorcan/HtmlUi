@@ -1,5 +1,7 @@
-﻿using Samotorcan.HtmlUi.Core.Logs;
+﻿using Samotorcan.HtmlUi.Core.Exceptions;
+using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
+using Samotorcan.HtmlUi.Core.Validation;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,9 +13,9 @@ using Xilium.CefGlue;
 namespace Samotorcan.HtmlUi.Core.Handlers.Browser
 {
     /// <summary>
-    /// View CEF resource handler.
+    /// Local CEF resource handler.
     /// </summary>
-    internal class ViewCefResourceHandler : CefResourceHandler
+    internal class LocalCefResourceHandler : CefResourceHandler
     {
         #region Properties
         #region Private
@@ -36,23 +38,14 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// </value>
         private Exception Exception { get; set; }
         #endregion
-        #region ViewPath
+        #region Content
         /// <summary>
-        /// Gets or sets the view path.
+        /// Gets or sets the content.
         /// </summary>
         /// <value>
-        /// The view path.
+        /// The content.
         /// </value>
-        private string ViewPath { get; set; }
-        #endregion
-        #region ViewContent
-        /// <summary>
-        /// Gets or sets the content of the view.
-        /// </summary>
-        /// <value>
-        /// The content of the view.
-        /// </value>
-        private byte[] ViewContent { get; set; }
+        private byte[] Content { get; set; }
         #endregion
         #region AllBytesRead
         /// <summary>
@@ -106,25 +99,24 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <param name="redirectUrl"></param>
         protected override void GetResponseHeaders(CefResponse response, out long responseLength, out string redirectUrl)
         {
-            if (response == null)
-                throw new ArgumentNullException("response");
+            Argument.Null(response, "response");
 
             redirectUrl = null;
             response.MimeType = "text/html";
 
             if (Exception != null)
             {
-                ViewContent = Encoding.UTF8.GetBytes(string.Format(ResourceUtility.GetResourceAsString("ViewRequestException.html"),
+                Content = Encoding.UTF8.GetBytes(string.Format(ResourceUtility.GetResourceAsString("ViewRequestException.html"),
                     Url,
                     Exception.ToString().Replace(Environment.NewLine, "<br>")));
 
-                responseLength = ViewContent.Length;
-                response.Status = 404;
-                response.StatusText = "Not Found";
+                responseLength = Content.Length;
+                response.Status = 500;
+                response.StatusText = "Internal Server Error";
             }
             else
             {
-                responseLength = ViewContent.Length;
+                responseLength = Content.Length;
                 response.Status = 200;
                 response.StatusText = "OK";
             }
@@ -139,31 +131,39 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <returns></returns>
         protected override bool ProcessRequest(CefRequest request, CefCallback callback)
         {
-            if (request == null)
-                throw new ArgumentNullException("request");
+            Argument.Null(request, "request");
 
             Url = request.Url;
+            var application = BaseApplication.Current;
 
-            BaseApplication.Current.InvokeOnMainAsync(() => {
-                var application = BaseApplication.Current;
-
-                try
+            // view url
+            if (application.IsViewFileUrl(Url))
+            {
+                application.InvokeOnMainAsync(() =>
                 {
-                    ViewPath = application.GetViewPath(request.Url);
-                    ViewContent = Encoding.UTF8.GetBytes(application.ViewProvider.GetView(ViewPath));
-                        
-                }
-                catch (Exception e)
-                {
-                    ViewPath = null;
-                    ViewContent = null;
-                    Exception = e;
+                    try
+                    {
+                        var viewPath = application.GetViewPath(request.Url);
+                        Content = Encoding.UTF8.GetBytes(application.ViewProvider.GetView(viewPath));
+                    }
+                    catch (Exception e)
+                    {
+                        Content = null;
+                        Exception = e;
 
-                    GeneralLog.Error("View request exception.", e);
-                }
+                        GeneralLog.Error("View request exception.", e);
+                    }
 
+                    callback.Continue();
+                });
+            }
+
+            // unknown url
+            else
+            {
+                Exception = new UnknownUrlException();
                 callback.Continue();
-            });
+            }
 
             return true;
         }
@@ -179,16 +179,15 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <returns></returns>
         protected override bool ReadResponse(Stream response, int bytesToRead, out int bytesRead, CefCallback callback)
         {
-            if (response == null)
-                throw new ArgumentNullException("response");
+            Argument.Null(response, "response");
 
             bytesRead = 0;
 
-            if (AllBytesRead >= ViewContent.Length)
+            if (AllBytesRead >= Content.Length)
                 return false;
 
-            bytesRead = Math.Min(bytesToRead, ViewContent.Length - AllBytesRead);
-            response.Write(ViewContent, AllBytesRead, bytesRead);
+            bytesRead = Math.Min(bytesToRead, Content.Length - AllBytesRead);
+            response.Write(Content, AllBytesRead, bytesRead);
 
             AllBytesRead += bytesRead;
 

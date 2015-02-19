@@ -76,13 +76,14 @@
     <Compile Include="CefArgument.cs" />
     <Compile Include="Events\BrowserCreatedEventArgs.cs" />
     <Compile Include="Exceptions\CefProcessException.cs" />
+    <Compile Include="Exceptions\UnknownUrlException.cs" />
     <Compile Include="Handlers\Browser\DefaultCefClient.cs" />
     <Compile Include="Handlers\Browser\DefaultCefDisplayHandler.cs" />
     <Compile Include="Handlers\Browser\DefaultCefLifeSpanHandler.cs" />
     <Compile Include="Handlers\Browser\DefaultCefLoadHandler.cs" />
     <Compile Include="Handlers\Browser\DefaultCefRequestHandler.cs" />
     <Compile Include="Handlers\Browser\DeveloperToolsCefClient.cs" />
-    <Compile Include="Handlers\Browser\ViewCefResourceHandler.cs" />
+    <Compile Include="Handlers\Browser\LocalCefResourceHandler.cs" />
     <Compile Include="Handlers\DefaultBrowserProcessHandler.cs" />
     <Compile Include="Handlers\DefaultCefApp.cs" />
     <Compile Include="Handlers\DefaultRenderProcessHandler.cs" />
@@ -92,6 +93,7 @@
     <Compile Include="IViewProvider.cs" />
     <Compile Include="FileAssemblyViewProvider.cs" />
     <Compile Include="Utilities\ResourceUtility.cs" />
+    <Compile Include="Validation\Argument.cs" />
     <Compile Include="ViewSearch.cs" />
     <Compile Include="BaseWindow.cs" />
     <Compile Include="Logs\GeneralLog.cs" />

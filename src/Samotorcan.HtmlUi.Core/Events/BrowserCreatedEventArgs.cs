@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Samotorcan.HtmlUi.Core.Validation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -37,8 +38,7 @@ namespace Samotorcan.HtmlUi.Core.Events
         /// <exception cref="System.ArgumentNullException">cefBrowser</exception>
         public BrowserCreatedEventArgs(CefBrowser cefBrowser)
         {
-            if (cefBrowser == null)
-                throw new ArgumentNullException("cefBrowser");
+            Argument.Null(cefBrowser, "cefBrowser");
 
             CefBrowser = cefBrowser;
         }

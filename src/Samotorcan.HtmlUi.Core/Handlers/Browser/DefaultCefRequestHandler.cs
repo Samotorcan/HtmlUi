@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Samotorcan.HtmlUi.Core.Validation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -65,7 +66,12 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <returns></returns>
         protected override CefResourceHandler GetResourceHandler(CefBrowser browser, CefFrame frame, CefRequest request)
         {
-            return new ViewCefResourceHandler();
+            Argument.Null(request, "request");
+
+            if (BaseApplication.Current.IsLocalUrl(request.Url))
+                return new LocalCefResourceHandler();
+
+            return null;
         }
         #endregion
 

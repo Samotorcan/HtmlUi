@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Samotorcan.HtmlUi.Core.Validation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,8 +25,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.ArgumentNullException">d</exception>
         public override void Post(SendOrPostCallback d, object state)
         {
-            if (d == null)
-                throw new ArgumentNullException("d");
+            Argument.Null(d, "d");
 
             BaseApplication.Current.InvokeOnMainAsync(() =>
             {
@@ -42,8 +42,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.ArgumentNullException">d</exception>
         public override void Send(SendOrPostCallback d, object state)
         {
-            if (d == null)
-                throw new ArgumentNullException("d");
+            Argument.Null(d, "d");
 
             BaseApplication.Current.InvokeOnMain(() =>
             {

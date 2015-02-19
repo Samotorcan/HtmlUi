@@ -1,6 +1,7 @@
 ﻿using Samotorcan.HtmlUi.Core.Events;
 using Samotorcan.HtmlUi.Core.Handlers.Browser;
 using Samotorcan.HtmlUi.Core.Utilities;
+using Samotorcan.HtmlUi.Core.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,8 +59,7 @@ namespace Samotorcan.HtmlUi.Core
             {
                 BaseApplication.Current.EnsureMainThread();
 
-                if (IsBrowserCreated)
-                    throw new InvalidOperationException("View can only be changed before the window is created.");
+                Argument.InvalidOperation(IsBrowserCreated, "View can only be changed before the window is created.");
 
                 _view = value;
             }
@@ -137,8 +137,7 @@ namespace Samotorcan.HtmlUi.Core
         {
             BaseApplication.Current.EnsureMainThread();
 
-            if (IsBrowserCreated)
-                throw new InvalidOperationException("Browser already created.");
+            Argument.InvalidOperation(IsBrowserCreated, "Browser already created.");
 
             var cefWindowInfo = CefWindowInfo.Create();
             cefWindowInfo.SetAsChild(handle, position);

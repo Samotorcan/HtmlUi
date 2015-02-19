@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Samotorcan.HtmlUi.Core.Validation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -87,8 +88,7 @@ namespace Samotorcan.HtmlUi.Core.Exceptions
         protected CefProcessException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            if (info == null)
-                throw new ArgumentNullException("info");
+            Argument.Null(info, "info");
 
             ExitCode = info.GetInt32("ExitCode");
         }
@@ -113,8 +113,7 @@ namespace Samotorcan.HtmlUi.Core.Exceptions
         {
             base.GetObjectData(info, context);
 
-            if (info == null)
-                throw new ArgumentNullException("info");
+            Argument.Null(info, "info");
 
             info.AddValue("ExitCode", ExitCode);
         }

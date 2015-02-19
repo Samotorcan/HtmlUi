@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Samotorcan.HtmlUi.Core.Validation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,8 +26,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <exception cref="System.ArgumentNullException">action</exception>
         public static void ExecuteTask(CefThreadId threadId, Action action)
         {
-            if (action == null)
-                throw new ArgumentNullException("action");
+            Argument.Null(action, "action");
 
             if (!CefRuntime.CurrentlyOn(threadId))
                 CefRuntime.PostTask(threadId, new ActionTask(action));

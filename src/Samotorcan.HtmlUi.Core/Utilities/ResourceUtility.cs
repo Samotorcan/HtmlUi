@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Samotorcan.HtmlUi.Core.Validation;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,16 +26,14 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "It's ok.")]
         public static string GetResourceAsString(string name)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
+            Argument.NullOrEmpty(name, "name");
 
             name = "Samotorcan.HtmlUi.Core.Resources." + name;
             var assembly = typeof(ResourceUtility).Assembly;
 
             using (var stream = assembly.GetManifestResourceStream(name))
             {
-                if (stream == null)
-                    throw new ArgumentException("Resource not found.", "name");
+                Argument.InvalidArgument(stream == null, "Resource not found.", "name");
 
                 using (var reader = new StreamReader(stream))
                 {
@@ -52,16 +51,14 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <exception cref="System.ArgumentNullException">name</exception>
         public static byte[] GetResourceAsBytes(string name)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
+            Argument.NullOrEmpty(name, "name");
 
             name = "Samotorcan.HtmlUi.Core.Resources." + name;
             var assembly = typeof(ResourceUtility).Assembly;
 
             using (var stream = assembly.GetManifestResourceStream(name))
             {
-                if (stream == null)
-                    throw new ArgumentException("Resource not found.", "name");
+                Argument.InvalidArgument(stream == null, "Resource not found.", "name");
 
                 using (var memoryStream = new MemoryStream())
                 {

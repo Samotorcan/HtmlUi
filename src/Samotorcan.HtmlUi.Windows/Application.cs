@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Samotorcan.HtmlUi.Core.Validation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -137,8 +138,7 @@ namespace Samotorcan.HtmlUi.Windows
         /// <exception cref="System.ArgumentNullException">action</exception>
         public Task<bool> InvokeOnUiAsync(Action action)
         {
-            if (action == null)
-                throw new ArgumentNullException("action");
+            Argument.Null(action, "action");
 
             var taskCompletionSource = new TaskCompletionSource<bool>();
 
@@ -179,8 +179,7 @@ namespace Samotorcan.HtmlUi.Windows
         /// <exception cref="System.InvalidOperationException">Must be called from the main thread.</exception>
         internal void EnsureUiThread()
         {
-            if (Thread.CurrentThread.ManagedThreadId != UiThread.ManagedThreadId)
-                throw new InvalidOperationException("Must be called from the main thread.");
+            Argument.InvalidOperation(Thread.CurrentThread.ManagedThreadId != UiThread.ManagedThreadId, "Must be called from the main thread.");
         }
         #endregion
 
