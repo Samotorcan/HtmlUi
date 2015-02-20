@@ -226,11 +226,8 @@ namespace Samotorcan.HtmlUi.Windows
         /// <param name="e">The <see cref="FormClosedEventArgs"/> instance containing the event data.</param>
         private void Form_FormClosed(object sender, FormClosedEventArgs e)
         {
-            Form.Dispose();
-
             Application.Current.InvokeOnMain(() =>
             {
-                Dispose();
                 Application.Current.Shutdown();
             });
         }
@@ -340,6 +337,37 @@ namespace Samotorcan.HtmlUi.Windows
         #endregion
 
         #endregion
+        #endregion
+
+        #region IDisposable
+
+        /// <summary>
+        /// Was dispose already called.
+        /// </summary>
+        private bool _disposed = false;
+
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            Application.Current.EnsureMainThread();
+
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    Application.Current.InvokeOnUiAsync(() =>
+                    {
+                        Form.Dispose();
+                    });
+                }
+            }
+        }
+
         #endregion
     }
 }

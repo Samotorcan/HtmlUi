@@ -23,7 +23,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// The default view.
         /// </summary>
-        private const string DefaultView = "Index.html";
+        private const string DefaultView = "~/Views/Index.html";
         #endregion
 
         #endregion
@@ -181,12 +181,19 @@ namespace Samotorcan.HtmlUi.Core
             {
                 if (disposing)
                 {
-                    var host = CefBrowser.GetHost();
+                    // CEF browser
+                    if (CefBrowser != null)
+                    {
+                        var host = CefBrowser.GetHost();
 
-                    host.CloseBrowser(true);
-                    host.Dispose();
+                        if (host != null)
+                        {
+                            host.CloseBrowser(true);
+                            host.Dispose();
+                        }
 
-                    CefBrowser.Dispose();
+                        CefBrowser.Dispose();
+                    }
                 }
 
                 _disposed = true;

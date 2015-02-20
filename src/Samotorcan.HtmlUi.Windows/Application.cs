@@ -1,4 +1,5 @@
-﻿using Samotorcan.HtmlUi.Core.Validation;
+﻿using Samotorcan.HtmlUi.Core.Logs;
+using Samotorcan.HtmlUi.Core.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -207,6 +208,9 @@ namespace Samotorcan.HtmlUi.Windows
             InvokeOnUi(() =>
             {
                 FormsApplication.Exit();
+
+                FormsApplication.ThreadException -= new ThreadExceptionEventHandler(Forms_UiUnhandledException);
+                AppDomain.CurrentDomain.UnhandledException -= new UnhandledExceptionEventHandler(Forms_UnhandledException);
             });
         }
         #endregion
@@ -220,6 +224,10 @@ namespace Samotorcan.HtmlUi.Windows
         /// </summary>
         private void UiThreadStart()
         {
+            FormsApplication.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            FormsApplication.ThreadException += new ThreadExceptionEventHandler(Forms_UiUnhandledException);
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(Forms_UnhandledException);
+
             FormsApplication.EnableVisualStyles();
             FormsApplication.SetCompatibleTextRenderingDefault(false);
             
@@ -227,6 +235,40 @@ namespace Samotorcan.HtmlUi.Windows
             UiSynchronizationContextCreated.Set();
 
             FormsApplication.Run();
+        }
+        #endregion
+        #region Forms_UnhandledException
+        /// <summary>
+        /// Handles the UnhandledException event of the Forms control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="UnhandledExceptionEventArgs"/> instance containing the event data.</param>
+        private void Forms_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            var exception = e.ExceptionObject as Exception;
+
+            GeneralLog.Error("Unhandled exception.", exception);
+
+            InvokeOnMainAsync(() =>
+            {
+                ShutdownWithException(exception);
+            });
+        }
+        #endregion
+        #region Forms_UiUnhandledException
+        /// <summary>
+        /// Handles the UiUnhandledException event of the Forms control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="ThreadExceptionEventArgs"/> instance containing the event data.</param>
+        private void Forms_UiUnhandledException(object sender, ThreadExceptionEventArgs e)
+        {
+            GeneralLog.Error("Unhandled exception.", e.Exception);
+
+            InvokeOnMainAsync(() =>
+            {
+                ShutdownWithException(e.Exception);
+            });
         }
         #endregion
 

@@ -37,7 +37,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Gets the view.
         /// </summary>
-        /// <param name="viewPath">Name of the view.</param>
+        /// <param name="path">Name of the view.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">viewName</exception>
         /// <exception cref="System.ArgumentException">
@@ -46,12 +46,14 @@ namespace Samotorcan.HtmlUi.Core
         /// Invalid view name.;viewName
         /// </exception>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "It's ok.")]
-        public string GetView(string viewPath)
+        public string GetView(string path)
         {
-            Argument.NullOrEmpty(viewPath, "viewPath");
+            Argument.NullOrEmpty(path, "path");
+            Argument.InvalidArgument(!path.StartsWith("~/"), "View path must start with ~.", "path");
 
-            var absoluteFullViewPath = FileAssemblyViewProvider.GetAbsoluteFullViewPath(viewPath);
-            var localViewPath = absoluteFullViewPath.Substring(1);
+            var localViewPath = path.Substring(1);
+
+            Argument.InvalidArgument(!PathUtility.IsFullFileName(localViewPath), "Invalid view path.", "path");
 
             // actual file
             if (ViewSearch == ViewSearch.FileAndAssembly || ViewSearch == ViewSearch.File)
@@ -93,8 +95,13 @@ namespace Samotorcan.HtmlUi.Core
         public string GetUrlFromViewPath(string path)
         {
             Argument.NullOrEmpty(path, "path");
+            Argument.InvalidArgument(!path.StartsWith("~/"), "View path must start with ~.", "viewPath");
 
-            return FileAssemblyViewProvider.GetRelativeFullViewPath(path);
+            var localViewPath = path.Substring(2);
+
+            Argument.InvalidArgument(!PathUtility.IsFullFileName(localViewPath), "Invalid view path.", "path");
+
+            return localViewPath;
         }
         #endregion
         #region GetViewPathFromUrl
@@ -108,53 +115,9 @@ namespace Samotorcan.HtmlUi.Core
         public string GetViewPathFromUrl(string url)
         {
             Argument.NullOrEmpty(url, "url");
+            Argument.InvalidArgument(!PathUtility.IsFullFileName(url), "Invalid url.", "url");
 
-            return FileAssemblyViewProvider.GetAbsoluteFullViewPath(url);
-        }
-        #endregion
-        #region GetAbsoluteFullViewPath
-        /// <summary>
-        /// Gets the absolute full view path.
-        /// </summary>
-        /// <param name="viewName">Name of the view.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">viewName</exception>
-        /// <exception cref="System.ArgumentException">Invalid view name.;viewName</exception>
-        public static string GetAbsoluteFullViewPath(string viewName)
-        {
-            Argument.NullOrEmpty(viewName, "viewName");
-
-            if (!viewName.StartsWith("~/Views/"))
-            {
-                Argument.InvalidArgument(viewName.StartsWith("~"), "Views must located in the Views directory.", "viewName");
-
-                viewName = "~/Views/" + viewName;
-            }
-
-            Argument.InvalidArgument(!PathUtility.IsFullFileName(viewName.Substring(1)), "Invalid view name.", "viewName");
-
-            return viewName;
-        }
-        #endregion
-        #region GetRelativeFullViewPath
-        /// <summary>
-        /// Gets the relative full view path.
-        /// </summary>
-        /// <param name="viewName">Name of the view.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">viewName</exception>
-        /// <exception cref="System.ArgumentException">Invalid view name.;viewName</exception>
-        public static string GetRelativeFullViewPath(string viewName)
-        {
-            Argument.NullOrEmpty(viewName, "viewName");
-
-            if (viewName.StartsWith("~/Views/"))
-                viewName = viewName.Substring(8);
-
-            Argument.InvalidArgument(viewName.StartsWith("~"), "Views must located in the Views directory.", "viewName");
-            Argument.InvalidArgument(!PathUtility.IsFullFileName(viewName), "Invalid view name.", "viewName");
-
-            return viewName;
+            return "~/" + url.TrimStart('/');
         }
         #endregion
 

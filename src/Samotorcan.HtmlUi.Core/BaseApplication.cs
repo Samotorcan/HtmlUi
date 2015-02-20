@@ -244,6 +244,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         private BlockingCollection<Action> InvokeQueue { get; set; }
         #endregion
+        #region ExitException
+        /// <summary>
+        /// Gets or sets the exit exception.
+        /// </summary>
+        /// <value>
+        /// The exit exception.
+        /// </value>
+        private Exception ExitException { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -256,6 +265,8 @@ namespace Samotorcan.HtmlUi.Core
         protected BaseApplication()
         {
             Argument.InvalidOperation(Current != null, "You can only have one instance of Application at any given time.");
+
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             LogsDirectoryPath = PathUtility.NormalizedWorkingDirectory + "/" + LogsDirectory;
             EnsureLogsDirectory();
@@ -305,6 +316,13 @@ namespace Samotorcan.HtmlUi.Core
             {
                 IsRunning = false;
                 InitializeInvokeQueue();
+
+                // exit the run method with the exception
+                if (ExitException != null)
+                {
+                    Dispose();
+                    throw ExitException;
+                }
             }
         }
         #endregion
@@ -365,7 +383,7 @@ namespace Samotorcan.HtmlUi.Core
                 RequestHostname,
                 RequestPort != 80 ? ":" + RequestPort : string.Empty,
                 RequestViewPath,
-                ViewProvider.GetUrlFromViewPath(viewPath));
+                ViewProvider.GetUrlFromViewPath(viewPath).TrimStart('/'));
         }
         #endregion
         #region GetViewPath
@@ -462,9 +480,24 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.InvalidOperationException">Application is not running.</exception>
         internal void Shutdown()
         {
+            EnsureMainThread();
+
             Argument.InvalidOperation(!IsRunning, "Application is not running.");
 
+            Window.Dispose();
             InvokeQueue.CompleteAdding();
+        }
+        #endregion
+        #region ShutdownWithException
+        /// <summary>
+        /// Shutdowns with the exception.
+        /// </summary>
+        /// <param name="e">The e.</param>
+        internal void ShutdownWithException(Exception e)
+        {
+            Shutdown();
+
+            ExitException = e;
         }
         #endregion
 
@@ -571,6 +604,17 @@ namespace Samotorcan.HtmlUi.Core
                 Directory.CreateDirectory(LogsDirectoryPath);
         }
         #endregion
+        #region CurrentDomain_UnhandledException
+        /// <summary>
+        /// Handles the UnhandledException event of the CurrentDomain control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="UnhandledExceptionEventArgs"/> instance containing the event data.</param>
+        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            GeneralLog.Error("Unhandled exception.", e.ExceptionObject as Exception);
+        }
+        #endregion
 
         #endregion
         #endregion
@@ -596,6 +640,8 @@ namespace Samotorcan.HtmlUi.Core
 
                     if (InvokeQueue != null)
                         InvokeQueue.Dispose();
+
+                    AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
                 }
 
                 _disposed = true;

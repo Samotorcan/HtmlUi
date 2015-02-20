@@ -19,7 +19,7 @@ namespace Samotorcan.Tests.Windows
 
                 var view = application.ViewProvider.GetView("~/Views/Index.html");
 
-                application.Window.View = "Index.html";
+                application.Window.View = "~/Views/Index.html";
                 application.Window.Borderless = false;
 
                 application.Run();
