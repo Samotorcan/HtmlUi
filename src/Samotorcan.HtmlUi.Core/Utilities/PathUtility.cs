@@ -91,7 +91,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
             if (string.IsNullOrWhiteSpace(fileName))
                 return false;
 
-            return Regex.IsMatch(fileName, @"^[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)?$");
+            return Regex.IsMatch(fileName, @"^[a-zA-Z0-9_\-\.]+$");
         }
         #endregion
         #region IsFilePath

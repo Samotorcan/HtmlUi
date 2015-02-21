@@ -15,13 +15,6 @@ namespace Samotorcan.Tests.Windows
         {
             using (var application = new Application())
             {
-                ((FileAssemblyViewProvider)application.ViewProvider).ViewSearch = ViewSearch.Assembly;
-
-                var view = application.ViewProvider.GetView("~/Views/Index.html");
-
-                application.Window.View = "~/Views/Index.html";
-                application.Window.Borderless = false;
-
                 application.Run();
             }
         }

@@ -17,16 +17,6 @@ namespace Samotorcan.HtmlUi.Core
     [CLSCompliant(false)]
     public abstract class BaseWindow : IDisposable
     {
-        #region Constants
-
-        #region DefaultView
-        /// <summary>
-        /// The default view.
-        /// </summary>
-        private const string DefaultView = "~/Views/Index.html";
-        #endregion
-
-        #endregion
         #region Events
 
         #region BrowserCreated
@@ -34,6 +24,12 @@ namespace Samotorcan.HtmlUi.Core
         /// Occurs when browser is created.
         /// </summary>
         protected event EventHandler<BrowserCreatedEventArgs> BrowserCreated;
+        #endregion
+        #region KeyPress
+        /// <summary>
+        /// Occurs when a key is pressed.
+        /// </summary>
+        protected event EventHandler<KeyPressEventArgs> KeyPress;
         #endregion
 
         #endregion
@@ -121,10 +117,28 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseWindow"/> class.
         /// </summary>
-        protected BaseWindow() { }
+        protected BaseWindow()
+        {
+            View = "/Views/Index.html";
+        }
 
         #endregion
         #region Methods
+        #region Internal
+
+        #region TriggerKeyPress
+        /// <summary>
+        /// Triggers the key press.
+        /// </summary>
+        /// <param name="nativeKeyCode">The native key code.</param>
+        internal void TriggerKeyPress(int nativeKeyCode)
+        {
+            if (KeyPress != null)
+                KeyPress(this, new KeyPressEventArgs(nativeKeyCode));
+        }
+        #endregion
+
+        #endregion
         #region Protected
 
         #region CreateBrowser
@@ -153,7 +167,7 @@ namespace Samotorcan.HtmlUi.Core
 
             var cefSettings = new CefBrowserSettings();
 
-            CefBrowserHost.CreateBrowser(cefWindowInfo, cefClient, cefSettings, BaseApplication.Current.GetAbsoluteViewUrl(View));
+            CefBrowserHost.CreateBrowser(cefWindowInfo, cefClient, cefSettings, BaseApplication.Current.GetAbsoluteContentUrl(View));
 
             IsBrowserCreated = true;
         }

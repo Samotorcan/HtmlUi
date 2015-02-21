@@ -7,29 +7,29 @@ using System.Threading.Tasks;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// View provider interface.
+    /// Content provider interface.
     /// </summary>
-    public interface IViewProvider
+    public interface IContentProvider
     {
         /// <summary>
-        /// Gets the view.
-        /// </summary>
-        /// <param name="viewPath">The view path.</param>
-        /// <returns></returns>
-        string GetView(string viewPath);
-
-        /// <summary>
-        /// Gets the URL from view path.
+        /// Gets the content.
         /// </summary>
         /// <param name="path">The path.</param>
         /// <returns></returns>
-        string GetUrlFromViewPath(string path);
+        byte[] GetContent(string path);
 
         /// <summary>
-        /// Gets the view path from URL.
+        /// Gets the URL from content path.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <returns></returns>
+        string GetUrlFromContentPath(string path);
+
+        /// <summary>
+        /// Gets the content path from URL.
         /// </summary>
         /// <param name="url">The URL.</param>
         /// <returns></returns>
-        string GetViewPathFromUrl(string url);
+        string GetContentPathFromUrl(string url);
     }
 }

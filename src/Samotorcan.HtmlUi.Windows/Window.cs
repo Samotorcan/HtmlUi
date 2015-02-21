@@ -127,6 +127,7 @@ namespace Samotorcan.HtmlUi.Windows
             });
 
             BrowserCreated += Window_BrowserCreated;
+            KeyPress += Window_KeyPress;
             Browser_MouseEventDelegate = new NativeMethods.HookProc(Browser_MouseEvent);
         }
 
@@ -241,16 +242,7 @@ namespace Samotorcan.HtmlUi.Windows
         {
             // developer tools
             if ((m.Msg == NativeMethods.WM_SYSCOMMAND) && ((int)m.WParam == NativeMethods.SYSMENU_DEVTOOLS_ID))
-            {
-                Application.Current.InvokeOnMain(() => {
-                    var windowInfo = CefWindowInfo.Create();
-                    windowInfo.SetAsPopup(IntPtr.Zero, "Developer tools");
-                    windowInfo.Width = 1200;
-                    windowInfo.Height = 500;
-
-                    CefBrowser.GetHost().ShowDevTools(windowInfo, new DeveloperToolsCefClient(), new CefBrowserSettings(), new CefPoint(0, 0));
-                });
-            }
+                OpenDeveloperTools();
         }
         #endregion
 
@@ -265,6 +257,18 @@ namespace Samotorcan.HtmlUi.Windows
             // hook mouse events
             var threadId = NativeMethods.GetWindowThreadProcessId(CefBrowser.GetHost().GetWindowHandle(), IntPtr.Zero);
             NativeMethods.SetWindowsHookEx(NativeMethods.HookType.WH_MOUSE, Browser_MouseEventDelegate, IntPtr.Zero, threadId);
+        }
+        #endregion
+        #region Window_KeyPress
+        /// <summary>
+        /// Handles the KeyPress event of the Window control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="Core.Events.KeyPressEventArgs"/> instance containing the event data.</param>
+        private void Window_KeyPress(object sender, Core.Events.KeyPressEventArgs e)
+        {
+            if (e.NativeKeyCode == (int)Keys.F12)
+                OpenDeveloperTools();
         }
         #endregion
         #region Browser_MouseEvent
@@ -333,6 +337,23 @@ namespace Samotorcan.HtmlUi.Windows
 
             NativeMethods.AppendMenu(hSysMenu, NativeMethods.MF_SEPARATOR, 0, string.Empty);
             NativeMethods.AppendMenu(hSysMenu, NativeMethods.MF_STRING, NativeMethods.SYSMENU_DEVTOOLS_ID, "Developer Tools");
+        }
+        #endregion
+        #region OpenDeveloperTools
+        /// <summary>
+        /// Opens the developer tools.
+        /// </summary>
+        private void OpenDeveloperTools()
+        {
+            Application.Current.InvokeOnMain(() =>
+            {
+                var windowInfo = CefWindowInfo.Create();
+                windowInfo.SetAsPopup(IntPtr.Zero, "Developer tools");
+                windowInfo.Width = 1200;
+                windowInfo.Height = 500;
+
+                CefBrowser.GetHost().ShowDevTools(windowInfo, new DeveloperToolsCefClient(), new CefBrowserSettings(), new CefPoint(0, 0));
+            });
         }
         #endregion
 

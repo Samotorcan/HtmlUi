@@ -13,7 +13,7 @@ namespace Samotorcan.Tests.Windowsx64
         {
             using (var application = new Application())
             {
-                application.Window.View = "~/Views/Index.html";
+                application.Window.View = "/Views/Index.html";
                 application.Window.Borderless = false;
 
                 application.Run();

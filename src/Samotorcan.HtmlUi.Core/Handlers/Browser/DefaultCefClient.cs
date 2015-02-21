@@ -64,6 +64,15 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// </value>
         private DefaultCefRequestHandler CefRequestHandler { get; set; }
         #endregion
+        #region CefKeyboardHandler
+        /// <summary>
+        /// Gets or sets the cef keyboard handler.
+        /// </summary>
+        /// <value>
+        /// The cef keyboard handler.
+        /// </value>
+        private DefaultCefKeyboardHandler CefKeyboardHandler { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -79,6 +88,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
             CefDisplayHandler = new DefaultCefDisplayHandler();
             CefLoadHandler = new DefaultCefLoadHandler();
             CefRequestHandler = new DefaultCefRequestHandler();
+            CefKeyboardHandler = new DefaultCefKeyboardHandler();
 
             // set events
             CefLifeSpanHandler.BrowserCreated += (sender, e) => {
@@ -129,6 +139,16 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         protected override CefRequestHandler GetRequestHandler()
         {
             return CefRequestHandler;
+        }
+        #endregion
+        #region GetKeyboardHandler
+        /// <summary>
+        /// Return the handler for keyboard events.
+        /// </summary>
+        /// <returns></returns>
+        protected override CefKeyboardHandler GetKeyboardHandler()
+        {
+            return CefKeyboardHandler;
         }
         #endregion
         #region OnProcessMessageReceived

@@ -74,11 +74,14 @@
     <Compile Include="ActionTask.cs" />
     <Compile Include="BaseApplication.cs" />
     <Compile Include="CefArgument.cs" />
+    <Compile Include="Controller.cs" />
     <Compile Include="Events\BrowserCreatedEventArgs.cs" />
+    <Compile Include="Events\KeyPressEventArgs.cs" />
     <Compile Include="Exceptions\CefProcessException.cs" />
     <Compile Include="Exceptions\UnknownUrlException.cs" />
     <Compile Include="Handlers\Browser\DefaultCefClient.cs" />
     <Compile Include="Handlers\Browser\DefaultCefDisplayHandler.cs" />
+    <Compile Include="Handlers\Browser\DefaultCefKeyboardHandler.cs" />
     <Compile Include="Handlers\Browser\DefaultCefLifeSpanHandler.cs" />
     <Compile Include="Handlers\Browser\DefaultCefLoadHandler.cs" />
     <Compile Include="Handlers\Browser\DefaultCefRequestHandler.cs" />
@@ -90,11 +93,11 @@
     <Compile Include="Handlers\Scheme\DefaultAppSchemeHandlerFactory.cs" />
     <Compile Include="Handlers\Scheme\DefaultRequestResourceHandler.cs" />
     <Compile Include="HtmlUiSynchronizationContext.cs" />
-    <Compile Include="IViewProvider.cs" />
-    <Compile Include="FileAssemblyViewProvider.cs" />
+    <Compile Include="IContentProvider.cs" />
+    <Compile Include="FileAssemblyContentProvider.cs" />
     <Compile Include="Utilities\ResourceUtility.cs" />
     <Compile Include="Validation\Argument.cs" />
-    <Compile Include="ViewSearch.cs" />
+    <Compile Include="ContentSearch.cs" />
     <Compile Include="BaseWindow.cs" />
     <Compile Include="Logs\GeneralLog.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -105,9 +108,17 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <EmbeddedResource Include="Resources\Scripts\angular.min.js.map" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\ViewRequestException.html" />
+    <EmbeddedResource Include="Resources\Views\ContentRequestException.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scripts\angular.js" />
+    <EmbeddedResource Include="Resources\Scripts\angular.min.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scripts\html-ui.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -18,6 +18,7 @@ using Samotorcan.HtmlUi.Core.Exceptions;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Samotorcan.HtmlUi.Core.Validation;
+using System.Collections.ObjectModel;
 
 namespace Samotorcan.HtmlUi.Core
 {
@@ -104,27 +105,36 @@ namespace Samotorcan.HtmlUi.Core
             }
         }
         #endregion
-        #region ViewProvider
-        private IViewProvider _viewProvider;
+        #region ContentProvider
+        private IContentProvider _contentProvider;
         /// <summary>
-        /// Gets or sets the view provider.
+        /// Gets or sets the content provider.
         /// </summary>
         /// <value>
-        /// The view provider.
+        /// The content provider.
         /// </value>
-        public IViewProvider ViewProvider
+        public IContentProvider ContentProvider
         {
             get
             {
-                return _viewProvider;
+                return _contentProvider;
             }
             set
             {
-                Argument.Null(value, "value");
+                EnsureMainThread();
 
-                _viewProvider = value;
+                _contentProvider = value;
             }
         }
+        #endregion
+        #region HtmlFileExtensions
+        /// <summary>
+        /// Gets the HTML file extensions.
+        /// </summary>
+        /// <value>
+        /// The HTML file extensions.
+        /// </value>
+        public Collection<string> HtmlFileExtensions { get; private set; }
         #endregion
 
         #region RequestHostname
@@ -172,31 +182,6 @@ namespace Samotorcan.HtmlUi.Core
                 Argument.InvalidArgument(value < 0 || value > 65535, "Invalid request port.", "value");
 
                 _requestPort = value;
-            }
-        }
-        #endregion
-        #region RequestViewPath
-        private string _requestViewPath;
-        /// <summary>
-        /// Gets or sets the request view path.
-        /// </summary>
-        /// <value>
-        /// The request view path.
-        /// </value>
-        /// <exception cref="System.ArgumentException">Invalid request view path;RequestViewsPath</exception>
-        public string RequestViewPath
-        {
-            get
-            {
-                return _requestViewPath;
-            }
-            set
-            {
-                Argument.Null(value, "value");
-                Argument.InvalidArgument(!PathUtility.IsFilePath(value), "Invalid request view path", "value");
-                Argument.InvalidArgument(value.StartsWith("/") || value.EndsWith("/"), "RequestViewPath can't start or end with a slash.", "value");
-
-                _requestViewPath = value;
             }
         }
         #endregion
@@ -278,10 +263,11 @@ namespace Samotorcan.HtmlUi.Core
 
             InitializeInvokeQueue();
 
-            ViewProvider = new FileAssemblyViewProvider();
+            ContentProvider = new FileAssemblyContentProvider();
             RequestHostname = "localhost";
             RequestPort = 80;
-            RequestViewPath = "Views";
+
+            HtmlFileExtensions = new Collection<string> { "html" };
         }
 
         #endregion
@@ -316,13 +302,13 @@ namespace Samotorcan.HtmlUi.Core
             {
                 IsRunning = false;
                 InitializeInvokeQueue();
+            }
 
-                // exit the run method with the exception
-                if (ExitException != null)
-                {
-                    Dispose();
-                    throw ExitException;
-                }
+            // exit the run method with the exception
+            if (ExitException != null)
+            {
+                Dispose();
+                throw ExitException;
             }
         }
         #endregion
@@ -365,47 +351,52 @@ namespace Samotorcan.HtmlUi.Core
         /// <returns></returns>
         public bool InvokeOnMain(Action action)
         {
-            return InvokeOnMainAsync(action).Result;
+            Argument.Null(action, "action");
+
+            if (!IsMainThread)
+                return InvokeOnMainAsync(action).Result;
+
+            action();
+
+            return true;
         }
         #endregion
-        #region GetAbsoluteViewUrl
+        #region GetAbsoluteContentUrl
         /// <summary>
-        /// Gets the absolute view URL.
+        /// Gets the absolute content URL.
         /// </summary>
-        /// <param name="viewPath">The view path.</param>
+        /// <param name="contentPath">The content path.</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">viewPath</exception>
-        public string GetAbsoluteViewUrl(string viewPath)
+        public string GetAbsoluteContentUrl(string contentPath)
         {
-            Argument.NullOrEmpty(viewPath, "viewPath");
+            Argument.NullOrEmpty(contentPath, "contentPath");
 
-            return string.Format("http://{0}{1}/{2}/{3}",
+            return string.Format("http://{0}{1}/{2}",
                 RequestHostname,
                 RequestPort != 80 ? ":" + RequestPort : string.Empty,
-                RequestViewPath,
-                ViewProvider.GetUrlFromViewPath(viewPath).TrimStart('/'));
+                ContentProvider.GetUrlFromContentPath(contentPath).TrimStart('/'));
         }
         #endregion
-        #region GetViewPath
+        #region GetContentPath
         /// <summary>
-        /// Gets the view path.
+        /// Gets the content path.
         /// </summary>
-        /// <param name="absoluteViewUrl">The absolute view URL.</param>
+        /// <param name="absoluteContentUrl">The absolute content URL.</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">absoluteViewUrl</exception>
-        public string GetViewPath(string absoluteViewUrl)
+        public string GetContentPath(string absoluteContentUrl)
         {
-            Argument.NullOrEmpty(absoluteViewUrl, "absoluteViewUrl");
+            Argument.NullOrEmpty(absoluteContentUrl, "absoluteContentUrl");
 
-            var match = Regex.Match(absoluteViewUrl, string.Format("^(http://)?{0}(:{1}){2}/{3}/(.+)$",
-                Regex.Escape(RequestHostname),
-                RequestPort,
-                RequestPort == 80 ? "?" : "{1}",
-                Regex.Escape(RequestViewPath)), RegexOptions.IgnoreCase);
+            var match = Regex.Match(absoluteContentUrl,
+                string.Format("^(http://)?{0}(:{1}){2}/(.+)$",
+                    Regex.Escape(RequestHostname),
+                    RequestPort,
+                    RequestPort == 80 ? "?" : "{1}"),
+                RegexOptions.IgnoreCase);
 
-            Argument.InvalidArgument(!match.Success, "Invalid url.", "absoluteViewUrl");
+            Argument.InvalidArgument(!match.Success, "Invalid url.", "absoluteContentUrl");
 
-            return ViewProvider.GetViewPathFromUrl(match.Groups.OfType<Group>().Last().Value);
+            return ContentProvider.GetContentPathFromUrl(match.Groups.OfType<Group>().Last().Value);
         }
         #endregion
         #region IsLocalUrl
@@ -423,24 +414,6 @@ namespace Samotorcan.HtmlUi.Core
                 Regex.Escape(RequestHostname),
                 RequestPort,
                 RequestPort == 80 ? "?" : "{1}"), RegexOptions.IgnoreCase);
-        }
-        #endregion
-        #region IsViewFileUrl
-        /// <summary>
-        /// Determines whether the specified URL is view file url.
-        /// </summary>
-        /// <param name="url">The URL.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">url</exception>
-        public bool IsViewFileUrl(string url)
-        {
-            Argument.NullOrEmpty(url, "url");
-
-            return Regex.IsMatch(url, string.Format("^(http://)?{0}(:{1}){2}/{3}/.+$",
-                Regex.Escape(RequestHostname),
-                RequestPort,
-                RequestPort == 80 ? "?" : "{1}",
-                RequestViewPath), RegexOptions.IgnoreCase);
         }
         #endregion
 

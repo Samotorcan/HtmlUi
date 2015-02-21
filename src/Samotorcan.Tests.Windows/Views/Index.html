@@ -1,12 +1,18 @@
 ﻿<!DOCTYPE html>
 
-<html>
+<html ng-app="htmlUiApp">
 <head>
     <title></title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/Scripts/angular.js"></script>
+    <script src="/Scripts/html-ui.js"></script>
 </head>
 <body>
     <h1>Index.html</h1>
+    <img src="/Images/home.png" />
+    <div ng-controller="GreetingController">
+        {{greeting}}
+    </div>
 </body>
 </html>

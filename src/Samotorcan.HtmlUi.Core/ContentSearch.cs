@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// View search.
+    /// Content search.
     /// </summary>
-    public enum ViewSearch
+    public enum ContentSearch
     {
         /// <summary>
         /// The file and assembly.

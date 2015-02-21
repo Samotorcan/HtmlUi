@@ -164,9 +164,17 @@ namespace Samotorcan.HtmlUi.Windows
         /// Invokes the specified action on the UI thread synchronous.
         /// </summary>
         /// <param name="action">The action.</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "It's validated.")]
         public bool InvokeOnUi(Action action)
         {
-            return InvokeOnUiAsync(action).Result;
+            Argument.Null(action, "action");
+
+            if (!IsUiThread)
+                return InvokeOnUiAsync(action).Result;
+
+            action();
+
+            return true;
         }
         #endregion
 
