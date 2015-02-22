@@ -60,6 +60,26 @@ namespace Samotorcan.HtmlUi.Core.Logs
             Log.Debug(message, exception);
         }
         #endregion
+        #region Info
+        /// <summary>
+        /// Log a message object with the log4net.Core.Level.Info level.
+        /// </summary>
+        /// <param name="message">The message object to log.</param>
+        public static void Info(object message)
+        {
+            Log.Info(message);
+        }
+
+        /// <summary>
+        /// Log a message object with the log4net.Core.Level.Info level including the stack trace of the System.Exception passed as a parameter.
+        /// </summary>
+        /// <param name="message">The message object to log.</param>
+        /// <param name="exception">The exception to log, including its stack trace.</param>
+        public static void Info(object message, Exception exception)
+        {
+            Log.Info(message, exception);
+        }
+        #endregion
         #region Warn
         /// <summary>
         /// Log a message object with the log4net.Core.Level.Warn level.

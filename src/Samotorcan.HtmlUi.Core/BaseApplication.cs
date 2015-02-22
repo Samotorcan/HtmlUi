@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Samotorcan.HtmlUi.Core.Validation;
 using System.Collections.ObjectModel;
+using Newtonsoft.Json;
 
 namespace Samotorcan.HtmlUi.Core
 {
@@ -124,6 +125,28 @@ namespace Samotorcan.HtmlUi.Core
                 EnsureMainThread();
 
                 _contentProvider = value;
+            }
+        }
+        #endregion
+        #region ControllerProvider
+        private IControllerProvider _controllerProvider;
+        /// <summary>
+        /// Gets or sets the controller provider.
+        /// </summary>
+        /// <value>
+        /// The controller provider.
+        /// </value>
+        public IControllerProvider ControllerProvider
+        {
+            get
+            {
+                return _controllerProvider;
+            }
+            set
+            {
+                EnsureMainThread();
+
+                _controllerProvider = value;
             }
         }
         #endregion
@@ -264,6 +287,7 @@ namespace Samotorcan.HtmlUi.Core
             InitializeInvokeQueue();
 
             ContentProvider = new FileAssemblyContentProvider();
+            ControllerProvider = new AssemblyControllerProvider();
             RequestHostname = "localhost";
             RequestPort = 80;
 
@@ -418,22 +442,6 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
 
         #endregion
-        #region Protected
-
-        #region OnInitialize
-        /// <summary>
-        /// Called when initialize is triggered.
-        /// </summary>
-        protected virtual void OnInitialize() { }
-        #endregion
-        #region OnShutdown
-        /// <summary>
-        /// Called when shutdown is triggered.
-        /// </summary>
-        protected virtual void OnShutdown() { }
-        #endregion
-
-        #endregion
         #region internal
 
         #region EnsureMainThread
@@ -472,6 +480,39 @@ namespace Samotorcan.HtmlUi.Core
 
             ExitException = e;
         }
+        #endregion
+        #region Digest
+        /// <summary>
+        /// Digest call. Updates the controllers.
+        /// </summary>
+        /// <param name="controllerChanges">The controller changes.</param>
+        internal void Digest(IEnumerable<ControllerChange> controllerChanges)
+        {
+            EnsureMainThread();
+
+            GeneralLog.Info(string.Format("Digest call: {0}", JsonConvert.SerializeObject(controllerChanges))); // TODO: add more info logs
+
+            foreach (var controllerChange in controllerChanges)
+            {
+                // TODO: implement
+            }
+        }
+        #endregion
+
+        #endregion
+        #region Protected
+
+        #region OnInitialize
+        /// <summary>
+        /// Called when initialize is triggered.
+        /// </summary>
+        protected virtual void OnInitialize() { }
+        #endregion
+        #region OnShutdown
+        /// <summary>
+        /// Called when shutdown is triggered.
+        /// </summary>
+        protected virtual void OnShutdown() { }
         #endregion
 
         #endregion

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Samotorcan.HtmlUi.Core.Validation
 {
     /// <summary>
-    /// Argument validation.
+    /// Argument validation. TODO: remove me
     /// </summary>
     public static class Argument
     {

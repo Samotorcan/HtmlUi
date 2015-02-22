@@ -103,7 +103,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
             Argument.Null(response, "response");
 
             redirectUrl = null;
-            response.MimeType = "text/html";
+            response.MimeType = "text/html";    // TODO: set proper mime type
 
             if (Exception != null)
             {

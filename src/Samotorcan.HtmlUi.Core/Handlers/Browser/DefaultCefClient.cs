@@ -1,4 +1,7 @@
-﻿using Samotorcan.HtmlUi.Core.Events;
+﻿using Newtonsoft.Json;
+using Samotorcan.HtmlUi.Core.Events;
+using Samotorcan.HtmlUi.Core.Logs;
+using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -163,6 +166,22 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <returns></returns>
         protected override bool OnProcessMessageReceived(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage message)
         {
+            if (message == null)
+                throw new ArgumentNullException("message");
+
+            // digest call
+            if (message.Name == "Digest")
+            {
+                var controllerChanges = JsonUtility.DeserializeFromBson<List<ControllerChange>>(message.Arguments.GetBinary(0).ToArray(), true);
+
+                BaseApplication.Current.InvokeOnMainAsync(() =>
+                {
+                    BaseApplication.Current.Digest(controllerChanges);
+                });
+
+                return true;
+            }
+
             return BaseApplication.Current.BrowserMessageRouter.OnProcessMessageReceived(browser, sourceProcess, message);
         }
         #endregion

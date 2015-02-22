@@ -11,6 +11,6 @@ namespace Samotorcan.HtmlUi.Core
     /// </summary>
     public abstract class Controller
     {
-
+        
     }
 }

@@ -59,6 +59,10 @@
     <Reference Include="log4net">
       <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -72,9 +76,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActionTask.cs" />
+    <Compile Include="AssemblyControllerProvider.cs" />
     <Compile Include="BaseApplication.cs" />
+    <Compile Include="CefActionV8Handler.cs" />
+    <Compile Include="CefActionV8HandlerFunction.cs" />
     <Compile Include="CefArgument.cs" />
     <Compile Include="Controller.cs" />
+    <Compile Include="ControllerChange.cs" />
+    <Compile Include="ControllerChangeProperty.cs" />
     <Compile Include="Events\BrowserCreatedEventArgs.cs" />
     <Compile Include="Events\KeyPressEventArgs.cs" />
     <Compile Include="Exceptions\CefProcessException.cs" />
@@ -95,6 +104,9 @@
     <Compile Include="HtmlUiSynchronizationContext.cs" />
     <Compile Include="IContentProvider.cs" />
     <Compile Include="FileAssemblyContentProvider.cs" />
+    <Compile Include="IControllerProvider.cs" />
+    <Compile Include="Utilities\JsonUtility.cs" />
+    <Compile Include="Utilities\MessageUtility.cs" />
     <Compile Include="Utilities\ResourceUtility.cs" />
     <Compile Include="Validation\Argument.cs" />
     <Compile Include="ContentSearch.cs" />
@@ -119,6 +131,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Scripts\html-ui.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
