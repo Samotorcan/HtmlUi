@@ -1,5 +1,4 @@
-﻿using Samotorcan.HtmlUi.Core.Validation;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
@@ -35,8 +34,11 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Scheme
         /// <returns></returns>
         protected override bool ProcessRequest(CefRequest request, CefCallback callback)
         {
-            Argument.Null(request, "request");
-            Argument.Null(callback, "callback");
+            if (request == null)
+                throw new ArgumentNullException("request");
+
+            if (callback == null)
+                throw new ArgumentNullException("callback");
 
             var requestNo = Interlocked.Increment(ref _requestNo);
 
@@ -83,7 +85,8 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Scheme
         /// <param name="redirectUrl"></param>
         protected override void GetResponseHeaders(CefResponse response, out long responseLength, out string redirectUrl)
         {
-            Argument.Null(response, "response");
+            if (response == null)
+                throw new ArgumentNullException("response");
 
             response.MimeType = "text/html";
             response.Status = 200;
@@ -111,7 +114,8 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Scheme
         /// <returns></returns>
         protected override bool ReadResponse(Stream response, int bytesToRead, out int bytesRead, CefCallback callback)
         {
-            Argument.Null(response, "response");
+            if (response == null)
+                throw new ArgumentNullException("response");
 
             if (bytesToRead == 0 || pos >= responseData.Length)
             {

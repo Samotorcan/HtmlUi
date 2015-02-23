@@ -1,5 +1,4 @@
-﻿using Samotorcan.HtmlUi.Core.Validation;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -35,8 +34,6 @@ namespace Samotorcan.HtmlUi.Core.Events
         /// <param name="nativeKeyCode">The native key code.</param>
         public KeyPressEventArgs(int nativeKeyCode)
         {
-            Argument.Null(nativeKeyCode, "nativeKeyCode");
-
             NativeKeyCode = nativeKeyCode;
         }
 

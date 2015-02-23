@@ -136,7 +136,10 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         /// <param name="extraInfo"></param>
         protected override void OnRenderThreadCreated(CefListValue extraInfo)
         {
+            log4net.GlobalContext.Properties["pid"] = Process.GetCurrentProcess().Id;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
+            GeneralLog.Info("Render process thread created.");
         }
         #endregion
 

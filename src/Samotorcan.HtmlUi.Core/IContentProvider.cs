@@ -31,5 +31,12 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="url">The URL.</param>
         /// <returns></returns>
         string GetContentPathFromUrl(string url);
+
+        /// <summary>
+        /// Content exists.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <returns></returns>
+        bool ContentExists(string path);
     }
 }

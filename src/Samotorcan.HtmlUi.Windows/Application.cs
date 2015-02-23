@@ -1,5 +1,4 @@
 ﻿using Samotorcan.HtmlUi.Core.Logs;
-using Samotorcan.HtmlUi.Core.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -139,7 +138,8 @@ namespace Samotorcan.HtmlUi.Windows
         /// <exception cref="System.ArgumentNullException">action</exception>
         public Task<bool> InvokeOnUiAsync(Action action)
         {
-            Argument.Null(action, "action");
+            if (action == null)
+                throw new ArgumentNullException("action");
 
             var taskCompletionSource = new TaskCompletionSource<bool>();
 
@@ -164,10 +164,10 @@ namespace Samotorcan.HtmlUi.Windows
         /// Invokes the specified action on the UI thread synchronous.
         /// </summary>
         /// <param name="action">The action.</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "It's validated.")]
         public bool InvokeOnUi(Action action)
         {
-            Argument.Null(action, "action");
+            if (action == null)
+                throw new ArgumentNullException("action");
 
             if (!IsUiThread)
                 return InvokeOnUiAsync(action).Result;
@@ -188,7 +188,8 @@ namespace Samotorcan.HtmlUi.Windows
         /// <exception cref="System.InvalidOperationException">Must be called from the main thread.</exception>
         internal void EnsureUiThread()
         {
-            Argument.InvalidOperation(Thread.CurrentThread.ManagedThreadId != UiThread.ManagedThreadId, "Must be called from the main thread.");
+            if (Thread.CurrentThread.ManagedThreadId != UiThread.ManagedThreadId)
+                throw new InvalidOperationException("Must be called from the main thread.");
         }
         #endregion
 

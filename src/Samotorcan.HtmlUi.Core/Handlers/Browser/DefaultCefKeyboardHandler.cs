@@ -1,5 +1,4 @@
-﻿using Samotorcan.HtmlUi.Core.Validation;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -31,7 +30,8 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <returns></returns>
         protected override bool OnPreKeyEvent(CefBrowser browser, CefKeyEvent keyEvent, IntPtr os_event, out bool isKeyboardShortcut)
         {
-            Argument.Null(keyEvent, "keyEvent");
+            if (keyEvent == null)
+                throw new ArgumentNullException("keyEvent");
 
             isKeyboardShortcut = false;
 

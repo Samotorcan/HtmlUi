@@ -1,5 +1,4 @@
 ﻿using Samotorcan.HtmlUi.Core.Utilities;
-using Samotorcan.HtmlUi.Core.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +25,8 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         /// <param name="commandLine">The command line.</param>
         protected override void OnBeforeChildProcessLaunch(CefCommandLine commandLine)
         {
-            Argument.Null(commandLine, "commandLine");
+            if (commandLine == null)
+                throw new ArgumentNullException("commandLine");
 
             // .NET in Windows treat assemblies as native images, so no any magic required.
             // Mono on any platform usually located far away from entry assembly, so we want prepare command line to call it correctly.

@@ -1,7 +1,6 @@
 ﻿using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
-using Samotorcan.HtmlUi.Core.Validation;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -100,10 +99,10 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <param name="redirectUrl"></param>
         protected override void GetResponseHeaders(CefResponse response, out long responseLength, out string redirectUrl)
         {
-            Argument.Null(response, "response");
+            if (response == null)
+                throw new ArgumentNullException("response");
 
             redirectUrl = null;
-            response.MimeType = "text/html";    // TODO: set proper mime type
 
             if (Exception != null)
             {
@@ -114,12 +113,29 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
                 responseLength = Data.Length;
                 response.Status = 500;
                 response.StatusText = "Internal Server Error";
+                response.MimeType = "text/html";
             }
-            else
+            else if (Data != null)
             {
                 responseLength = Data.Length;
                 response.Status = 200;
                 response.StatusText = "OK";
+
+                // mime type
+                response.MimeType = "application/octet-stream";
+                var extension = Path.GetExtension(Url);
+
+                if (!string.IsNullOrWhiteSpace(extension) && BaseApplication.Current.MimeTypes.ContainsKey(extension))
+                    response.MimeType = BaseApplication.Current.MimeTypes[extension];
+            }
+            else
+            {
+                Data = Encoding.UTF8.GetBytes(string.Format(ResourceUtility.GetResourceAsString("Views/ContentNotFound.html"), Url));
+
+                responseLength = Data.Length;
+                response.Status = 404;
+                response.StatusText = "Not Found";
+                response.MimeType = "text/html";
             }
         }
         #endregion
@@ -132,7 +148,8 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <returns></returns>
         protected override bool ProcessRequest(CefRequest request, CefCallback callback)
         {
-            Argument.Null(request, "request");
+            if (request == null)
+                throw new ArgumentNullException("request");
 
             Url = request.Url;
             var application = BaseApplication.Current;
@@ -142,20 +159,9 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
                 try
                 {
                     var path = application.GetContentPath(request.Url);
-                    var fileExtension = Path.GetExtension(path).TrimStart('.');
-                    var content = application.ContentProvider.GetContent(path);
 
-                    // html content
-                    if (!string.IsNullOrWhiteSpace(fileExtension) && application.HtmlFileExtensions.Contains(fileExtension))
-                    {
-                        Data = ProcessHtmlFile(content);
-                    }
-
-                    // unknown content
-                    else
-                    {
-                        Data = content;
-                    }
+                    if (application.ContentProvider.ContentExists(path))
+                        Data = application.ContentProvider.GetContent(path);
                 }
                 catch (Exception e)
                 {
@@ -182,7 +188,8 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <returns></returns>
         protected override bool ReadResponse(Stream response, int bytesToRead, out int bytesRead, CefCallback callback)
         {
-            Argument.Null(response, "response");
+            if (response == null)
+                throw new ArgumentNullException("response");
 
             bytesRead = 0;
 
@@ -195,23 +202,6 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
             AllBytesRead += bytesRead;
 
             return true;
-        }
-        #endregion
-
-        #endregion
-        #region Private
-
-        #region ProcessHtmlFile
-        /// <summary>
-        /// Processes the HTML file.
-        /// </summary>
-        /// <param name="data">The data.</param>
-        /// <returns></returns>
-        private byte[] ProcessHtmlFile(byte[] data)
-        {
-            Argument.Null(data, "data");
-
-            return data;
         }
         #endregion
 

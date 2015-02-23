@@ -1,5 +1,4 @@
 ﻿using Samotorcan.HtmlUi.Core.Utilities;
-using Samotorcan.HtmlUi.Core.Validation;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -65,7 +64,8 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         /// <param name="commandLine">The command line.</param>
         protected override void OnBeforeCommandLineProcessing(string processType, CefCommandLine commandLine)
         {
-            Argument.Null(commandLine, "commandLine");
+            if (commandLine == null)
+                throw new ArgumentNullException("commandLine");
 
             commandLine.AppendSwitch("resources-dir-path", PathUtility.WorkingDirectory);
             commandLine.AppendSwitch("locales-dir-path", Path.Combine(PathUtility.WorkingDirectory, "locales"));
