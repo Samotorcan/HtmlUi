@@ -13,9 +13,9 @@ using Xilium.CefGlue;
 namespace Samotorcan.HtmlUi.Core.Handlers.Browser
 {
     /// <summary>
-    /// Local CEF resource handler.
+    /// Content CEF resource handler.
     /// </summary>
-    internal class LocalCefResourceHandler : CefResourceHandler
+    internal class ContentCefResourceHandler : CefResourceHandler
     {
         #region Properties
         #region Private
@@ -141,7 +141,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         #endregion
         #region ProcessRequest
         /// <summary>
-        /// Processes the request for the view.
+        /// Processes the request.
         /// </summary>
         /// <param name="request"></param>
         /// <param name="callback"></param>
@@ -179,7 +179,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         #endregion
         #region ReadResponse
         /// <summary>
-        /// Returns the view content.
+        /// Reads the response.
         /// </summary>
         /// <param name="response"></param>
         /// <param name="bytesToRead"></param>

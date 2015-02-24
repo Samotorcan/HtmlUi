@@ -19,17 +19,16 @@ namespace Samotorcan.HtmlUi.Core
         Controller CreateController(string name);
 
         /// <summary>
-        /// Determines whether the specified controller name is unique.
-        /// </summary>
-        /// <param name="name">The name.</param>
-        /// <returns></returns>
-        bool IsUniqueControllerName(string name);
-
-        /// <summary>
         /// Controller exists.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <returns></returns>
         bool ControllerExists(string name);
+
+        /// <summary>
+        /// Gets controller types.
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<Type> GetControllerTypes();
     }
 }

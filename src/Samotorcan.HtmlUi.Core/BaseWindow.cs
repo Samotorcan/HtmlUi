@@ -96,6 +96,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         internal bool IsBrowserCreated { get; private set; }
         #endregion
+        #region Controllers
+        /// <summary>
+        /// Gets or sets the controllers.
+        /// </summary>
+        /// <value>
+        /// The controllers.
+        /// </value>
+        internal List<Controller> Controllers { get; set; }
+        #endregion
 
         #endregion
         #region Protected
@@ -120,6 +129,7 @@ namespace Samotorcan.HtmlUi.Core
         protected BaseWindow()
         {
             View = "/Views/Index.html";
+            Controllers = new List<Controller>();
         }
 
         #endregion

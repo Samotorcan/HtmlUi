@@ -77,6 +77,16 @@ namespace Samotorcan.HtmlUi.Core
             return (Controller)Activator.CreateInstance(GetControllerType(name));
         }
         #endregion
+        #region GetControllerTypes
+        /// <summary>
+        /// Gets controller types.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<Type> GetControllerTypes()
+        {
+            return ControllerTypes.ToArray();
+        }
+        #endregion
         #region IsUniqueControllerName
         /// <summary>
         /// Determines whether the specified controller name is unique.

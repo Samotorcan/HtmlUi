@@ -188,30 +188,6 @@ namespace Samotorcan.HtmlUi.Core
             }
         }
         #endregion
-        #region RequestPort
-        private int _requestPort;
-        /// <summary>
-        /// Gets or sets the port.
-        /// </summary>
-        /// <value>
-        /// The port.
-        /// </value>
-        /// <exception cref="System.ArgumentException">Invalid request port.;Port</exception>
-        public int RequestPort
-        {
-            get
-            {
-                return _requestPort;
-            }
-            set
-            {
-                if (value < 0 || value > 65535)
-                    throw new ArgumentException("Invalid request port.", "value");
-
-                _requestPort = value;
-            }
-        }
-        #endregion
 
         #endregion
         #region Internal
@@ -233,6 +209,45 @@ namespace Samotorcan.HtmlUi.Core
         /// The logs directory path.
         /// </value>
         internal string LogsDirectoryPath { get; set; }
+        #endregion
+        #region NativeRequestPort
+        private int _nativeRequestPort;
+        /// <summary>
+        /// Gets or sets the native request port.
+        /// </summary>
+        /// <value>
+        /// The native request port.
+        /// </value>
+        /// <exception cref="System.ArgumentException">Invalid port.;Port</exception>
+        internal int NativeRequestPort
+        {
+            get
+            {
+                return _nativeRequestPort;
+            }
+            set
+            {
+                if (value < 0 || value > 65535)
+                    throw new ArgumentException("Invalid port.", "value");
+
+                _nativeRequestPort = value;
+            }
+        }
+        #endregion
+        #region NativeRequestUrl
+        /// <summary>
+        /// Gets the native request URL.
+        /// </summary>
+        /// <value>
+        /// The native request URL.
+        /// </value>
+        public string NativeRequestUrl
+        {
+            get
+            {
+                return string.Format("http://{0}:{1}/", RequestHostname, NativeRequestPort);
+            }
+        }
         #endregion
 
         #endregion
@@ -295,7 +310,7 @@ namespace Samotorcan.HtmlUi.Core
             ContentProvider = new FileAssemblyContentProvider();
             ControllerProvider = new AssemblyControllerProvider();
             RequestHostname = "localhost";
-            RequestPort = 80;
+            NativeRequestPort = 16556;
 
             MimeTypes = GetDefaultMimeTypes();
         }
@@ -412,9 +427,8 @@ namespace Samotorcan.HtmlUi.Core
             if (string.IsNullOrWhiteSpace(contentPath))
                 throw new ArgumentNullException("contentPath");
 
-            return string.Format("http://{0}{1}/{2}",
+            return string.Format("http://{0}/{1}",
                 RequestHostname,
-                RequestPort != 80 ? ":" + RequestPort : string.Empty,
                 ContentProvider.GetUrlFromContentPath(contentPath).TrimStart('/'));
         }
         #endregion
@@ -430,10 +444,8 @@ namespace Samotorcan.HtmlUi.Core
                 throw new ArgumentNullException("absoluteContentUrl");
 
             var match = Regex.Match(absoluteContentUrl,
-                string.Format("^(http://)?{0}(:{1}){2}/(.+)$",
-                    Regex.Escape(RequestHostname),
-                    RequestPort,
-                    RequestPort == 80 ? "?" : "{1}"),
+                string.Format("^(http://)?{0}(:80)?/(.+)$",
+                    Regex.Escape(RequestHostname)),
                 RegexOptions.IgnoreCase);
 
             if (!match.Success)
@@ -442,22 +454,21 @@ namespace Samotorcan.HtmlUi.Core
             return ContentProvider.GetContentPathFromUrl(match.Groups.OfType<Group>().Last().Value);
         }
         #endregion
-        #region IsLocalUrl
+        #region IsContentUrl
         /// <summary>
-        /// Determines whether the specified URL is local.
+        /// Determines whether the specified URL is content.
         /// </summary>
         /// <param name="url">The URL.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">url</exception>
-        public bool IsLocalUrl(string url)
+        public bool IsContentUrl(string url)
         {
             if (string.IsNullOrWhiteSpace(url))
                 throw new ArgumentNullException("url");
 
-            return Regex.IsMatch(url, string.Format("^(http://)?{0}(:{1}){2}(/.*)?$",
-                Regex.Escape(RequestHostname),
-                RequestPort,
-                RequestPort == 80 ? "?" : "{1}"), RegexOptions.IgnoreCase);
+            return Regex.IsMatch(url, string.Format("^(http://)?{0}(:80)?(/.*)?$",
+                    Regex.Escape(RequestHostname)),
+                RegexOptions.IgnoreCase);
         }
         #endregion
 
@@ -522,6 +533,67 @@ namespace Samotorcan.HtmlUi.Core
             {
                 // TODO: implement
             }
+        }
+        #endregion
+        #region IsLocalUrl
+        /// <summary>
+        /// Determines whether the specified URL is local.
+        /// </summary>
+        /// <param name="url">The URL.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">url</exception>
+        internal bool IsLocalUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentNullException("url");
+
+            return Regex.IsMatch(url, string.Format("^(http://)?{0}((:80)?|:{1})(/.*)?$",
+                    Regex.Escape(RequestHostname),
+                    NativeRequestPort),
+                RegexOptions.IgnoreCase);
+        }
+        #endregion
+        #region IsNativeRequestUrl
+        /// <summary>
+        /// Determines whether the specified URL is native request.
+        /// </summary>
+        /// <param name="url">The URL.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">url</exception>
+        internal bool IsNativeRequestUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentNullException("url");
+
+            return Regex.IsMatch(url, string.Format("^(http://)?{0}:{1}(/.*)?$",
+                    Regex.Escape(RequestHostname),
+                    NativeRequestPort),
+                RegexOptions.IgnoreCase);
+        }
+        #endregion
+        #region GetNativeRequestPath
+        /// <summary>
+        /// Gets the native request path.
+        /// </summary>
+        /// <param name="absoluteNativeRequestUrl">The absolute native request URL.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">absoluteNativeRequestUrl</exception>
+        /// <exception cref="System.ArgumentException">Invalid url.;absoluteContentUrl</exception>
+        public string GetNativeRequestPath(string absoluteNativeRequestUrl)
+        {
+            if (string.IsNullOrWhiteSpace(absoluteNativeRequestUrl))
+                throw new ArgumentNullException("absoluteNativeRequestUrl");
+
+            var match = Regex.Match(absoluteNativeRequestUrl,
+                string.Format("^(http://)?{0}:{1}/(.+)$",
+                    Regex.Escape(RequestHostname),
+                    NativeRequestPort),
+                RegexOptions.IgnoreCase);
+
+            if (!match.Success)
+                throw new ArgumentException("Invalid url.", "absoluteNativeRequestUrl");
+
+            return match.Groups.OfType<Group>().Last().Value;
         }
         #endregion
 

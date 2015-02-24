@@ -41,6 +41,15 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         /// </value>
         private CefBrowser CefBrowser { get; set; }
         #endregion
+        #region NativeRequestUrl
+        /// <summary>
+        /// Gets or sets the native request URL.
+        /// </summary>
+        /// <value>
+        /// The native request URL.
+        /// </value>
+        private string NativeRequestUrl { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -139,6 +148,8 @@ namespace Samotorcan.HtmlUi.Core.Handlers
             log4net.GlobalContext.Properties["pid"] = Process.GetCurrentProcess().Id;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
+            NativeRequestUrl = extraInfo.GetString(0);
+
             GeneralLog.Info("Render process thread created.");
         }
         #endregion
@@ -219,7 +230,38 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         /// <returns></returns>
         private string ProcessExtensionResource(string extensionResource)
         {
-            return extensionResource.Replace("//!native ", "native ");
+            var constants = new string[]
+            {
+                CreateStringConstant("htmlUi.nativeRequestUrl", NativeRequestUrl)
+            };
+
+            return extensionResource
+                .Replace("//!native ", "native ")
+                .Replace("//!inject-constants", string.Join(Environment.NewLine, constants));
+        }
+        #endregion
+        #region CreateConstant
+        /// <summary>
+        /// Creates the constant.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        private string CreateConstant(string name, string value)
+        {
+            return string.Format("{0} = {1};", name, value);
+        }
+        #endregion
+        #region CreateStringConstant
+        /// <summary>
+        /// Creates the string constant.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        private string CreateStringConstant(string name, string value)
+        {
+            return string.Format("{0} = '{1}';", name, value);
         }
         #endregion
 

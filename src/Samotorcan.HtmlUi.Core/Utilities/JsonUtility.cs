@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -74,6 +75,17 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         public static TType DeserializeFromBson<TType>(byte[] value)
         {
             return JsonUtility.DeserializeFromBson<TType>(value, false);
+        }
+        #endregion
+        #region SerializeToJson
+        /// <summary>
+        /// Serializes to json.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        public static byte[] SerializeToJson(object value)
+        {
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, Formatting.Indented, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }));
         }
         #endregion
 

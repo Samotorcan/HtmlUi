@@ -48,6 +48,20 @@ namespace Samotorcan.HtmlUi.Core.Handlers
                 commandLine.AppendArgument(CefArgument.DisableD3D11.Value);
         }
         #endregion
+        #region OnRenderProcessThreadCreated
+        /// <summary>
+        /// Called on the browser process IO thread after the main thread has been
+        /// created for a new render process. Provides an opportunity to specify extra
+        /// information that will be passed to
+        /// CefRenderProcessHandler::OnRenderThreadCreated() in the render process. Do
+        /// not keep a reference to |extra_info| outside of this method.
+        /// </summary>
+        /// <param name="extraInfo"></param>
+        protected override void OnRenderProcessThreadCreated(CefListValue extraInfo)
+        {
+            extraInfo.SetString(0, BaseApplication.Current.NativeRequestUrl);
+        }
+        #endregion
 
         #endregion
         #endregion

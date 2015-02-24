@@ -68,8 +68,11 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
             if (request == null)
                 throw new ArgumentNullException("request");
 
-            if (BaseApplication.Current.IsLocalUrl(request.Url))
-                return new LocalCefResourceHandler();
+            if (BaseApplication.Current.IsContentUrl(request.Url))
+                return new ContentCefResourceHandler();
+
+            if (BaseApplication.Current.IsNativeRequestUrl(request.Url))
+                return new NativeRequestCefResourceHandler();
 
             return null;
         }

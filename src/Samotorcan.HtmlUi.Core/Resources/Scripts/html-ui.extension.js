@@ -3,10 +3,20 @@
 (function (htmlUi) {
     htmlUi.app = null;
 
+    //!inject-constants
+    htmlUi.nativeRequestUrl = htmlUi.nativeRequestUrl || null;
+
     var native = {
         digest: function (controllers) {
+            console.log('digest call'); // TEMP: debug
+
             //!native function digest();
             digest(controllers);
+        },
+        createControllers: function () {
+            console.log('create controllers call'); // TEMP: debug
+
+            return nativeSynchronous('create-controllers');
         }
     };
 
@@ -40,12 +50,40 @@
                 native.digest(controllers);
             });
         }]);
+
+        // create controllers   // TODO: add methods
+        var controllers = native.createControllers();
+        console.log(controllers);
+
+        for (var i = 0; i < controllers.length; i++) {
+            var controller = controllers[i];
+
+            htmlUi.app.controller(controller.name, ['$scope', function ($scope) {
+                // properties
+                for (var j = 0; j < controller.properties.length; j++) {
+                    var property = controller.properties[j];
+
+                    $scope[property.name] = property.value;
+                }
+            }]);
+        }
     };
 
+    // inject code before method call
     function inject(func, inject) {
         return function () {
             inject.apply(this, arguments);
             return func.apply(this, arguments);
         };
+    }
+
+    // native synchronous call
+    function nativeSynchronous(action) {
+        var xhr = new XMLHttpRequest();
+
+        xhr.open('GET', htmlUi.nativeRequestUrl + action, false);
+        xhr.send();
+
+        return JSON.parse(xhr.responseText);
     }
 })(htmlUi);
