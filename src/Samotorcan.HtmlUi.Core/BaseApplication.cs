@@ -638,20 +638,26 @@ namespace Samotorcan.HtmlUi.Core
             };
 
             // arguments
-            var arguments = new List<string>();
-            if (!EnableD3D11)
+            var processArguments = Environment.GetCommandLineArgs();
+            var type = processArguments.Where(a => a.StartsWith("--type=")).Select(a => a.Substring(7)).FirstOrDefault();
+
+            var arguments = !string.IsNullOrEmpty(type) ? processArguments.ToList() : new List<string>();
+            if (!EnableD3D11 && !arguments.Contains(CefArgument.DisableD3D11.Value))
                 arguments.Add(CefArgument.DisableD3D11.Value);
 
             // initialize
             var mainArgs = new CefMainArgs(arguments.ToArray());
             var app = new DefaultCefApp();
 
+            // sub process
             var exitCode = CefRuntime.ExecuteProcess(mainArgs, app, IntPtr.Zero);
             if (exitCode != -1)
-                throw new CefProcessException(exitCode);
+            {
+                Dispose();
+                Environment.Exit(0);
+            }
 
             CefRuntime.Initialize(mainArgs, cefSettings, app, IntPtr.Zero);
-
             GeneralLog.Info("CEF initialized.");
         }
         #endregion

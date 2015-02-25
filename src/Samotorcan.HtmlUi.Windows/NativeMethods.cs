@@ -62,6 +62,10 @@ namespace Samotorcan.HtmlUi.Windows
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool InsertMenu(IntPtr hMenu, uint uPosition, uint uFlags, uint uIDNewItem, string lpNewItem);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool AllocConsole();
+
         public delegate IntPtr HookProc(int code, IntPtr wParam, IntPtr lParam);
 
         [StructLayout(LayoutKind.Sequential)]

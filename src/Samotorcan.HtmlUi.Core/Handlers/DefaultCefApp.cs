@@ -70,7 +70,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers
             commandLine.AppendSwitch("resources-dir-path", PathUtility.WorkingDirectory);
             commandLine.AppendSwitch("locales-dir-path", Path.Combine(PathUtility.WorkingDirectory, "locales"));
 
-            if (!BaseApplication.Current.EnableD3D11)
+            if (!BaseApplication.Current.EnableD3D11 && !commandLine.GetArguments().Contains(CefArgument.DisableD3D11.Value))
                 commandLine.AppendArgument(CefArgument.DisableD3D11.Value);
         }
         #endregion
