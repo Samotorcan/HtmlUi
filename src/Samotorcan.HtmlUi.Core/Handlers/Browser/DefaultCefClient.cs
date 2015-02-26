@@ -162,27 +162,36 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// </summary>
         /// <param name="browser"></param>
         /// <param name="sourceProcess"></param>
-        /// <param name="message"></param>
+        /// <param name="processMessage"></param>
         /// <returns></returns>
-        protected override bool OnProcessMessageReceived(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage message)
+        protected override bool OnProcessMessageReceived(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
         {
-            if (message == null)
+            if (processMessage == null)
                 throw new ArgumentNullException("message");
 
-            // digest call
-            if (message.Name == "Digest")
+            // digest
+            if (processMessage.Name == "Digest")
             {
-                var controllerChanges = JsonUtility.DeserializeFromBson<List<ControllerChange>>(message.Arguments.GetBinary(0).ToArray(), true);
+                var message = MessageUtility.DeserializeMessage<List<ControllerChange>>(processMessage);
 
                 BaseApplication.Current.InvokeOnMainAsync(() =>
                 {
-                    BaseApplication.Current.Digest(controllerChanges);
+                    BaseApplication.Current.Digest(message.Data);
+
+                    // callback
+                    if (message.CallbackId != null)
+                    {
+                        CefUtility.ExecuteTask(CefThreadId.UI, () =>
+                        {
+                            MessageUtility.SendMessage(browser, "DigestCallback", message.CallbackId);
+                        });
+                    }
                 });
 
                 return true;
             }
 
-            return BaseApplication.Current.BrowserMessageRouter.OnProcessMessageReceived(browser, sourceProcess, message);
+            return BaseApplication.Current.BrowserMessageRouter.OnProcessMessageReceived(browser, sourceProcess, processMessage);
         }
         #endregion
 

@@ -3,19 +3,20 @@
 (function (htmlUi) {
     htmlUi.app = null;
 
-    //!inject-constants
-    htmlUi.nativeRequestUrl = htmlUi.nativeRequestUrl || null;
+    // !inject-constants
+    nativeRequestUrl = nativeRequestUrl || null;
 
     var native = {
         digest: function (controllers) {
-            console.log('digest call'); // TEMP: debug
-
-            //!native function digest();
-            digest(controllers);
+            return nativeSynchronous('digest', controllers);
         },
-        createControllers: function () {
-            console.log('create controllers call'); // TEMP: debug
 
+        digestAsync: function (controllers, callback) {
+            // !native function digest();
+            digest(controllers, callback);
+        },
+
+        createControllers: function () {
             return nativeSynchronous('create-controllers');
         }
     };
@@ -26,7 +27,7 @@
 
         // inject controller creation
         htmlUi.app.controller = inject(htmlUi.app.controller, function (name) {
-            console.log('controller \'' + name + '\' created');
+            
         });
 
         // digest
@@ -53,7 +54,6 @@
 
         // create controllers   // TODO: add methods
         var controllers = native.createControllers();
-        console.log(controllers);
 
         for (var i = 0; i < controllers.length; i++) {
             var controller = controllers[i];
@@ -78,12 +78,20 @@
     }
 
     // native synchronous call
-    function nativeSynchronous(action) {
+    function nativeSynchronous(action, data) {
         var xhr = new XMLHttpRequest();
+        var url = nativeRequestUrl + action;
 
-        xhr.open('GET', htmlUi.nativeRequestUrl + action, false);
-        xhr.send();
+        if (data != null) {
+            xhr.open('POST', url, false);
+            xhr.send(JSON.stringify(data));
+        } else {
+            xhr.open('GET', url, false);
+            xhr.send();
+        }
 
-        return JSON.parse(xhr.responseText);
+        var response = xhr.responseText;
+
+        return response != null && response != '' && xhr.status == 200 ? JSON.parse(response) : undefined;
     }
 })(htmlUi);

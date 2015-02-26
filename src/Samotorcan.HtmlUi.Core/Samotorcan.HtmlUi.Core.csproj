@@ -78,12 +78,12 @@
     <Compile Include="ActionTask.cs" />
     <Compile Include="AssemblyControllerProvider.cs" />
     <Compile Include="BaseApplication.cs" />
+    <Compile Include="Message.cs" />
     <Compile Include="CefActionV8Handler.cs" />
     <Compile Include="CefActionV8HandlerFunction.cs" />
     <Compile Include="CefArgument.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="ControllerChange.cs" />
-    <Compile Include="ControllerChangeProperty.cs" />
     <Compile Include="ControllerDescription.cs" />
     <Compile Include="ControllerProperty.cs" />
     <Compile Include="Events\BrowserCreatedEventArgs.cs" />
@@ -111,6 +111,7 @@
     <Compile Include="IContentProvider.cs" />
     <Compile Include="FileAssemblyContentProvider.cs" />
     <Compile Include="IControllerProvider.cs" />
+    <Compile Include="JavascriptCallback.cs" />
     <Compile Include="PropertyAccess.cs" />
     <Compile Include="PropertyNameType.cs" />
     <Compile Include="Utilities\JsonUtility.cs" />
@@ -126,9 +127,9 @@
     <Compile Include="Utilities\UriUtility.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
     <None Include="packages.config" />
     <EmbeddedResource Include="Resources\Scripts\angular.min.js.map" />
+    <EmbeddedResource Include="Resources\MimeTypes.json" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Views\ContentRequestException.html" />

@@ -50,6 +50,15 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         /// </value>
         private string NativeRequestUrl { get; set; }
         #endregion
+        #region Callbacks
+        /// <summary>
+        /// Gets or sets the callbacks.
+        /// </summary>
+        /// <value>
+        /// The callbacks.
+        /// </value>
+        private Dictionary<Guid, JavascriptCallback> Callbacks { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -60,6 +69,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         /// </summary>
         public DefaultRenderProcessHandler()
         {
+            Callbacks = new Dictionary<Guid, JavascriptCallback>();
             MessageRouter = new CefMessageRouterRendererSide(new CefMessageRouterConfig());
         }
 
@@ -97,11 +107,23 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         /// </summary>
         /// <param name="browser">The browser.</param>
         /// <param name="sourceProcess">The source process.</param>
-        /// <param name="message">The message.</param>
+        /// <param name="processMessage">The process message.</param>
         /// <returns></returns>
-        protected override bool OnProcessMessageReceived(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage message)
+        protected override bool OnProcessMessageReceived(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
         {
-            return MessageRouter.OnProcessMessageReceived(browser, sourceProcess, message);
+            if (processMessage == null)
+                throw new ArgumentNullException("message");
+
+            // digest callback
+            if (processMessage.Name == "DigestCallback")
+            {
+                var message = MessageUtility.DeserializeMessage(processMessage);
+                var callback = GetCallback(message.CallbackId.Value);
+
+                callback.CallbackFunction.ExecuteFunctionWithContext(callback.Context, null, new CefV8Value[0]);
+            }
+
+            return MessageRouter.OnProcessMessageReceived(browser, sourceProcess, processMessage);
         }
         #endregion
         #region OnBrowserCreated
@@ -191,10 +213,18 @@ namespace Samotorcan.HtmlUi.Core.Handlers
             exception = null;
             returnValue = null;
 
-            var controllerChanges = new List<ControllerChange>();
+            var controllers = arguments[0];
+            var callbackFunction = arguments.Length > 1 && arguments[1].IsFunction ? arguments[1] : null;
+            var context = CefV8Context.GetCurrentContext();
+            Guid? callbackId = null;
+
+            // save callback
+            if (callbackFunction != null)
+                callbackId = AddCallback(callbackFunction, context);
 
             // controllers
-            var controllers = arguments[0];
+            var controllerChanges = new List<ControllerChange>();
+
             for (int i = 0; i < controllers.GetArrayLength(); i++)
             {
                 var controller = controllers.GetValue(i);
@@ -211,15 +241,28 @@ namespace Samotorcan.HtmlUi.Core.Handlers
                 // properties
                 foreach (var propertyName in properties.GetKeys())
                 {
-                    var propertyValue = properties.GetValue(propertyName);
+                    var value = properties.GetValue(propertyName);
+                    object rawValue = null;
 
-                    if (propertyValue.IsString)
-                        controllerChange.Properties.Add(new ControllerChangeProperty { Name = propertyName, Value = propertyValue.GetStringValue() });
+                    if (value.IsString)
+                        rawValue = value.GetStringValue();
+                    else if (value.IsInt)
+                        rawValue = value.GetIntValue();
+                    else if (value.IsBool)
+                        rawValue = value.GetBoolValue();
+                    else if (value.IsDate)
+                        rawValue = value.GetDateValue();
+                    else if (value.IsDouble)
+                        rawValue = value.GetDoubleValue();
+                    else if (value.IsUInt)
+                        rawValue = TryConvertToInt(value.GetUIntValue());
+
+                    controllerChange.Properties.Add(propertyName, rawValue);
                 }
             }
 
             // send to browser process
-            MessageUtility.SendBinaryMessage(CefBrowser, "Digest", JsonUtility.SerializeToBson(controllerChanges));
+            MessageUtility.SendMessage(CefBrowser, "Digest", callbackId, controllerChanges);
         }
         #endregion
         #region ProcessExtensionResource
@@ -232,12 +275,12 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         {
             var constants = new string[]
             {
-                CreateStringConstant("htmlUi.nativeRequestUrl", NativeRequestUrl)
+                CreateStringConstant("nativeRequestUrl", NativeRequestUrl)
             };
 
             return extensionResource
-                .Replace("//!native ", "native ")
-                .Replace("//!inject-constants", string.Join(Environment.NewLine, constants));
+                .Replace("// !native ", "native ")
+                .Replace("// !inject-constants", string.Join(Environment.NewLine, constants));
         }
         #endregion
         #region CreateConstant
@@ -262,6 +305,54 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         private string CreateStringConstant(string name, string value)
         {
             return string.Format("{0} = '{1}';", name, value);
+        }
+        #endregion
+        #region AddCallback
+        /// <summary>
+        /// Adds the callback.
+        /// </summary>
+        /// <param name="callbackFunction">The callback function.</param>
+        /// <param name="context">The context.</param>
+        /// <returns></returns>
+        private Guid AddCallback(CefV8Value callbackFunction, CefV8Context context)
+        {
+            var callback = new JavascriptCallback(callbackFunction, context);
+            Callbacks.Add(callback.Id, callback);
+
+            return callback.Id;
+        }
+        #endregion
+        #region GetCallback
+        /// <summary>
+        /// Gets the callback.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <returns></returns>
+        private JavascriptCallback GetCallback(Guid id)
+        {
+            if (Callbacks.ContainsKey(id))
+            {
+                var callback = Callbacks[id];
+                Callbacks.Remove(id);
+
+                return callback;
+            }
+
+            return null;
+        }
+        #endregion
+        #region TryConvertToInt
+        /// <summary>
+        /// Tries the convert to int.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        private object TryConvertToInt(uint value)
+        {
+            if (value > int.MaxValue)
+                return value;
+
+            return (int)value;
         }
         #endregion
 

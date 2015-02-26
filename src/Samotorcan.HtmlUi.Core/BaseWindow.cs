@@ -147,6 +147,39 @@ namespace Samotorcan.HtmlUi.Core
                 KeyPress(this, new KeyPressEventArgs(nativeKeyCode));
         }
         #endregion
+        #region CreateControllers
+        /// <summary>
+        /// Creates the controllers.
+        /// </summary>
+        internal void CreateControllers()
+        {
+            var controllerProvider = BaseApplication.Current.ControllerProvider;
+            var controllerTypes = controllerProvider.GetControllerTypes();
+            var createdControllers = new List<Controller>();
+
+            try
+            {
+                foreach (var controllerType in controllerTypes)
+                {
+                    createdControllers.Add(controllerProvider.CreateController(controllerType.Name));
+                }
+            }
+            catch (Exception)
+            {
+                foreach (var createdController in createdControllers)
+                    createdController.Dispose();
+
+                throw;
+            }
+
+            // dispose current controllers
+            foreach (var controller in Controllers)
+                controller.Dispose();
+
+            // save created controllers
+            Controllers = createdControllers;
+        }
+        #endregion
 
         #endregion
         #region Protected

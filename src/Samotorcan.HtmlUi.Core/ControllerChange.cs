@@ -31,7 +31,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The properties.
         /// </value>
-        public Collection<ControllerChangeProperty> Properties { get; private set; }
+        public Dictionary<string, object> Properties { get; private set; }
         #endregion
 
         #endregion
@@ -43,7 +43,7 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         public ControllerChange()
         {
-            Properties = new Collection<ControllerChangeProperty>();
+            Properties = new Dictionary<string, object>();
         }
 
         #endregion

@@ -116,6 +116,8 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
 
             redirectUrl = null;
 
+            response.SetHeaderMap(new NameValueCollection { { "Access-Control-Allow-Origin", "*" } });
+
             if (Exception != null)
             {
                 Data = Encoding.UTF8.GetBytes(string.Format(ResourceUtility.GetResourceAsString("Views/NativeRequestException.html"),
@@ -133,7 +135,6 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
                 response.Status = 200;
                 response.StatusText = "OK";
                 response.MimeType = "application/json";
-                response.SetHeaderMap(new NameValueCollection { { "Access-Control-Allow-Origin", "*" } });
             }
             else
             {
@@ -164,7 +165,9 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
             try
             {
                 if (Path == "create-controllers")
-                    Data = CreateControllers();
+                    Data = CreateControllers(request);
+                else if (Path == "digest")
+                    Data = Digest(request);
             }
             catch (Exception e)
             {
@@ -212,41 +215,20 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
 
         #region CreateControllers
         /// <summary>
-        /// Creates the controllers and returns a JSON description of the controllers.
+        /// Calls the create controllers.
         /// </summary>
+        /// <param name="request">The request.</param>
         /// <returns></returns>
-        private byte[] CreateControllers()
+        private byte[] CreateControllers(CefRequest request)
         {
             var application = BaseApplication.Current;
             var window = application.Window;
-            var controllerProvider = application.ControllerProvider;
-            var controllerTypes = controllerProvider.GetControllerTypes();
 
             var createdControllers = new List<Controller>();
 
             // create controllers
             application.InvokeOnMain(() => {
-                try
-                {
-                    foreach (var controllerType in controllerTypes)
-                    {
-                        createdControllers.Add(controllerProvider.CreateController(controllerType.Name));
-                    }
-                }
-                catch (Exception)
-                {
-                    foreach (var createdController in createdControllers)
-                        createdController.Dispose();
-
-                    throw;
-                }
-
-                // dispose current controllers
-                foreach (var controller in window.Controllers)
-                    controller.Dispose();
-
-                // save created controllers
-                window.Controllers = createdControllers;
+                window.CreateControllers();
             });
 
             var controllerDescriptions = window.Controllers
@@ -256,8 +238,40 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
             return JsonUtility.SerializeToJson(controllerDescriptions);
         }
         #endregion
+        #region Digest
+        /// <summary>
+        /// Calls the digest.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        private byte[] Digest(CefRequest request)
+        {
+            List<ControllerChange> controllerChanges = GetPostData<List<ControllerChange>>(request);
 
-        
+            var application = BaseApplication.Current;
+            application.InvokeOnMain(() =>
+            {
+                application.Digest(controllerChanges);
+            });
+
+            return new byte[0];
+        }
+        #endregion
+
+        #region GetPostData
+        /// <summary>
+        /// Gets the post data.
+        /// </summary>
+        /// <typeparam name="TData">The type of the data.</typeparam>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        private TData GetPostData<TData>(CefRequest request)
+        {
+            var json = Encoding.UTF8.GetString(request.PostData.GetElements()[0].GetBytes());
+
+            return JsonConvert.DeserializeObject<TData>(json);
+        }
+        #endregion
 
         #endregion
         #endregion
