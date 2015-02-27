@@ -6,14 +6,15 @@
     // !inject-constants
     nativeRequestUrl = nativeRequestUrl || null;
 
-    var native = {
+    // TODO: make it private when done testing
+    var native = htmlUi.native = {
         digest: function (controllers) {
             return nativeSynchronous('digest', controllers);
         },
 
         digestAsync: function (controllers, callback) {
             // !native function digest();
-            digest(controllers, callback);
+            digest(JSON.stringify(controllers), callback);
         },
 
         createControllers: function () {

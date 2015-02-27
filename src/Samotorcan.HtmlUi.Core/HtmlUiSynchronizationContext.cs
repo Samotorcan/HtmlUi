@@ -27,7 +27,7 @@ namespace Samotorcan.HtmlUi.Core
             if (d == null)
                 throw new ArgumentNullException("d");
 
-            BaseApplication.Current.InvokeOnMainAsync(() =>
+            BaseMainApplication.Current.InvokeOnMainAsync(() =>
             {
                 d.Invoke(state);
             });
@@ -45,7 +45,7 @@ namespace Samotorcan.HtmlUi.Core
             if (d == null)
                 throw new ArgumentNullException("d");
 
-            BaseApplication.Current.InvokeOnMain(() =>
+            BaseMainApplication.Current.InvokeOnMain(() =>
             {
                 d.Invoke(state);
             });

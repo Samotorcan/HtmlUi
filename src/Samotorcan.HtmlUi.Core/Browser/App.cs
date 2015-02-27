@@ -1,4 +1,5 @@
-﻿using Samotorcan.HtmlUi.Core.Utilities;
+﻿using Samotorcan.HtmlUi.Core.Browser.Handlers;
+using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,13 +9,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
 
-namespace Samotorcan.HtmlUi.Core.Handlers
+namespace Samotorcan.HtmlUi.Core.Browser
 {
     /// <summary>
-    /// Default CEF app.
+    /// Browser app.
     /// </summary>
     [CLSCompliant(false)]
-    public class DefaultCefApp : CefApp
+    public class App : CefApp
     {
         #region Properties
         #region Private
@@ -26,16 +27,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         /// <value>
         /// The browser process handler.
         /// </value>
-        private DefaultBrowserProcessHandler BrowserProcessHandler { get; set; }
-        #endregion
-        #region RenderProcessHandler
-        /// <summary>
-        /// Gets or sets the render process handler.
-        /// </summary>
-        /// <value>
-        /// The render process handler.
-        /// </value>
-        private DefaultRenderProcessHandler RenderProcessHandler { get; set; }
+        private ProcessHandler BrowserProcessHandler { get; set; }
         #endregion
 
         #endregion
@@ -43,13 +35,12 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DefaultCefApp"/> class.
+        /// Initializes a new instance of the <see cref="App"/> class.
         /// </summary>
-        public DefaultCefApp()
+        public App()
             : base()
         {
-            BrowserProcessHandler = new DefaultBrowserProcessHandler();
-            RenderProcessHandler = new DefaultRenderProcessHandler();
+            BrowserProcessHandler = new ProcessHandler();
         }
 
         #endregion
@@ -67,10 +58,13 @@ namespace Samotorcan.HtmlUi.Core.Handlers
             if (commandLine == null)
                 throw new ArgumentNullException("commandLine");
 
-            commandLine.AppendSwitch("resources-dir-path", PathUtility.WorkingDirectory);
-            commandLine.AppendSwitch("locales-dir-path", Path.Combine(PathUtility.WorkingDirectory, "locales"));
+            if (!commandLine.HasSwitch("resources-dir-path"))
+                commandLine.AppendSwitch("resources-dir-path", PathUtility.WorkingDirectory);
 
-            if (!BaseApplication.Current.EnableD3D11 && !commandLine.GetArguments().Contains(CefArgument.DisableD3D11.Value))
+            if (!commandLine.HasSwitch("locales-dir-path"))
+                commandLine.AppendSwitch("locales-dir-path", Path.Combine(PathUtility.WorkingDirectory, "locales"));
+
+            if (!BaseMainApplication.Current.EnableD3D11 && !commandLine.GetArguments().Contains(CefArgument.DisableD3D11.Value))
                 commandLine.AppendArgument(CefArgument.DisableD3D11.Value);
         }
         #endregion
@@ -82,16 +76,6 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         protected override CefBrowserProcessHandler GetBrowserProcessHandler()
         {
             return BrowserProcessHandler;
-        }
-        #endregion
-        #region GetRenderProcessHandler
-        /// <summary>
-        /// Gets the render process handler.
-        /// </summary>
-        /// <returns></returns>
-        protected override CefRenderProcessHandler GetRenderProcessHandler()
-        {
-            return RenderProcessHandler;
         }
         #endregion
 

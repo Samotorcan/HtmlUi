@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
 
-namespace Samotorcan.HtmlUi.Core.Handlers.Browser
+namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 {
     /// <summary>
-    /// Default cef request handler.
+    /// Request handler.
     /// </summary>
     [CLSCompliant(false)]
-    public class DefaultCefRequestHandler : CefRequestHandler
+    public class RequestHandler : CefRequestHandler
     {
         #region Methods
         #region Protected
@@ -34,7 +34,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <returns></returns>
         protected override bool OnBeforeBrowse(CefBrowser browser, CefFrame frame, CefRequest request, bool isRedirect)
         {
-            BaseApplication.Current.BrowserMessageRouter.OnBeforeBrowse(browser, frame);
+            BaseMainApplication.Current.BrowserMessageRouter.OnBeforeBrowse(browser, frame);
 
             return false;
         }
@@ -49,7 +49,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <param name="status"></param>
         protected override void OnRenderProcessTerminated(CefBrowser browser, CefTerminationStatus status)
         {
-            BaseApplication.Current.BrowserMessageRouter.OnRenderProcessTerminated(browser);
+            BaseMainApplication.Current.BrowserMessageRouter.OnRenderProcessTerminated(browser);
         }
         #endregion
         #region GetResourceHandler
@@ -68,11 +68,11 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
             if (request == null)
                 throw new ArgumentNullException("request");
 
-            if (BaseApplication.Current.IsContentUrl(request.Url))
-                return new ContentCefResourceHandler();
+            if (BaseMainApplication.Current.IsContentUrl(request.Url))
+                return new ContentResourceHandler();
 
-            if (BaseApplication.Current.IsNativeRequestUrl(request.Url))
-                return new NativeRequestCefResourceHandler();
+            if (BaseMainApplication.Current.IsNativeRequestUrl(request.Url))
+                return new NativeRequestResourceHandler();
 
             return null;
         }

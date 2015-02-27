@@ -5,14 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
 
-namespace Samotorcan.HtmlUi.Core.Handlers.Browser
+namespace Samotorcan.HtmlUi.Core.Renderer
 {
     /// <summary>
-    /// Default cef display handler.
+    /// Developer tools CEF client.
     /// </summary>
-    [CLSCompliant(false)]
-    public class DefaultCefDisplayHandler : CefDisplayHandler
+    internal class DeveloperToolsClient : CefClient
     {
-
     }
 }

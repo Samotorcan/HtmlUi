@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Samotorcan.HtmlUi.Core.Browser.Handlers;
 using Samotorcan.HtmlUi.Core.Events;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
@@ -10,13 +11,13 @@ using System.Threading.Tasks;
 using Xilium.CefGlue;
 using Xilium.CefGlue.Wrapper;
 
-namespace Samotorcan.HtmlUi.Core.Handlers.Browser
+namespace Samotorcan.HtmlUi.Core.Browser
 {
     /// <summary>
-    /// Default cef client.
+    /// Client.
     /// </summary>
     [CLSCompliant(false)]
-    public class DefaultCefClient : CefClient
+    public class Client : CefClient
     {
         #region Events
 
@@ -38,7 +39,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <value>
         /// The cef life span handler.
         /// </value>
-        private DefaultCefLifeSpanHandler CefLifeSpanHandler { get; set; }
+        private LifeSpanHandler CefLifeSpanHandler { get; set; }
         #endregion
         #region CefDisplayHandler
         /// <summary>
@@ -47,7 +48,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <value>
         /// The cef display handler.
         /// </value>
-        private DefaultCefDisplayHandler CefDisplayHandler { get; set; }
+        private DisplayHandler CefDisplayHandler { get; set; }
         #endregion
         #region CefLoadHandler
         /// <summary>
@@ -56,7 +57,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <value>
         /// The cef load handler.
         /// </value>
-        private DefaultCefLoadHandler CefLoadHandler { get; set; }
+        private LoadHandler CefLoadHandler { get; set; }
         #endregion
         #region CefRequestHandler
         /// <summary>
@@ -65,7 +66,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <value>
         /// The cef request handler.
         /// </value>
-        private DefaultCefRequestHandler CefRequestHandler { get; set; }
+        private RequestHandler CefRequestHandler { get; set; }
         #endregion
         #region CefKeyboardHandler
         /// <summary>
@@ -74,7 +75,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <value>
         /// The cef keyboard handler.
         /// </value>
-        private DefaultCefKeyboardHandler CefKeyboardHandler { get; set; }
+        private KeyboardHandler CefKeyboardHandler { get; set; }
         #endregion
 
         #endregion
@@ -82,16 +83,16 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DefaultCefClient"/> class.
+        /// Initializes a new instance of the <see cref="Client"/> class.
         /// </summary>
-        public DefaultCefClient()
+        public Client()
             : base()
         {
-            CefLifeSpanHandler = new DefaultCefLifeSpanHandler();
-            CefDisplayHandler = new DefaultCefDisplayHandler();
-            CefLoadHandler = new DefaultCefLoadHandler();
-            CefRequestHandler = new DefaultCefRequestHandler();
-            CefKeyboardHandler = new DefaultCefKeyboardHandler();
+            CefLifeSpanHandler = new LifeSpanHandler();
+            CefDisplayHandler = new DisplayHandler();
+            CefLoadHandler = new LoadHandler();
+            CefRequestHandler = new RequestHandler();
+            CefKeyboardHandler = new KeyboardHandler();
 
             // set events
             CefLifeSpanHandler.BrowserCreated += (sender, e) => {
@@ -174,9 +175,9 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
             {
                 var message = MessageUtility.DeserializeMessage<List<ControllerChange>>(processMessage);
 
-                BaseApplication.Current.InvokeOnMainAsync(() =>
+                BaseMainApplication.Current.InvokeOnMainAsync(() =>
                 {
-                    BaseApplication.Current.Digest(message.Data);
+                    BaseMainApplication.Current.Digest(message.Data);
 
                     // callback
                     if (message.CallbackId != null)
@@ -191,7 +192,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
                 return true;
             }
 
-            return BaseApplication.Current.BrowserMessageRouter.OnProcessMessageReceived(browser, sourceProcess, processMessage);
+            return BaseMainApplication.Current.BrowserMessageRouter.OnProcessMessageReceived(browser, sourceProcess, processMessage);
         }
         #endregion
 

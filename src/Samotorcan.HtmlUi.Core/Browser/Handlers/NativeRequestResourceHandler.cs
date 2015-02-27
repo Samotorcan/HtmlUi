@@ -1,8 +1,11 @@
-﻿using Samotorcan.HtmlUi.Core.Exceptions;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,12 +13,12 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
 
-namespace Samotorcan.HtmlUi.Core.Handlers.Browser
+namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 {
     /// <summary>
-    /// Content CEF resource handler.
+    /// Native request resource handler.
     /// </summary>
-    internal class ContentCefResourceHandler : CefResourceHandler
+    internal class NativeRequestResourceHandler : CefResourceHandler
     {
         #region Properties
         #region Private
@@ -28,6 +31,15 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// The URL.
         /// </value>
         private string Url { get; set; }
+        #endregion
+        #region Path
+        /// <summary>
+        /// Gets or sets the path.
+        /// </summary>
+        /// <value>
+        /// The path.
+        /// </value>
+        public string Path { get; set; }
         #endregion
         #region Exception
         /// <summary>
@@ -104,9 +116,11 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
 
             redirectUrl = null;
 
+            response.SetHeaderMap(new NameValueCollection { { "Access-Control-Allow-Origin", "*" } });
+
             if (Exception != null)
             {
-                Data = Encoding.UTF8.GetBytes(string.Format(ResourceUtility.GetResourceAsString("Views/ContentRequestException.html"),
+                Data = Encoding.UTF8.GetBytes(string.Format(ResourceUtility.GetResourceAsString("Views/NativeRequestException.html"),
                     Url,
                     Exception.ToString().Replace(Environment.NewLine, "<br>")));
 
@@ -120,17 +134,11 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
                 responseLength = Data.Length;
                 response.Status = 200;
                 response.StatusText = "OK";
-
-                // mime type
-                response.MimeType = "application/octet-stream";
-                var extension = Path.GetExtension(Url);
-
-                if (!string.IsNullOrWhiteSpace(extension) && BaseApplication.Current.MimeTypes.ContainsKey(extension))
-                    response.MimeType = BaseApplication.Current.MimeTypes[extension];
+                response.MimeType = "application/json";
             }
             else
             {
-                Data = Encoding.UTF8.GetBytes(string.Format(ResourceUtility.GetResourceAsString("Views/ContentNotFound.html"), Url));
+                Data = Encoding.UTF8.GetBytes(string.Format(ResourceUtility.GetResourceAsString("Views/NativeRequestNotFound.html"), Url));
 
                 responseLength = Data.Length;
                 response.Status = 404;
@@ -141,7 +149,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         #endregion
         #region ProcessRequest
         /// <summary>
-        /// Processes the request.
+        /// Processes the request for the view.
         /// </summary>
         /// <param name="request"></param>
         /// <param name="callback"></param>
@@ -152,27 +160,24 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
                 throw new ArgumentNullException("request");
 
             Url = request.Url;
-            var application = BaseApplication.Current;
+            Path = BaseMainApplication.Current.GetNativeRequestPath(Url);
 
-            application.InvokeOnMainAsync(() =>
+            try
             {
-                try
-                {
-                    var path = application.GetContentPath(request.Url);
+                if (Path == "create-controllers")
+                    Data = CreateControllers(request);
+                else if (Path == "digest")
+                    Data = Digest(request);
+            }
+            catch (Exception e)
+            {
+                Data = null;
+                Exception = e;
 
-                    if (application.ContentProvider.ContentExists(path))
-                        Data = application.ContentProvider.GetContent(path);
-                }
-                catch (Exception e)
-                {
-                    Data = null;
-                    Exception = e;
+                GeneralLog.Error("Native request exception.", e);
+            }
 
-                    GeneralLog.Error("Content request exception.", e);
-                }
-
-                callback.Continue();
-            });
+            callback.Continue();
 
             return true;
         }
@@ -202,6 +207,69 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
             AllBytesRead += bytesRead;
 
             return true;
+        }
+        #endregion
+
+        #endregion
+        #region Private
+
+        #region CreateControllers
+        /// <summary>
+        /// Calls the create controllers.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        private byte[] CreateControllers(CefRequest request)
+        {
+            var application = BaseMainApplication.Current;
+            var window = application.Window;
+
+            var createdControllers = new List<Controller>();
+
+            // create controllers
+            application.InvokeOnMain(() => {
+                window.CreateControllers();
+            });
+
+            var controllerDescriptions = window.Controllers
+                .Select(c => c.GetDescription(PropertyNameType.CamelCase))
+                .ToArray();
+
+            return JsonUtility.SerializeToJson(controllerDescriptions);
+        }
+        #endregion
+        #region Digest
+        /// <summary>
+        /// Calls the digest.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        private byte[] Digest(CefRequest request)
+        {
+            List<ControllerChange> controllerChanges = GetPostData<List<ControllerChange>>(request);
+
+            var application = BaseMainApplication.Current;
+            application.InvokeOnMain(() =>
+            {
+                application.Digest(controllerChanges);
+            });
+
+            return new byte[0];
+        }
+        #endregion
+
+        #region GetPostData
+        /// <summary>
+        /// Gets the post data.
+        /// </summary>
+        /// <typeparam name="TData">The type of the data.</typeparam>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        private TData GetPostData<TData>(CefRequest request)
+        {
+            var json = Encoding.UTF8.GetString(request.PostData.GetElements()[0].GetBytes());
+
+            return JsonConvert.DeserializeObject<TData>(json);
         }
         #endregion
 

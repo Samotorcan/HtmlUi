@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
 
-namespace Samotorcan.HtmlUi.Core.Handlers.Scheme
+namespace Samotorcan.HtmlUi.Core.Scheme
 {
     /// <summary>
     /// Default app schema handler factory.

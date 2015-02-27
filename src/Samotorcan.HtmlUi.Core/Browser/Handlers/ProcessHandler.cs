@@ -7,13 +7,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
 
-namespace Samotorcan.HtmlUi.Core.Handlers
+namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 {
     /// <summary>
-    /// Default browser process handler.
+    /// Browser process handler.
     /// </summary>
     [CLSCompliant(false)]
-    public class DefaultBrowserProcessHandler : CefBrowserProcessHandler
+    public class ProcessHandler : CefBrowserProcessHandler
     {
         #region Methods
         #region Protected
@@ -44,7 +44,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers
                 }
             }
 
-            if (!BaseApplication.Current.EnableD3D11 && !commandLine.GetArguments().Contains(CefArgument.DisableD3D11.Value))
+            if (!BaseMainApplication.Current.EnableD3D11 && !commandLine.GetArguments().Contains(CefArgument.DisableD3D11.Value))
                 commandLine.AppendArgument(CefArgument.DisableD3D11.Value);
         }
         #endregion
@@ -59,7 +59,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         /// <param name="extraInfo"></param>
         protected override void OnRenderProcessThreadCreated(CefListValue extraInfo)
         {
-            extraInfo.SetString(0, BaseApplication.Current.NativeRequestUrl);
+            extraInfo.SetString(0, BaseMainApplication.Current.NativeRequestUrl);
         }
         #endregion
 

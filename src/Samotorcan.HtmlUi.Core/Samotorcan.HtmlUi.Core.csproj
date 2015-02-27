@@ -76,8 +76,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActionTask.cs" />
+    <Compile Include="ApplicationType.cs" />
     <Compile Include="AssemblyControllerProvider.cs" />
     <Compile Include="BaseApplication.cs" />
+    <Compile Include="BaseMainApplication.cs" />
+    <Compile Include="BaseChildApplication.cs" />
+    <Compile Include="Renderer\App.cs" />
+    <Compile Include="HtmlUiRuntime.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="CefActionV8Handler.cs" />
     <Compile Include="CefActionV8HandlerFunction.cs" />
@@ -93,20 +98,20 @@
     <Compile Include="Exceptions\MoreThanOneControllerFoundException.cs" />
     <Compile Include="Exceptions\ControllerNotFoundException.cs" />
     <Compile Include="Exceptions\UnknownUrlException.cs" />
-    <Compile Include="Handlers\Browser\NativeRequestCefResourceHandler.cs" />
-    <Compile Include="Handlers\Browser\DefaultCefClient.cs" />
-    <Compile Include="Handlers\Browser\DefaultCefDisplayHandler.cs" />
-    <Compile Include="Handlers\Browser\DefaultCefKeyboardHandler.cs" />
-    <Compile Include="Handlers\Browser\DefaultCefLifeSpanHandler.cs" />
-    <Compile Include="Handlers\Browser\DefaultCefLoadHandler.cs" />
-    <Compile Include="Handlers\Browser\DefaultCefRequestHandler.cs" />
-    <Compile Include="Handlers\Browser\DeveloperToolsCefClient.cs" />
-    <Compile Include="Handlers\Browser\ContentCefResourceHandler.cs" />
-    <Compile Include="Handlers\DefaultBrowserProcessHandler.cs" />
-    <Compile Include="Handlers\DefaultCefApp.cs" />
-    <Compile Include="Handlers\DefaultRenderProcessHandler.cs" />
-    <Compile Include="Handlers\Scheme\DefaultAppSchemeHandlerFactory.cs" />
-    <Compile Include="Handlers\Scheme\DefaultRequestResourceHandler.cs" />
+    <Compile Include="Browser\Handlers\NativeRequestResourceHandler.cs" />
+    <Compile Include="Browser\Client.cs" />
+    <Compile Include="Browser\Handlers\DisplayHandler.cs" />
+    <Compile Include="Browser\Handlers\KeyboardHandler.cs" />
+    <Compile Include="Browser\Handlers\LifeSpanHandler.cs" />
+    <Compile Include="Browser\Handlers\LoadHandler.cs" />
+    <Compile Include="Browser\Handlers\RequestHandler.cs" />
+    <Compile Include="Renderer\DeveloperToolsClient.cs" />
+    <Compile Include="Browser\Handlers\ContentResourceHandler.cs" />
+    <Compile Include="Browser\Handlers\ProcessHandler.cs" />
+    <Compile Include="Browser\App.cs" />
+    <Compile Include="Renderer\Handlers\ProcessHandler.cs" />
+    <Compile Include="Scheme\DefaultAppSchemeHandlerFactory.cs" />
+    <Compile Include="Scheme\DefaultRequestResourceHandler.cs" />
     <Compile Include="HtmlUiSynchronizationContext.cs" />
     <Compile Include="IContentProvider.cs" />
     <Compile Include="FileAssemblyContentProvider.cs" />
@@ -153,6 +158,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\Views\NativeRequestException.html" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

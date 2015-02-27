@@ -1,5 +1,4 @@
-﻿using Samotorcan.HtmlUi.Core.Handlers.Browser;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -12,6 +11,7 @@ using System.ComponentModel;
 using System.Drawing;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System.Runtime.InteropServices;
+using Samotorcan.HtmlUi.Core.Renderer;
 using Samotorcan.HtmlUi.Core.Events;
 
 namespace Samotorcan.HtmlUi.Windows
@@ -111,7 +111,7 @@ namespace Samotorcan.HtmlUi.Windows
         public Window()
             : base()
         {
-            Application.Current.InvokeOnUi(() => {
+            MainApplication.Current.InvokeOnUi(() => {
                 Form = new Form();
 
                 // default values
@@ -150,7 +150,7 @@ namespace Samotorcan.HtmlUi.Windows
             var width = Form.ClientSize.Width;
             var height = Form.ClientSize.Height;
 
-            Application.Current.InvokeOnMain(() => {
+            MainApplication.Current.InvokeOnMain(() => {
                 CreateBrowser(FormHandle, new CefRectangle(0, 0, width, height));
             });
 
@@ -227,9 +227,9 @@ namespace Samotorcan.HtmlUi.Windows
         /// <param name="e">The <see cref="FormClosedEventArgs"/> instance containing the event data.</param>
         private void Form_FormClosed(object sender, FormClosedEventArgs e)
         {
-            Application.Current.InvokeOnMain(() =>
+            MainApplication.Current.InvokeOnMain(() =>
             {
-                Application.Current.Shutdown();
+                MainApplication.Current.Shutdown();
             });
         }
         #endregion
@@ -345,14 +345,14 @@ namespace Samotorcan.HtmlUi.Windows
         /// </summary>
         private void OpenDeveloperTools()
         {
-            Application.Current.InvokeOnMain(() =>
+            MainApplication.Current.InvokeOnMain(() =>
             {
                 var windowInfo = CefWindowInfo.Create();
                 windowInfo.SetAsPopup(IntPtr.Zero, "Developer tools");
                 windowInfo.Width = 1200;
                 windowInfo.Height = 500;
 
-                CefBrowser.GetHost().ShowDevTools(windowInfo, new DeveloperToolsCefClient(), new CefBrowserSettings(), new CefPoint(0, 0));
+                CefBrowser.GetHost().ShowDevTools(windowInfo, new DeveloperToolsClient(), new CefBrowserSettings(), new CefPoint(0, 0));
             });
         }
         #endregion
@@ -375,13 +375,13 @@ namespace Samotorcan.HtmlUi.Windows
         {
             base.Dispose(disposing);
 
-            Application.Current.EnsureMainThread();
+            MainApplication.Current.EnsureMainThread();
 
             if (!_disposed)
             {
                 if (disposing)
                 {
-                    Application.Current.InvokeOnUiAsync(() =>
+                    MainApplication.Current.InvokeOnUiAsync(() =>
                     {
                         Form.Dispose();
                     });

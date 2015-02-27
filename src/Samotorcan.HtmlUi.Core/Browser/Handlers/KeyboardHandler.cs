@@ -5,12 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
 
-namespace Samotorcan.HtmlUi.Core.Handlers.Browser
+namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 {
     /// <summary>
-    /// Default CEF keyboard handler.
+    /// Keyboard handler.
     /// </summary>
-    internal class DefaultCefKeyboardHandler : CefKeyboardHandler
+    internal class KeyboardHandler : CefKeyboardHandler
     {
         #region Methods
         #region Protected
@@ -35,7 +35,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
 
             isKeyboardShortcut = false;
 
-            BaseApplication.Current.Window.TriggerKeyPress(keyEvent.WindowsKeyCode);
+            BaseMainApplication.Current.Window.TriggerKeyPress(keyEvent.WindowsKeyCode);
 
             return false;
         }

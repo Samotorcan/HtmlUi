@@ -6,14 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
 
-namespace Samotorcan.HtmlUi.Core.Handlers.Browser
+namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 {
     /// <summary>
-    /// Default life span handler.
+    /// Life span handler.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "LifeSpan", Justification = "The base class has the same name.")]
     [CLSCompliant(false)]
-    public class DefaultCefLifeSpanHandler : CefLifeSpanHandler
+    public class LifeSpanHandler : CefLifeSpanHandler
     {
         #region Events
 
@@ -40,7 +40,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers.Browser
         /// <param name="browser"></param>
         protected override void OnBeforeClose(CefBrowser browser)
         {
-            BaseApplication.Current.BrowserMessageRouter.OnBeforeClose(browser);
+            BaseMainApplication.Current.BrowserMessageRouter.OnBeforeClose(browser);
         }
         #endregion
         #region OnAfterCreated

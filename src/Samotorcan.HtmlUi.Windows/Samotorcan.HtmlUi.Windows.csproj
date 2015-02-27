@@ -101,7 +101,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Application.cs" />
+    <Compile Include="ChildApplication.cs" />
+    <Compile Include="MainApplication.cs" />
     <Compile Include="Form.cs">
       <SubType>Form</SubType>
     </Compile>

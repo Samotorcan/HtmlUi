@@ -1,5 +1,5 @@
-﻿using Samotorcan.HtmlUi.Core.Events;
-using Samotorcan.HtmlUi.Core.Handlers.Browser;
+﻿using Samotorcan.HtmlUi.Core.Browser;
+using Samotorcan.HtmlUi.Core.Events;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
@@ -52,7 +52,7 @@ namespace Samotorcan.HtmlUi.Core
             }
             set
             {
-                BaseApplication.Current.EnsureMainThread();
+                BaseMainApplication.Current.EnsureMainThread();
 
                 if (IsBrowserCreated)
                     throw new InvalidOperationException("View can only be changed before the window is created.");
@@ -77,7 +77,7 @@ namespace Samotorcan.HtmlUi.Core
             }
             set
             {
-                BaseApplication.Current.EnsureMainThread();
+                BaseMainApplication.Current.EnsureMainThread();
 
                 _borderless = value;
             }
@@ -153,7 +153,7 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         internal void CreateControllers()
         {
-            var controllerProvider = BaseApplication.Current.ControllerProvider;
+            var controllerProvider = BaseMainApplication.Current.ControllerProvider;
             var controllerTypes = controllerProvider.GetControllerTypes();
             var createdControllers = new List<Controller>();
 
@@ -192,7 +192,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="position">The position.</param>
         protected void CreateBrowser(IntPtr handle, CefRectangle position)
         {
-            BaseApplication.Current.EnsureMainThread();
+            BaseMainApplication.Current.EnsureMainThread();
 
             if (IsBrowserCreated)
                 throw new InvalidOperationException("Browser already created.");
@@ -200,7 +200,7 @@ namespace Samotorcan.HtmlUi.Core
             var cefWindowInfo = CefWindowInfo.Create();
             cefWindowInfo.SetAsChild(handle, position);
 
-            var cefClient = new DefaultCefClient();
+            var cefClient = new Client();
             cefClient.BrowserCreated += (sender, e) =>
             {
                 CefBrowser = e.CefBrowser;
@@ -211,7 +211,7 @@ namespace Samotorcan.HtmlUi.Core
 
             var cefSettings = new CefBrowserSettings();
 
-            CefBrowserHost.CreateBrowser(cefWindowInfo, cefClient, cefSettings, BaseApplication.Current.GetAbsoluteContentUrl(View));
+            CefBrowserHost.CreateBrowser(cefWindowInfo, cefClient, cefSettings, BaseMainApplication.Current.GetAbsoluteContentUrl(View));
 
             IsBrowserCreated = true;
         }
@@ -233,7 +233,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            BaseApplication.Current.EnsureMainThread();
+            BaseMainApplication.Current.EnsureMainThread();
 
             if (!_disposed)
             {

@@ -31,7 +31,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The properties.
         /// </value>
-        public Dictionary<string, object> Properties { get; private set; }
+        public Dictionary<string, object> Properties { get; set; }
         #endregion
 
         #endregion

@@ -11,7 +11,7 @@ namespace Samotorcan.Tests.Windowsx64
     {
         static void Main(string[] args)
         {
-            using (var application = new Application())
+            using (var application = new MainApplication())
             {
                 application.Window.View = "/Views/Index.html";
                 application.Window.Borderless = false;

@@ -12,13 +12,13 @@ using System.Threading.Tasks;
 using Xilium.CefGlue;
 using Xilium.CefGlue.Wrapper;
 
-namespace Samotorcan.HtmlUi.Core.Handlers
+namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 {
     /// <summary>
-    /// Default render process handler.
+    /// Render process handler.
     /// </summary>
     [CLSCompliant(false)]
-    public class DefaultRenderProcessHandler : CefRenderProcessHandler
+    public class ProcessHandler : CefRenderProcessHandler
     {
         #region Properties
         #region Private
@@ -65,9 +65,9 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DefaultRenderProcessHandler"/> class.
+        /// Initializes a new instance of the <see cref="ProcessHandler"/> class.
         /// </summary>
-        public DefaultRenderProcessHandler()
+        public ProcessHandler()
         {
             Callbacks = new Dictionary<Guid, JavascriptCallback>();
             MessageRouter = new CefMessageRouterRendererSide(new CefMessageRouterConfig());
@@ -167,9 +167,6 @@ namespace Samotorcan.HtmlUi.Core.Handlers
         /// <param name="extraInfo"></param>
         protected override void OnRenderThreadCreated(CefListValue extraInfo)
         {
-            log4net.GlobalContext.Properties["pid"] = Process.GetCurrentProcess().Id;
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-
             NativeRequestUrl = extraInfo.GetString(0);
 
             GeneralLog.Info("Render process thread created.");
@@ -223,43 +220,7 @@ namespace Samotorcan.HtmlUi.Core.Handlers
                 callbackId = AddCallback(callbackFunction, context);
 
             // controllers
-            var controllerChanges = new List<ControllerChange>();
-
-            for (int i = 0; i < controllers.GetArrayLength(); i++)
-            {
-                var controller = controllers.GetValue(i);
-
-                var id = controller.GetValue("id").GetIntValue();
-                var properties = controller.GetValue("properties");
-
-                var controllerChange = new ControllerChange
-                {
-                    Id = id
-                };
-                controllerChanges.Add(controllerChange);
-
-                // properties
-                foreach (var propertyName in properties.GetKeys())
-                {
-                    var value = properties.GetValue(propertyName);
-                    object rawValue = null;
-
-                    if (value.IsString)
-                        rawValue = value.GetStringValue();
-                    else if (value.IsInt)
-                        rawValue = value.GetIntValue();
-                    else if (value.IsBool)
-                        rawValue = value.GetBoolValue();
-                    else if (value.IsDate)
-                        rawValue = value.GetDateValue();
-                    else if (value.IsDouble)
-                        rawValue = value.GetDoubleValue();
-                    else if (value.IsUInt)
-                        rawValue = TryConvertToInt(value.GetUIntValue());
-
-                    controllerChange.Properties.Add(propertyName, rawValue);
-                }
-            }
+            var controllerChanges = JsonConvert.DeserializeObject<List<ControllerChange>>(controllers.GetStringValue());
 
             // send to browser process
             MessageUtility.SendMessage(CefBrowser, "Digest", callbackId, controllerChanges);
@@ -353,18 +314,6 @@ namespace Samotorcan.HtmlUi.Core.Handlers
                 return value;
 
             return (int)value;
-        }
-        #endregion
-
-        #region CurrentDomain_UnhandledException
-        /// <summary>
-        /// Handles the UnhandledException event of the CurrentDomain control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="UnhandledExceptionEventArgs"/> instance containing the event data.</param>
-        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            GeneralLog.Error("Render process unhandled exception.", e.ExceptionObject as Exception);
         }
         #endregion
 

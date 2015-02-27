@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
 
-namespace Samotorcan.HtmlUi.Core.Handlers.Browser
+namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 {
     /// <summary>
-    /// Default cef load handler.
+    /// Load handler.
     /// </summary>
     [CLSCompliant(false)]
-    public class DefaultCefLoadHandler : CefLoadHandler
+    public class LoadHandler : CefLoadHandler
     {
     }
 }

@@ -11,10 +11,10 @@ using FormsApplication = System.Windows.Forms.Application;
 namespace Samotorcan.HtmlUi.Windows
 {
     /// <summary>
-    /// Application.
+    /// Main application.
     /// </summary>
     [CLSCompliant(false)]
-    public class Application : Core.BaseApplication
+    public class MainApplication : Core.BaseMainApplication
     {
         #region Properties
         #region Public
@@ -26,11 +26,11 @@ namespace Samotorcan.HtmlUi.Windows
         /// <value>
         /// The current.
         /// </value>
-        public static new Application Current
+        public static new MainApplication Current
         {
             get
             {
-                return (Application)Core.BaseApplication.Current;
+                return (MainApplication)Core.BaseMainApplication.Current;
             }
         }
         #endregion
@@ -109,9 +109,9 @@ namespace Samotorcan.HtmlUi.Windows
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Application"/> class.
+        /// Initializes a new instance of the <see cref="MainApplication"/> class.
         /// </summary>
-        public Application()
+        public MainApplication()
             : base()
         {
             UiSynchronizationContextCreated = new AutoResetEvent(false);

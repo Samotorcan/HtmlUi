@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
 
-namespace Samotorcan.HtmlUi.Core.Handlers.Scheme
+namespace Samotorcan.HtmlUi.Core.Scheme
 {
     /// <summary>
     /// Default request resource handler.

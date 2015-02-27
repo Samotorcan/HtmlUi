@@ -14,10 +14,26 @@ namespace Samotorcan.Tests.Windows
     {
         static void Main(string[] args)
         {
-            using (var application = new Application())
+            if (HtmlUiRuntime.ApplicationType == ApplicationType.MainApplication)
+                RunMainApplication();
+            else
+                RunChildApplication();
+        }
+
+        private static void RunMainApplication()
+        {
+            using (var application = new MainApplication())
             {
                 var controller = application.ControllerProvider.CreateController("GreetingController");
 
+                application.Run();
+            }
+        }
+
+        private static void RunChildApplication()
+        {
+            using (var application = new ChildApplication())
+            {
                 application.Run();
             }
         }
