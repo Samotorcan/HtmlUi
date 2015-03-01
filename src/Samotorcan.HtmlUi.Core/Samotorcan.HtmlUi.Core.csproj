@@ -81,12 +81,14 @@
     <Compile Include="BaseApplication.cs" />
     <Compile Include="BaseMainApplication.cs" />
     <Compile Include="BaseChildApplication.cs" />
+    <Compile Include="LogMessageType.cs" />
+    <Compile Include="LogType.cs" />
     <Compile Include="Renderer\App.cs" />
     <Compile Include="HtmlUiRuntime.cs" />
     <Compile Include="Message.cs" />
-    <Compile Include="CefActionV8Handler.cs" />
-    <Compile Include="CefActionV8HandlerFunction.cs" />
-    <Compile Include="CefArgument.cs" />
+    <Compile Include="V8ActionHandler.cs" />
+    <Compile Include="V8ActionHandlerFunction.cs" />
+    <Compile Include="Argument.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="ControllerChange.cs" />
     <Compile Include="ControllerDescription.cs" />

@@ -8,9 +8,9 @@ using Xilium.CefGlue;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// CEF action V8 handler function.
+    /// V8 action handler function.
     /// </summary>
-    internal class CefActionV8HandlerFunction
+    internal class V8ActionHandlerFunction
     {
         #region ExecuteAction
         /// <summary>
@@ -51,7 +51,7 @@ namespace Samotorcan.HtmlUi.Core
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CefActionV8HandlerFunction"/> class.
+        /// Initializes a new instance of the <see cref="V8ActionHandlerFunction"/> class.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="action">The action.</param>
@@ -60,7 +60,7 @@ namespace Samotorcan.HtmlUi.Core
         /// or
         /// action
         /// </exception>
-        public CefActionV8HandlerFunction(string name, ExecuteAction action)
+        public V8ActionHandlerFunction(string name, ExecuteAction action)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException("name");

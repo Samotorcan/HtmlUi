@@ -15,22 +15,22 @@ namespace Samotorcan.HtmlUi.Core.Logs
         #region Properties
         #region Private
 
-        #region Log
-        private static ILog _log;
+        #region Logger
+        private static ILog _logger;
         /// <summary>
-        /// Gets the log.
+        /// Gets the logger.
         /// </summary>
         /// <value>
-        /// The log.
+        /// The logger.
         /// </value>
-        private static ILog Log
+        private static ILog Logger
         {
             get
             {
-                if (_log == null)
-                    _log = LogManager.GetLogger("GeneralLog");
+                if (_logger == null)
+                    _logger = LogManager.GetLogger("GeneralLog");
 
-                return _log;
+                return _logger;
             }
         }
         #endregion
@@ -40,6 +40,28 @@ namespace Samotorcan.HtmlUi.Core.Logs
         #region Methods
         #region Public
 
+        #region Log
+        /// <summary>
+        /// Logs the specified message.
+        /// </summary>
+        /// <param name="messageType">Type of the message.</param>
+        /// <param name="message">The message.</param>
+        public static void Log(LogMessageType messageType, string message)
+        {
+            if (messageType == LogMessageType.Debug)
+                GeneralLog.Debug(message);
+
+            if (messageType == LogMessageType.Info)
+                GeneralLog.Info(message);
+
+            if (messageType == LogMessageType.Warn)
+                GeneralLog.Warn(message);
+
+            if (messageType == LogMessageType.Error)
+                GeneralLog.Error(message);
+        }
+        #endregion
+
         #region Debug
         /// <summary>
         /// Log a message object with the log4net.Core.Level.Debug level.
@@ -47,7 +69,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="message">The message object to log.</param>
         public static void Debug(object message)
         {
-            Log.Debug(message);
+            Logger.Debug(message);
         }
 
         /// <summary>
@@ -57,7 +79,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="exception">The exception to log, including its stack trace.</param>
         public static void Debug(object message, Exception exception)
         {
-            Log.Debug(message, exception);
+            Logger.Debug(message, exception);
         }
         #endregion
         #region Info
@@ -67,7 +89,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="message">The message object to log.</param>
         public static void Info(object message)
         {
-            Log.Info(message);
+            Logger.Info(message);
         }
 
         /// <summary>
@@ -77,7 +99,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="exception">The exception to log, including its stack trace.</param>
         public static void Info(object message, Exception exception)
         {
-            Log.Info(message, exception);
+            Logger.Info(message, exception);
         }
         #endregion
         #region Warn
@@ -87,7 +109,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="message">The message object to log.</param>
         public static void Warn(object message)
         {
-            Log.Warn(message);
+            Logger.Warn(message);
         }
 
         /// <summary>
@@ -97,7 +119,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="exception">The exception to log, including its stack trace.</param>
         public static void Warn(object message, Exception exception)
         {
-            Log.Warn(message, exception);
+            Logger.Warn(message, exception);
         }
         #endregion
         #region Error
@@ -107,7 +129,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="message">The message object to log.</param>
         public static void Error(object message)
         {
-            Log.Error(message);
+            Logger.Error(message);
         }
 
         /// <summary>
@@ -117,7 +139,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="exception">The exception to log, including its stack trace.</param>
         public static void Error(object message, Exception exception)
         {
-            Log.Error(message, exception);
+            Logger.Error(message, exception);
         }
         #endregion
 

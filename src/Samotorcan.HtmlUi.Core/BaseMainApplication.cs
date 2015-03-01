@@ -563,8 +563,8 @@ namespace Samotorcan.HtmlUi.Core
 
             // arguments
             var arguments = new List<string>();
-            if (!EnableD3D11 && !arguments.Contains(CefArgument.DisableD3D11.Value))
-                arguments.Add(CefArgument.DisableD3D11.Value);
+            if (!EnableD3D11 && !arguments.Contains(Argument.DisableD3D11.Value))
+                arguments.Add(Argument.DisableD3D11.Value);
 
             // initialize
             var mainArgs = new CefMainArgs(arguments.ToArray());

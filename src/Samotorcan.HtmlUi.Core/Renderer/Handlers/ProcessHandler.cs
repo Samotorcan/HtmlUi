@@ -123,6 +123,15 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
                 callback.CallbackFunction.ExecuteFunctionWithContext(callback.Context, null, new CefV8Value[0]);
             }
 
+            // create controllers callback
+            else if (processMessage.Name == "CreateControllersCallback")
+            {
+                var message = MessageUtility.DeserializeMessage<List<ControllerDescription>>(processMessage);
+                var callback = GetCallback(message.CallbackId.Value);
+
+                callback.CallbackFunction.ExecuteFunctionWithContext(callback.Context, null, new CefV8Value[] { CefV8Value.CreateString(JsonConvert.SerializeObject(message.Data)) });
+            }
+
             return MessageRouter.OnProcessMessageReceived(browser, sourceProcess, processMessage);
         }
         #endregion
@@ -157,7 +166,10 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             // html-ui extension
             var htmlUiScript = ProcessExtensionResource(ResourceUtility.GetResourceAsString("Scripts/html-ui.extension.js"));
 
-            CefRuntime.RegisterExtension("html-ui", htmlUiScript, new CefActionV8Handler("digest", Digest));
+            CefRuntime.RegisterExtension("html-ui", htmlUiScript, new V8ActionHandler(
+                new V8ActionHandlerFunction("digest", Digest),
+                new V8ActionHandlerFunction("createControllers", CreateControllers)
+            ));
         }
         #endregion
         #region OnRenderThreadCreated
@@ -224,6 +236,32 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 
             // send to browser process
             MessageUtility.SendMessage(CefBrowser, "Digest", callbackId, controllerChanges);
+        }
+        #endregion
+        #region CreateControllers
+        /// <summary>
+        /// Create controllers call.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="obj">The object.</param>
+        /// <param name="arguments">The arguments.</param>
+        /// <param name="returnValue">The return value.</param>
+        /// <param name="exception">The exception.</param>
+        private void CreateControllers(string name, CefV8Value obj, CefV8Value[] arguments, out CefV8Value returnValue, out string exception)
+        {
+            exception = null;
+            returnValue = null;
+
+            var callbackFunction = arguments.Length > 0 && arguments[0].IsFunction ? arguments[0] : null;
+            var context = CefV8Context.GetCurrentContext();
+            Guid? callbackId = null;
+
+            // save callback
+            if (callbackFunction != null)
+                callbackId = AddCallback(callbackFunction, context);
+
+            // send to browser process
+            MessageUtility.SendMessage(CefBrowser, "CreateControllers", callbackId);
         }
         #endregion
         #region ProcessExtensionResource

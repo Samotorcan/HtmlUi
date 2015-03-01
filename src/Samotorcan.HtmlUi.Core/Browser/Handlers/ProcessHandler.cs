@@ -44,8 +44,8 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 }
             }
 
-            if (!BaseMainApplication.Current.EnableD3D11 && !commandLine.GetArguments().Contains(CefArgument.DisableD3D11.Value))
-                commandLine.AppendArgument(CefArgument.DisableD3D11.Value);
+            if (!BaseMainApplication.Current.EnableD3D11 && !commandLine.GetArguments().Contains(Argument.DisableD3D11.Value))
+                commandLine.AppendArgument(Argument.DisableD3D11.Value);
         }
         #endregion
         #region OnRenderProcessThreadCreated

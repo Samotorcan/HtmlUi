@@ -32,50 +32,50 @@ namespace Samotorcan.HtmlUi.Core.Browser
         #region Properties
         #region Private
 
-        #region CefLifeSpanHandler
+        #region LifeSpanHandler
         /// <summary>
-        /// Gets or sets the cef life span handler.
+        /// Gets or sets the life span handler.
         /// </summary>
         /// <value>
-        /// The cef life span handler.
+        /// The life span handler.
         /// </value>
-        private LifeSpanHandler CefLifeSpanHandler { get; set; }
+        private LifeSpanHandler LifeSpanHandler { get; set; }
         #endregion
-        #region CefDisplayHandler
+        #region DisplayHandler
         /// <summary>
-        /// Gets or sets the cef display handler.
+        /// Gets or sets the display handler.
         /// </summary>
         /// <value>
-        /// The cef display handler.
+        /// The display handler.
         /// </value>
-        private DisplayHandler CefDisplayHandler { get; set; }
+        private DisplayHandler DisplayHandler { get; set; }
         #endregion
-        #region CefLoadHandler
+        #region LoadHandler
         /// <summary>
-        /// Gets or sets the cef load handler.
+        /// Gets or sets the load handler.
         /// </summary>
         /// <value>
-        /// The cef load handler.
+        /// The load handler.
         /// </value>
-        private LoadHandler CefLoadHandler { get; set; }
+        private LoadHandler LoadHandler { get; set; }
         #endregion
-        #region CefRequestHandler
+        #region RequestHandler
         /// <summary>
-        /// Gets or sets the cef request handler.
+        /// Gets or sets the request handler.
         /// </summary>
         /// <value>
-        /// The cef request handler.
+        /// The request handler.
         /// </value>
-        private RequestHandler CefRequestHandler { get; set; }
+        private RequestHandler RequestHandler { get; set; }
         #endregion
-        #region CefKeyboardHandler
+        #region KeyboardHandler
         /// <summary>
-        /// Gets or sets the cef keyboard handler.
+        /// Gets or sets the keyboard handler.
         /// </summary>
         /// <value>
-        /// The cef keyboard handler.
+        /// The keyboard handler.
         /// </value>
-        private KeyboardHandler CefKeyboardHandler { get; set; }
+        private KeyboardHandler KeyboardHandler { get; set; }
         #endregion
 
         #endregion
@@ -88,14 +88,14 @@ namespace Samotorcan.HtmlUi.Core.Browser
         public Client()
             : base()
         {
-            CefLifeSpanHandler = new LifeSpanHandler();
-            CefDisplayHandler = new DisplayHandler();
-            CefLoadHandler = new LoadHandler();
-            CefRequestHandler = new RequestHandler();
-            CefKeyboardHandler = new KeyboardHandler();
+            LifeSpanHandler = new LifeSpanHandler();
+            DisplayHandler = new DisplayHandler();
+            LoadHandler = new LoadHandler();
+            RequestHandler = new RequestHandler();
+            KeyboardHandler = new KeyboardHandler();
 
             // set events
-            CefLifeSpanHandler.BrowserCreated += (sender, e) => {
+            LifeSpanHandler.BrowserCreated += (sender, e) => {
                 if (BrowserCreated != null)
                     BrowserCreated(this, e);
             };
@@ -112,7 +112,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         /// <returns></returns>
         protected override CefLifeSpanHandler GetLifeSpanHandler()
         {
-            return CefLifeSpanHandler;
+            return LifeSpanHandler;
         }
         #endregion
         #region GetDisplayHandler
@@ -122,7 +122,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         /// <returns></returns>
         protected override CefDisplayHandler GetDisplayHandler()
         {
-            return CefDisplayHandler;
+            return DisplayHandler;
         }
         #endregion
         #region GetLoadHandler
@@ -132,7 +132,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         /// <returns></returns>
         protected override CefLoadHandler GetLoadHandler()
         {
-            return CefLoadHandler;
+            return LoadHandler;
         }
         #endregion
         #region GetRequestHandler
@@ -142,7 +142,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         /// <returns></returns>
         protected override CefRequestHandler GetRequestHandler()
         {
-            return CefRequestHandler;
+            return RequestHandler;
         }
         #endregion
         #region GetKeyboardHandler
@@ -152,7 +152,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         /// <returns></returns>
         protected override CefKeyboardHandler GetKeyboardHandler()
         {
-            return CefKeyboardHandler;
+            return KeyboardHandler;
         }
         #endregion
         #region OnProcessMessageReceived
@@ -182,14 +182,35 @@ namespace Samotorcan.HtmlUi.Core.Browser
                     // callback
                     if (message.CallbackId != null)
                     {
-                        CefUtility.ExecuteTask(CefThreadId.UI, () =>
-                        {
-                            MessageUtility.SendMessage(browser, "DigestCallback", message.CallbackId);
-                        });
+                        MessageUtility.SendMessage(browser, "DigestCallback", message.CallbackId);
                     }
                 });
 
                 return true;
+            }
+
+            // create controllers
+            else if (processMessage.Name == "CreateControllers")
+            {
+                var message = MessageUtility.DeserializeMessage(processMessage);
+
+                BaseMainApplication.Current.InvokeOnMainAsync(() =>
+                {
+                    var application = BaseMainApplication.Current;
+                    var window = application.Window;
+
+                    window.CreateControllers();
+
+                    // callback
+                    if (message.CallbackId != null)
+                    {
+                        var controllerDescriptions = window.Controllers
+                            .Select(c => c.GetDescription(PropertyNameType.CamelCase))
+                            .ToList();
+
+                        MessageUtility.SendMessage(browser, "CreateControllersCallback", message.CallbackId, controllerDescriptions);
+                    }
+                });
             }
 
             return BaseMainApplication.Current.BrowserMessageRouter.OnProcessMessageReceived(browser, sourceProcess, processMessage);

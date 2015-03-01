@@ -19,6 +19,20 @@
 
         createControllers: function () {
             return nativeSynchronous('create-controllers');
+        },
+
+        createControllersAsync: function (callback) {
+            var convertCallback = function (json) {
+                if (callback != null)
+                    callback(JSON.parse(json))
+            };
+
+            // !native function createControllers();
+            createControllers(convertCallback);
+        },
+
+        log: function (type, messageType, message) {
+            return nativeSynchronous('log', { type: type, messageType: messageType, message: message });
         }
     };
 

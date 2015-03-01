@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// Cef argument.
+    /// Argument.
     /// </summary>
-    public sealed class CefArgument
+    public sealed class Argument
     {
         #region Arguments
 
@@ -18,7 +18,7 @@ namespace Samotorcan.HtmlUi.Core
         /// The disable d3d11 argument.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "It's immutable.")]
-        public static readonly CefArgument DisableD3D11 = new CefArgument("--disable-d3d11");
+        public static readonly Argument DisableD3D11 = new Argument("--disable-d3d11");
         #endregion
 
         #endregion
@@ -40,10 +40,10 @@ namespace Samotorcan.HtmlUi.Core
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CefArgument"/> class.
+        /// Initializes a new instance of the <see cref="Argument"/> class.
         /// </summary>
         /// <param name="value">The value.</param>
-        private CefArgument(string value)
+        private Argument(string value)
         {
             Value = value;
         }

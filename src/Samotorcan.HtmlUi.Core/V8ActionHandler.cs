@@ -8,9 +8,9 @@ using Xilium.CefGlue;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// CEF Action V8 handler.
+    /// V8 action handler.
     /// </summary>
-    internal class CefActionV8Handler : CefV8Handler
+    internal class V8ActionHandler : CefV8Handler
     {
         #region Properties
         #region Private
@@ -22,7 +22,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The functions.
         /// </value>
-        private CefActionV8HandlerFunction[] Functions { get; set; }
+        private V8ActionHandlerFunction[] Functions { get; set; }
         #endregion
 
         #endregion
@@ -30,24 +30,24 @@ namespace Samotorcan.HtmlUi.Core
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CefActionV8Handler"/> class.
+        /// Initializes a new instance of the <see cref="V8ActionHandler"/> class.
         /// </summary>
         /// <param name="functions">The functions.</param>
-        public CefActionV8Handler(params CefActionV8HandlerFunction[] functions)
+        public V8ActionHandler(params V8ActionHandlerFunction[] functions)
         {
             if (functions == null)
-                functions = new CefActionV8HandlerFunction[0];
+                functions = new V8ActionHandlerFunction[0];
 
             Functions = functions;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CefActionV8Handler"/> class.
+        /// Initializes a new instance of the <see cref="V8ActionHandler"/> class.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="action">The action.</param>
-        public CefActionV8Handler(string name, CefActionV8HandlerFunction.ExecuteAction action)
-            : this(new CefActionV8HandlerFunction[] { new CefActionV8HandlerFunction(name, action) }) { }
+        public V8ActionHandler(string name, V8ActionHandlerFunction.ExecuteAction action)
+            : this(new V8ActionHandlerFunction[] { new V8ActionHandlerFunction(name, action) }) { }
 
         #endregion
         #region Methods

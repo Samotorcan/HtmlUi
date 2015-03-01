@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
@@ -168,6 +169,8 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                     Data = CreateControllers(request);
                 else if (Path == "digest")
                     Data = Digest(request);
+                else if (Path == "log")
+                    Data = Log(request);
             }
             catch (Exception e)
             {
@@ -224,8 +227,6 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             var application = BaseMainApplication.Current;
             var window = application.Window;
 
-            var createdControllers = new List<Controller>();
-
             // create controllers
             application.InvokeOnMain(() => {
                 window.CreateControllers();
@@ -233,7 +234,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             var controllerDescriptions = window.Controllers
                 .Select(c => c.GetDescription(PropertyNameType.CamelCase))
-                .ToArray();
+                .ToList();
 
             return JsonUtility.SerializeToJson(controllerDescriptions);
         }
@@ -257,6 +258,26 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             return new byte[0];
         }
         #endregion
+        #region Log
+        /// <summary>
+        /// Calls the log.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        private byte[] Log(CefRequest request)
+        {
+            var jsonToken = GetPostJsonToken(request);
+
+            var type = LogType.Parse((string)jsonToken["type"]);
+            var messageType = LogMessageType.Parse((string)jsonToken["messageType"]);
+            var message = jsonToken["message"].ToString();
+
+            if (type == LogType.GeneralLog)
+                GeneralLog.Log(messageType, message);
+
+            return new byte[0];
+        }
+        #endregion
 
         #region GetPostData
         /// <summary>
@@ -267,9 +288,33 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// <returns></returns>
         private TData GetPostData<TData>(CefRequest request)
         {
-            var json = Encoding.UTF8.GetString(request.PostData.GetElements()[0].GetBytes());
+            var json = GetPostJson(request);
 
             return JsonConvert.DeserializeObject<TData>(json);
+        }
+        #endregion
+        #region GetPostJson
+        /// <summary>
+        /// Gets the post json.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        private string GetPostJson(CefRequest request)
+        {
+            return Encoding.UTF8.GetString(request.PostData.GetElements()[0].GetBytes());
+        }
+        #endregion
+        #region GetPostJsonToken
+        /// <summary>
+        /// Gets the post json token.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        private JToken GetPostJsonToken(CefRequest request)
+        {
+            var json = GetPostJson(request);
+
+            return JToken.Parse(json);
         }
         #endregion
 
