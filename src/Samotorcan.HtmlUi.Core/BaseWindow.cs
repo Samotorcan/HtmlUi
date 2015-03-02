@@ -1,5 +1,7 @@
-﻿using Samotorcan.HtmlUi.Core.Browser;
+﻿using Newtonsoft.Json;
+using Samotorcan.HtmlUi.Core.Browser;
 using Samotorcan.HtmlUi.Core.Events;
+using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
@@ -103,7 +105,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The controllers.
         /// </value>
-        internal List<Controller> Controllers { get; set; }
+        internal Dictionary<int, Controller> Controllers { get; set; }
         #endregion
 
         #endregion
@@ -129,7 +131,7 @@ namespace Samotorcan.HtmlUi.Core
         protected BaseWindow()
         {
             View = "/Views/Index.html";
-            Controllers = new List<Controller>();
+            Controllers = new Dictionary<int, Controller>();
         }
 
         #endregion
@@ -147,37 +149,44 @@ namespace Samotorcan.HtmlUi.Core
                 KeyPress(this, new KeyPressEventArgs(nativeKeyCode));
         }
         #endregion
-        #region CreateControllers
+        #region CreateController
         /// <summary>
         /// Creates the controllers.
         /// </summary>
-        internal void CreateControllers()
+        internal Controller CreateController(string name, int id)
         {
-            var controllerProvider = BaseMainApplication.Current.ControllerProvider;
-            var controllerTypes = controllerProvider.GetControllerTypes();
-            var createdControllers = new List<Controller>();
+            if (Controllers.ContainsKey(id))
+                throw new ArgumentException("Controller with this id already exists.", "id");
 
-            try
+            var controllerProvider = BaseMainApplication.Current.ControllerProvider;
+
+            var createdController = controllerProvider.CreateController(name, id);
+            Controllers.Add(id, createdController);
+
+            return createdController;
+        }
+        #endregion
+        #region Digest
+        /// <summary>
+        /// Digest call. Updates the controllers.
+        /// </summary>
+        /// <param name="controllerChanges">The controller changes.</param>
+        internal void Digest(IEnumerable<ControllerChange> controllerChanges)
+        {
+            BaseMainApplication.Current.EnsureMainThread();
+
+            GeneralLog.Debug(string.Format("Digest call: {0}", JsonConvert.SerializeObject(controllerChanges)));
+
+            foreach (var controllerChange in controllerChanges)
             {
-                foreach (var controllerType in controllerTypes)
+                if (Controllers.ContainsKey(controllerChange.Id))
                 {
-                    createdControllers.Add(controllerProvider.CreateController(controllerType.Name));
+                    var controller = Controllers[controllerChange.Id];
+
+                    foreach (var changeProperty in controllerChange.Properties)
+                        controller.TrySetProperty(changeProperty.Key, changeProperty.Value);
                 }
             }
-            catch (Exception)
-            {
-                foreach (var createdController in createdControllers)
-                    createdController.Dispose();
-
-                throw;
-            }
-
-            // dispose current controllers
-            foreach (var controller in Controllers)
-                controller.Dispose();
-
-            // save created controllers
-            Controllers = createdControllers;
         }
         #endregion
 

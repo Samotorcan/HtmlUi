@@ -15,8 +15,9 @@ namespace Samotorcan.HtmlUi.Core
         /// Creates the controller.
         /// </summary>
         /// <param name="name">The name.</param>
+        /// <param name="id">The identifier.</param>
         /// <returns></returns>
-        Controller CreateController(string name);
+        Controller CreateController(string name, int id);
 
         /// <summary>
         /// Controller exists.

@@ -14,6 +14,19 @@ namespace Samotorcan.HtmlUi.Core
     public abstract class Controller : IDisposable
     {
         #region Properties
+        #region Public
+
+        #region Id
+        /// <summary>
+        /// Gets the identifier.
+        /// </summary>
+        /// <value>
+        /// The identifier.
+        /// </value>
+        public int Id { get; private set; }
+        #endregion
+
+        #endregion
         #region Private
 
         #region Properties
@@ -43,6 +56,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         private Type Type { get; set; }
         #endregion
+        #region IgnoreProperties
+        /// <summary>
+        /// Gets or sets the ignore properties.
+        /// </summary>
+        /// <value>
+        /// The ignore properties.
+        /// </value>
+        private List<string> IgnoreProperties { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -52,14 +74,20 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Initializes a new instance of the <see cref="Controller"/> class.
         /// </summary>
-        protected Controller()
+        protected Controller(int id)
         {
+            Id = id;
+
             Properties = new List<ControllerPropertyInfo>();
+            IgnoreProperties = new List<string>
+            {
+                "Id"
+            };
             Type = GetType();
             Name = Type.Name;
 
             // find all properties
-            foreach (var property in Type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            foreach (var property in Type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => !IgnoreProperties.Contains(p.Name)))
             {
                 var readAccess = property.CanRead && property.GetGetMethod(false) != null;
                 var writeAccess = property.CanWrite && property.GetSetMethod(false) != null;
@@ -75,7 +103,7 @@ namespace Samotorcan.HtmlUi.Core
 
                 // add
                 if (access != null)
-                    Properties.Add(new ControllerPropertyInfo { Name = property.Name, Property = property, Access = access.Value });
+                    Properties.Add(new ControllerPropertyInfo { Name = property.Name, PropertyInfo = property, Access = access.Value });
             }
         }
 
@@ -96,7 +124,7 @@ namespace Samotorcan.HtmlUi.Core
                 .Select(p => new ControllerProperty
                 {
                     Name = propertyNameType == PropertyNameType.CamelCase ? StringUtility.CamelCase(p.Name) : p.Name,
-                    Value = p.Access.HasFlag(PropertyAccess.Read) ? p.Property.GetValue(this, null) : null,
+                    Value = p.Access.HasFlag(PropertyAccess.Read) ? p.PropertyInfo.GetValue(this, null) : null,
                     Access = p.Access
                 })
                 .ToList();
@@ -152,7 +180,65 @@ namespace Samotorcan.HtmlUi.Core
         /// <returns></returns>
         internal ControllerDescription GetDescription()
         {
-            return GetDescription(PropertyNameType.Normal);
+            return GetDescription(PropertyNameType.CamelCase);
+        }
+        #endregion
+        #region TrySetProperty
+        /// <summary>
+        /// Tries to set property.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="propertyNameType">Type of the property name.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">propertyName</exception>
+        internal bool TrySetProperty(string propertyName, object value, PropertyNameType propertyNameType)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName))
+                throw new ArgumentNullException("propertyName");
+
+            var property = Properties.FirstOrDefault(p => p.Access.HasFlag(PropertyAccess.Write) &&
+                (propertyNameType == PropertyNameType.CamelCase
+                    ? StringUtility.CamelCase(p.Name) == propertyName
+                    : p.Name == propertyName));
+
+            if (property != null)
+            {
+                var propertyInfo = property.PropertyInfo;
+                var propertyType = propertyInfo.PropertyType;
+
+                if (value == null)
+                {
+                    if (!propertyType.IsValueType || Nullable.GetUnderlyingType(propertyType) != null)
+                    {
+                        propertyInfo.SetValue(this, value);
+                        return true;
+                    }
+                }
+                else
+                {
+                    var valueType = value.GetType();
+
+                    if (valueType == propertyType)
+                    {
+                        propertyInfo.SetValue(this, value);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to set property.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        internal bool TrySetProperty(string propertyName, object value)
+        {
+            return TrySetProperty(propertyName, value, PropertyNameType.CamelCase);
         }
         #endregion
 
@@ -167,12 +253,12 @@ namespace Samotorcan.HtmlUi.Core
         private class ControllerPropertyInfo : ControllerProperty
         {
             /// <summary>
-            /// Gets or sets the property.
+            /// Gets or sets the property info.
             /// </summary>
             /// <value>
-            /// The property.
+            /// The property info.
             /// </value>
-            public PropertyInfo Property { get; set; }
+            public PropertyInfo PropertyInfo { get; set; }
         }
         #endregion
 

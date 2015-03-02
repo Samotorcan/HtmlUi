@@ -165,12 +165,21 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             try
             {
-                if (Path == "create-controllers")
-                    Data = CreateControllers(request);
-                else if (Path == "digest")
-                    Data = Digest(request);
-                else if (Path == "log")
-                    Data = Log(request);
+                switch (Path)
+                {
+                    case "controller-names":
+                        Data = ControllerNames(request);
+                        break;
+                    case "create-controller":
+                        Data = CreateController(request);
+                        break;
+                    case "digest":
+                        Data = Digest(request);
+                        break;
+                    case "log":
+                        Data = Log(request);
+                        break;
+                }
             }
             catch (Exception e)
             {
@@ -216,27 +225,43 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         #endregion
         #region Private
 
-        #region CreateControllers
+        #region ControllerNames
         /// <summary>
-        /// Calls the create controllers.
+        /// Controller names.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <returns></returns>
-        private byte[] CreateControllers(CefRequest request)
+        private byte[] ControllerNames(CefRequest request)
         {
-            var application = BaseMainApplication.Current;
-            var window = application.Window;
+            IEnumerable<Type> controllerTypes = null;
 
-            // create controllers
-            application.InvokeOnMain(() => {
-                window.CreateControllers();
+            BaseMainApplication.Current.InvokeOnMain(() =>
+            {
+                controllerTypes = BaseMainApplication.Current.ControllerProvider.GetControllerTypes();
             });
 
-            var controllerDescriptions = window.Controllers
-                .Select(c => c.GetDescription(PropertyNameType.CamelCase))
-                .ToList();
+            return JsonUtility.SerializeToJson(controllerTypes.Select(c => c.Name).ToList());
+        }
+        #endregion
+        #region CreateController
+        /// <summary>
+        /// Controller names.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        private byte[] CreateController(CefRequest request)
+        {
+            var controllerData = GetAnonymousPostData(request, new { Name = string.Empty, id = 0 });
+            ControllerDescription controllerDescription = null;
 
-            return JsonUtility.SerializeToJson(controllerDescriptions);
+            BaseMainApplication.Current.InvokeOnMain(() =>
+            {
+                var controller = BaseMainApplication.Current.Window.CreateController(controllerData.Name, controllerData.id);
+
+                controllerDescription = controller.GetDescription();
+            });
+
+            return JsonUtility.SerializeToJson(controllerDescription);
         }
         #endregion
         #region Digest
@@ -247,12 +272,12 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// <returns></returns>
         private byte[] Digest(CefRequest request)
         {
-            List<ControllerChange> controllerChanges = GetPostData<List<ControllerChange>>(request);
+            var controllerChanges = GetPostData<List<ControllerChange>>(request);
 
             var application = BaseMainApplication.Current;
             application.InvokeOnMain(() =>
             {
-                application.Digest(controllerChanges);
+                application.Window.Digest(controllerChanges);
             });
 
             return new byte[0];
@@ -291,6 +316,21 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             var json = GetPostJson(request);
 
             return JsonConvert.DeserializeObject<TData>(json);
+        }
+        #endregion
+        #region GetAnonymousPostData
+        /// <summary>
+        /// Gets the anonymous post data.
+        /// </summary>
+        /// <typeparam name="TData">The type of the data.</typeparam>
+        /// <param name="request">The request.</param>
+        /// <param name="anonymousObject">The anonymous object.</param>
+        /// <returns></returns>
+        private TData GetAnonymousPostData<TData>(CefRequest request, TData anonymousObject)
+        {
+            var json = GetPostJson(request);
+
+            return JsonConvert.DeserializeAnonymousType(json, anonymousObject);
         }
         #endregion
         #region GetPostJson

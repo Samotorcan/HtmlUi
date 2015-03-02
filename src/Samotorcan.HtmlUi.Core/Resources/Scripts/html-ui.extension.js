@@ -17,18 +17,22 @@
             digest(JSON.stringify(controllers), callback);
         },
 
-        createControllers: function () {
-            return nativeSynchronous('create-controllers');
+        controllerNames: function () {
+            return nativeSynchronous('controller-names');
         },
 
-        createControllersAsync: function (callback) {
-            var convertCallback = function (json) {
-                if (callback != null)
-                    callback(JSON.parse(json))
-            };
+        controllerNamesAsync: function (callback) {
+            // !native function controllerNames();
+            controllerNames(null, convertCallback(callback));
+        },
 
-            // !native function createControllers();
-            createControllers(convertCallback);
+        createController: function (name, id) {
+            return nativeSynchronous('create-controller', { name: name, id: id });
+        },
+
+        createControllerAsync: function (name, id, callback) {
+            // !native function createController();
+            createController(JSON.stringify({ name: name, id: id }), convertCallback(callback));
         },
 
         log: function (type, messageType, message) {
@@ -68,12 +72,14 @@
         }]);
 
         // create controllers   // TODO: add methods
-        var controllers = native.createControllers();
+        var controllerNames = native.controllerNames();
 
-        for (var i = 0; i < controllers.length; i++) {
-            var controller = controllers[i];
+        for (var i = 0; i < controllerNames.length; i++) {
+            var controllerName = controllerNames[i];
 
-            htmlUi.app.controller(controller.name, ['$scope', function ($scope) {
+            htmlUi.app.controller(controllerName, ['$scope', function ($scope) {
+                var controller = native.createController(controllerName, $scope.$id);
+
                 // properties
                 for (var j = 0; j < controller.properties.length; j++) {
                     var property = controller.properties[j];
@@ -108,5 +114,12 @@
         var response = xhr.responseText;
 
         return response != null && response != '' && xhr.status == 200 ? JSON.parse(response) : undefined;
+    }
+
+    function convertCallback(callback) {
+        return function (json) {
+            if (callback != null)
+                callback(JSON.parse(json))
+        }
     }
 })(htmlUi);

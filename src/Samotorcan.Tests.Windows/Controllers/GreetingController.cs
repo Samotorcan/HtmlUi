@@ -12,13 +12,25 @@ namespace Samotorcan.Tests.Windows.Controllers
     /// </summary>
     public class GreetingController : Controller
     {
-        public string InputString { get; set; }
+        private string _inputString;
+        public string InputString
+        {
+            get
+            {
+                return _inputString;
+            }
+            set
+            {
+                _inputString = value;
+            }
+        }
 
         public string InputStringPS { get; private set; }
 
         public string InputStringPG { private get; set; }
 
-        public GreetingController()
+        public GreetingController(int id)
+            : base(id)
         {
             InputString = "Test string";
             InputStringPS = "Other test string";

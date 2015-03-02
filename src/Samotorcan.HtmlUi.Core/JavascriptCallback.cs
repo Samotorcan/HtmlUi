@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -70,6 +71,30 @@ namespace Samotorcan.HtmlUi.Core
             Context = context;
         }
 
+        #endregion
+        #region Methods
+        #region Public
+
+        #region Execute
+        /// <summary>
+        /// Executes the callback.
+        /// </summary>
+        public void Execute()
+        {
+            CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[0]);
+        }
+
+        /// <summary>
+        /// Executes the callback with data.
+        /// </summary>
+        /// <param name="data">The data.</param>
+        public void Execute(object data)
+        {
+            CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[] { CefV8Value.CreateString(JsonConvert.SerializeObject(data)) });
+        }
+        #endregion
+
+        #endregion
         #endregion
     }
 }

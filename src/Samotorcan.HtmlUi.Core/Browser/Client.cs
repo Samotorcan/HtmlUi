@@ -78,6 +78,16 @@ namespace Samotorcan.HtmlUi.Core.Browser
         private KeyboardHandler KeyboardHandler { get; set; }
         #endregion
 
+        #region ProcessMessages
+        /// <summary>
+        /// Gets or sets the process messages.
+        /// </summary>
+        /// <value>
+        /// The process messages.
+        /// </value>
+        private Dictionary<string, Action<CefBrowser, CefProcessId, CefProcessMessage>> ProcessMessages { get; set; }
+        #endregion
+
         #endregion
         #endregion
         #region Constructors
@@ -98,6 +108,13 @@ namespace Samotorcan.HtmlUi.Core.Browser
             LifeSpanHandler.BrowserCreated += (sender, e) => {
                 if (BrowserCreated != null)
                     BrowserCreated(this, e);
+            };
+
+            ProcessMessages = new Dictionary<string, Action<CefBrowser, CefProcessId, CefProcessMessage>>
+            {
+                { "Digest", Digest },
+                { "ControllerNames", ControllerNames },
+                { "CreateController", CreateController }
             };
         }
 
@@ -170,50 +187,86 @@ namespace Samotorcan.HtmlUi.Core.Browser
             if (processMessage == null)
                 throw new ArgumentNullException("message");
 
-            // digest
-            if (processMessage.Name == "Digest")
+            if (ProcessMessages.ContainsKey(processMessage.Name))
             {
-                var message = MessageUtility.DeserializeMessage<List<ControllerChange>>(processMessage);
-
-                BaseMainApplication.Current.InvokeOnMainAsync(() =>
-                {
-                    BaseMainApplication.Current.Digest(message.Data);
-
-                    // callback
-                    if (message.CallbackId != null)
-                    {
-                        MessageUtility.SendMessage(browser, "DigestCallback", message.CallbackId);
-                    }
-                });
+                ProcessMessages[processMessage.Name](browser, sourceProcess, processMessage);
 
                 return true;
             }
 
-            // create controllers
-            else if (processMessage.Name == "CreateControllers")
-            {
-                var message = MessageUtility.DeserializeMessage(processMessage);
-
-                BaseMainApplication.Current.InvokeOnMainAsync(() =>
-                {
-                    var application = BaseMainApplication.Current;
-                    var window = application.Window;
-
-                    window.CreateControllers();
-
-                    // callback
-                    if (message.CallbackId != null)
-                    {
-                        var controllerDescriptions = window.Controllers
-                            .Select(c => c.GetDescription(PropertyNameType.CamelCase))
-                            .ToList();
-
-                        MessageUtility.SendMessage(browser, "CreateControllersCallback", message.CallbackId, controllerDescriptions);
-                    }
-                });
-            }
-
             return BaseMainApplication.Current.BrowserMessageRouter.OnProcessMessageReceived(browser, sourceProcess, processMessage);
+        }
+        #endregion
+
+        #endregion
+        #region Private
+
+        #region Digest
+        /// <summary>
+        /// Digest call.
+        /// </summary>
+        /// <param name="browser">The browser.</param>
+        /// <param name="sourceProcess">The source process.</param>
+        /// <param name="processMessage">The process message.</param>
+        private void Digest(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        {
+            var message = MessageUtility.DeserializeMessage<List<ControllerChange>>(processMessage);
+
+            BaseMainApplication.Current.InvokeOnMainAsync(() =>
+            {
+                BaseMainApplication.Current.Window.Digest(message.Data);
+
+                // callback
+                if (message.CallbackId != null)
+                {
+                    MessageUtility.SendMessage(browser, "DigestCallback", message.CallbackId);
+                }
+            });
+        }
+        #endregion
+        #region ControllerNames
+        /// <summary>
+        /// Controller names call.
+        /// </summary>
+        /// <param name="browser">The browser.</param>
+        /// <param name="sourceProcess">The source process.</param>
+        /// <param name="processMessage">The process message.</param>
+        private void ControllerNames(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        {
+            var message = MessageUtility.DeserializeMessage(processMessage);
+
+            BaseMainApplication.Current.InvokeOnMainAsync(() =>
+            {
+                // callback
+                if (message.CallbackId != null)
+                {
+                    var controllerTypes = BaseMainApplication.Current.ControllerProvider.GetControllerTypes();
+                    var controllerNames = controllerTypes.Select(c => c.Name).ToList();
+
+                    MessageUtility.SendMessage(browser, "ControllerNamesCallback", message.CallbackId, controllerNames);
+                }
+            });
+        }
+        #endregion
+        #region CreateController
+        /// <summary>
+        /// Create controller call.
+        /// </summary>
+        /// <param name="browser">The browser.</param>
+        /// <param name="sourceProcess">The source process.</param>
+        /// <param name="processMessage">The process message.</param>
+        private void CreateController(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        {
+            var message = MessageUtility.DeserializeAnonymousMessage(processMessage, new { Name = string.Empty, id = 0 });
+
+            BaseMainApplication.Current.InvokeOnMainAsync(() =>
+            {
+                var controller = BaseMainApplication.Current.Window.CreateController(message.Data.Name, message.Data.id);
+
+                // callback
+                if (message.CallbackId != null)
+                    MessageUtility.SendMessage(browser, "CreateControllerCallback", message.CallbackId, controller.GetDescription());
+            });
         }
         #endregion
 

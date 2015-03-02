@@ -59,6 +59,15 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </value>
         private Dictionary<Guid, JavascriptCallback> Callbacks { get; set; }
         #endregion
+        #region ProcessCallbacks
+        /// <summary>
+        /// Gets or sets the process callbacks.
+        /// </summary>
+        /// <value>
+        /// The process callbacks.
+        /// </value>
+        private Dictionary<string, Action<CefBrowser, CefProcessId, CefProcessMessage>> ProcessCallbacks { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -71,6 +80,12 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         {
             Callbacks = new Dictionary<Guid, JavascriptCallback>();
             MessageRouter = new CefMessageRouterRendererSide(new CefMessageRouterConfig());
+            ProcessCallbacks = new Dictionary<string, Action<CefBrowser, CefProcessId, CefProcessMessage>>
+            {
+                { "DigestCallback", DigestCallback },
+                { "ControllerNamesCallback", ControllerNamesCallback },
+                { "CreateControllerCallback", CreateControllerCallback },
+            };
         }
 
         #endregion
@@ -114,23 +129,9 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             if (processMessage == null)
                 throw new ArgumentNullException("message");
 
-            // digest callback
-            if (processMessage.Name == "DigestCallback")
-            {
-                var message = MessageUtility.DeserializeMessage(processMessage);
-                var callback = GetCallback(message.CallbackId.Value);
-
-                callback.CallbackFunction.ExecuteFunctionWithContext(callback.Context, null, new CefV8Value[0]);
-            }
-
-            // create controllers callback
-            else if (processMessage.Name == "CreateControllersCallback")
-            {
-                var message = MessageUtility.DeserializeMessage<List<ControllerDescription>>(processMessage);
-                var callback = GetCallback(message.CallbackId.Value);
-
-                callback.CallbackFunction.ExecuteFunctionWithContext(callback.Context, null, new CefV8Value[] { CefV8Value.CreateString(JsonConvert.SerializeObject(message.Data)) });
-            }
+            // process callback message
+            if (ProcessCallbacks.ContainsKey(processMessage.Name))
+                ProcessCallbacks[processMessage.Name](browser, sourceProcess, processMessage);
 
             return MessageRouter.OnProcessMessageReceived(browser, sourceProcess, processMessage);
         }
@@ -168,7 +169,8 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 
             CefRuntime.RegisterExtension("html-ui", htmlUiScript, new V8ActionHandler(
                 new V8ActionHandlerFunction("digest", Digest),
-                new V8ActionHandlerFunction("createControllers", CreateControllers)
+                new V8ActionHandlerFunction("controllerNames", ControllerNames),
+                new V8ActionHandlerFunction("createController", CreateController)
             ));
         }
         #endregion
@@ -222,48 +224,94 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             exception = null;
             returnValue = null;
 
-            var controllers = arguments[0];
-            var callbackFunction = arguments.Length > 1 && arguments[1].IsFunction ? arguments[1] : null;
-            var context = CefV8Context.GetCurrentContext();
-            Guid? callbackId = null;
+            var controllerChanges = GetData<List<ControllerChange>>(arguments[0]);
+            var callbackId = AddCallback(arguments[1], CefV8Context.GetCurrentContext());
 
-            // save callback
-            if (callbackFunction != null)
-                callbackId = AddCallback(callbackFunction, context);
-
-            // controllers
-            var controllerChanges = JsonConvert.DeserializeObject<List<ControllerChange>>(controllers.GetStringValue());
-
-            // send to browser process
             MessageUtility.SendMessage(CefBrowser, "Digest", callbackId, controllerChanges);
         }
-        #endregion
-        #region CreateControllers
+
         /// <summary>
-        /// Create controllers call.
+        /// Digest callback.
+        /// </summary>
+        /// <param name="browser">The browser.</param>
+        /// <param name="sourceProcess">The source process.</param>
+        /// <param name="processMessage">The process message.</param>
+        private void DigestCallback(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        {
+            var message = MessageUtility.DeserializeMessage(processMessage);
+            var callback = GetCallback(message.CallbackId.Value);
+
+            callback.Execute();
+        }
+        #endregion
+        #region ControllerNames
+        /// <summary>
+        /// Controller names call.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="obj">The object.</param>
         /// <param name="arguments">The arguments.</param>
         /// <param name="returnValue">The return value.</param>
         /// <param name="exception">The exception.</param>
-        private void CreateControllers(string name, CefV8Value obj, CefV8Value[] arguments, out CefV8Value returnValue, out string exception)
+        private void ControllerNames(string name, CefV8Value obj, CefV8Value[] arguments, out CefV8Value returnValue, out string exception)
         {
             exception = null;
             returnValue = null;
 
-            var callbackFunction = arguments.Length > 0 && arguments[0].IsFunction ? arguments[0] : null;
-            var context = CefV8Context.GetCurrentContext();
-            Guid? callbackId = null;
+            var callbackId = AddCallback(arguments[1], CefV8Context.GetCurrentContext());
 
-            // save callback
-            if (callbackFunction != null)
-                callbackId = AddCallback(callbackFunction, context);
+            MessageUtility.SendMessage(CefBrowser, "ControllerNames", callbackId);
+        }
 
-            // send to browser process
-            MessageUtility.SendMessage(CefBrowser, "CreateControllers", callbackId);
+        /// <summary>
+        /// Controller names callback.
+        /// </summary>
+        /// <param name="browser">The browser.</param>
+        /// <param name="sourceProcess">The source process.</param>
+        /// <param name="processMessage">The process message.</param>
+        private void ControllerNamesCallback(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        {
+            var message = MessageUtility.DeserializeMessage<List<string>>(processMessage);
+            var callback = GetCallback(message.CallbackId.Value);
+
+            callback.Execute(message.Data);
         }
         #endregion
+        #region CreateController
+        /// <summary>
+        /// Creates the controller.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="obj">The object.</param>
+        /// <param name="arguments">The arguments.</param>
+        /// <param name="returnValue">The return value.</param>
+        /// <param name="exception">The exception.</param>
+        private void CreateController(string name, CefV8Value obj, CefV8Value[] arguments, out CefV8Value returnValue, out string exception)
+        {
+            exception = null;
+            returnValue = null;
+
+            var controllerData = GetAnonymousData(arguments[0], new { Name = string.Empty, id = 0 });
+            var callbackId = AddCallback(arguments[1], CefV8Context.GetCurrentContext());
+
+            MessageUtility.SendMessage(CefBrowser, "CreateController", callbackId, controllerData);
+        }
+
+        /// <summary>
+        /// Create controller callback.
+        /// </summary>
+        /// <param name="browser">The browser.</param>
+        /// <param name="sourceProcess">The source process.</param>
+        /// <param name="processMessage">The process message.</param>
+        private void CreateControllerCallback(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        {
+            var message = MessageUtility.DeserializeMessage<ControllerDescription>(processMessage);
+            var callback = GetCallback(message.CallbackId.Value);
+
+            callback.Execute(message.Data);
+        }
+        #endregion
+
         #region ProcessExtensionResource
         /// <summary>
         /// Processes the extension resource.
@@ -313,12 +361,17 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// <param name="callbackFunction">The callback function.</param>
         /// <param name="context">The context.</param>
         /// <returns></returns>
-        private Guid AddCallback(CefV8Value callbackFunction, CefV8Context context)
+        private Guid? AddCallback(CefV8Value callbackFunction, CefV8Context context)
         {
-            var callback = new JavascriptCallback(callbackFunction, context);
-            Callbacks.Add(callback.Id, callback);
+            if (callbackFunction != null && callbackFunction.IsFunction)
+            {
+                var callback = new JavascriptCallback(callbackFunction, context);
+                Callbacks.Add(callback.Id, callback);
 
-            return callback.Id;
+                return callback.Id;
+            }
+
+            return null;
         }
         #endregion
         #region GetCallback
@@ -352,6 +405,31 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
                 return value;
 
             return (int)value;
+        }
+        #endregion
+        #region GetData
+        /// <summary>
+        /// Gets the data.
+        /// </summary>
+        /// <typeparam name="TData">The type of the data.</typeparam>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        private TData GetData<TData>(CefV8Value value)
+        {
+            return JsonConvert.DeserializeObject<TData>(value.GetStringValue());
+        }
+        #endregion
+        #region GetAnonymousData
+        /// <summary>
+        /// Gets the anonymous data.
+        /// </summary>
+        /// <typeparam name="TData">The type of the data.</typeparam>
+        /// <param name="value">The value.</param>
+        /// <param name="anonymousObject">The anonymous object.</param>
+        /// <returns></returns>
+        private TData GetAnonymousData<TData>(CefV8Value value, TData anonymousObject)
+        {
+            return JsonConvert.DeserializeAnonymousType(value.GetStringValue(), anonymousObject);
         }
         #endregion
 

@@ -68,13 +68,15 @@ namespace Samotorcan.HtmlUi.Core
         /// Creates the controller.
         /// </summary>
         /// <param name="name">The name.</param>
+        /// <param name="id">The identifier.</param>
         /// <returns></returns>
-        public Controller CreateController(string name)
+        /// <exception cref="System.ArgumentNullException">name</exception>
+        public Controller CreateController(string name, int id)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException("name");
 
-            return (Controller)Activator.CreateInstance(GetControllerType(name));
+            return (Controller)Activator.CreateInstance(GetControllerType(name), id);
         }
         #endregion
         #region GetControllerTypes

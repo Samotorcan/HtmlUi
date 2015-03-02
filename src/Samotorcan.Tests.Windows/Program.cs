@@ -24,7 +24,7 @@ namespace Samotorcan.Tests.Windows
         {
             using (var application = new MainApplication())
             {
-                var controller = application.ControllerProvider.CreateController("GreetingController");
+                var controller = application.ControllerProvider.CreateController("GreetingController", 12);
 
                 application.Run();
             }

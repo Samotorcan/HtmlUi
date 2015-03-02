@@ -411,23 +411,6 @@ namespace Samotorcan.HtmlUi.Core
             GeneralLog.Info("Shutdown with exception.", e);
         }
         #endregion
-        #region Digest
-        /// <summary>
-        /// Digest call. Updates the controllers.
-        /// </summary>
-        /// <param name="controllerChanges">The controller changes.</param>
-        internal void Digest(IEnumerable<ControllerChange> controllerChanges)
-        {
-            EnsureMainThread();
-
-            GeneralLog.Debug(string.Format("Digest call: {0}", JsonConvert.SerializeObject(controllerChanges)));
-
-            foreach (var controllerChange in controllerChanges)
-            {
-                // TODO: implement
-            }
-        }
-        #endregion
         #region IsLocalUrl
         /// <summary>
         /// Determines whether the specified URL is local.
