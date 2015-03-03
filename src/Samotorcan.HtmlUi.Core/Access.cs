@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// Property access.
+    /// Access.
     /// </summary>
     [Flags]
-    internal enum PropertyAccess
+    internal enum Access
     {
         /// <summary>
         /// The read.

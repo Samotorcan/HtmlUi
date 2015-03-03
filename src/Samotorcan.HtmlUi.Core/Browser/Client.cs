@@ -114,7 +114,8 @@ namespace Samotorcan.HtmlUi.Core.Browser
             {
                 { "Digest", Digest },
                 { "ControllerNames", ControllerNames },
-                { "CreateController", CreateController }
+                { "CreateController", CreateController },
+                { "DestroyController", DestroyController },
             };
         }
 
@@ -257,15 +258,36 @@ namespace Samotorcan.HtmlUi.Core.Browser
         /// <param name="processMessage">The process message.</param>
         private void CreateController(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
         {
-            var message = MessageUtility.DeserializeAnonymousMessage(processMessage, new { Name = string.Empty, id = 0 });
+            var message = MessageUtility.DeserializeAnonymousMessage(processMessage, new { Name = string.Empty, Id = 0 });
 
             BaseMainApplication.Current.InvokeOnMainAsync(() =>
             {
-                var controller = BaseMainApplication.Current.Window.CreateController(message.Data.Name, message.Data.id);
+                var controller = BaseMainApplication.Current.Window.CreateController(message.Data.Name, message.Data.Id);
 
                 // callback
                 if (message.CallbackId != null)
                     MessageUtility.SendMessage(browser, "CreateControllerCallback", message.CallbackId, controller.GetDescription());
+            });
+        }
+        #endregion
+        #region DestroyController
+        /// <summary>
+        /// Destroy controller call.
+        /// </summary>
+        /// <param name="browser">The browser.</param>
+        /// <param name="sourceProcess">The source process.</param>
+        /// <param name="processMessage">The process message.</param>
+        private void DestroyController(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        {
+            var message = MessageUtility.DeserializeMessage<int>(processMessage);
+
+            BaseMainApplication.Current.InvokeOnMainAsync(() =>
+            {
+                var controller = BaseMainApplication.Current.Window.DestroyController(message.Data);
+
+                // callback
+                if (message.CallbackId != null)
+                    MessageUtility.SendMessage(browser, "DestroyControllerCallback", message.CallbackId);
             });
         }
         #endregion

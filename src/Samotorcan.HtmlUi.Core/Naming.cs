@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// Property name type.
+    /// Naming.
     /// </summary>
-    internal enum PropertyNameType
+    internal enum Naming
     {
         /// <summary>
         /// The normal.

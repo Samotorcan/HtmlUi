@@ -85,6 +85,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
                 { "DigestCallback", DigestCallback },
                 { "ControllerNamesCallback", ControllerNamesCallback },
                 { "CreateControllerCallback", CreateControllerCallback },
+                { "DestroyControllerCallback", DestroyControllerCallback }
             };
         }
 
@@ -170,7 +171,8 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             CefRuntime.RegisterExtension("html-ui", htmlUiScript, new V8ActionHandler(
                 new V8ActionHandlerFunction("digest", Digest),
                 new V8ActionHandlerFunction("controllerNames", ControllerNames),
-                new V8ActionHandlerFunction("createController", CreateController)
+                new V8ActionHandlerFunction("createController", CreateController),
+                new V8ActionHandlerFunction("destroyController", DestroyController)
             ));
         }
         #endregion
@@ -279,7 +281,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         #endregion
         #region CreateController
         /// <summary>
-        /// Creates the controller.
+        /// Create controller call.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="obj">The object.</param>
@@ -291,7 +293,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             exception = null;
             returnValue = null;
 
-            var controllerData = GetAnonymousData(arguments[0], new { Name = string.Empty, id = 0 });
+            var controllerData = GetAnonymousData(arguments[0], new { Name = string.Empty, Id = 0 });
             var callbackId = AddCallback(arguments[1], CefV8Context.GetCurrentContext());
 
             MessageUtility.SendMessage(CefBrowser, "CreateController", callbackId, controllerData);
@@ -309,6 +311,40 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             var callback = GetCallback(message.CallbackId.Value);
 
             callback.Execute(message.Data);
+        }
+        #endregion
+        #region DestroyController
+        /// <summary>
+        /// Destroy controller call.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="obj">The object.</param>
+        /// <param name="arguments">The arguments.</param>
+        /// <param name="returnValue">The return value.</param>
+        /// <param name="exception">The exception.</param>
+        private void DestroyController(string name, CefV8Value obj, CefV8Value[] arguments, out CefV8Value returnValue, out string exception)
+        {
+            exception = null;
+            returnValue = null;
+
+            var controllerId = GetData<int>(arguments[0]);
+            var callbackId = AddCallback(arguments[1], CefV8Context.GetCurrentContext());
+
+            MessageUtility.SendMessage(CefBrowser, "DestroyController", callbackId, controllerId);
+        }
+
+        /// <summary>
+        /// Destroy controller callback.
+        /// </summary>
+        /// <param name="browser">The browser.</param>
+        /// <param name="sourceProcess">The source process.</param>
+        /// <param name="processMessage">The process message.</param>
+        private void DestroyControllerCallback(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        {
+            var message = MessageUtility.DeserializeMessage(processMessage);
+            var callback = GetCallback(message.CallbackId.Value);
+
+            callback.Execute();
         }
         #endregion
 

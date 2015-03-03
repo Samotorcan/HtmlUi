@@ -35,5 +35,20 @@ namespace Samotorcan.Tests.Windows.Controllers
             InputString = "Test string";
             InputStringPS = "Other test string";
         }
+
+        public void TestMethod1()
+        {
+            
+        }
+
+        public void TestMethod2(int a)
+        {
+
+        }
+
+        public string TestMethod2(int b, string z)
+        {
+            return string.Empty;
+        }
     }
 }

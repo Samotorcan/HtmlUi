@@ -81,6 +81,7 @@
     <Compile Include="BaseApplication.cs" />
     <Compile Include="BaseMainApplication.cs" />
     <Compile Include="BaseChildApplication.cs" />
+    <Compile Include="ControllerMethod.cs" />
     <Compile Include="LogMessageType.cs" />
     <Compile Include="LogType.cs" />
     <Compile Include="Renderer\App.cs" />
@@ -119,8 +120,8 @@
     <Compile Include="FileAssemblyContentProvider.cs" />
     <Compile Include="IControllerProvider.cs" />
     <Compile Include="JavascriptCallback.cs" />
-    <Compile Include="PropertyAccess.cs" />
-    <Compile Include="PropertyNameType.cs" />
+    <Compile Include="Access.cs" />
+    <Compile Include="Naming.cs" />
     <Compile Include="Utilities\JsonUtility.cs" />
     <Compile Include="Utilities\MessageUtility.cs" />
     <Compile Include="Utilities\ResourceUtility.cs" />

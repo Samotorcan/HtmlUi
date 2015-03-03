@@ -89,7 +89,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <exception cref="System.InvalidCastException">
         /// Invalid type.
         /// </exception>
-        private static object ParseValue(CefV8Value value, Type type, PropertyNameType propertyNameType)
+        private static object ParseValue(CefV8Value value, Type type, Naming propertyNameType)
         {
             if (value == null)
                 throw new ArgumentNullException("value");
@@ -184,7 +184,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
 
                 foreach (var property in properties)
                 {
-                    var propertyName = propertyNameType == PropertyNameType.CamelCase ? StringUtility.CamelCase(property.Name) : property.Name;
+                    var propertyName = propertyNameType == Naming.CamelCase ? StringUtility.CamelCase(property.Name) : property.Name;
 
                     property.SetValue(typeObject, ParseValue(value.GetValue(propertyName), property.PropertyType, propertyNameType));
                 }
@@ -202,7 +202,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <param name="value">The value.</param>
         /// <param name="propertyNameType">Type of the property name.</param>
         /// <returns></returns>
-        public static TType ParseValue<TType>(CefV8Value value, PropertyNameType propertyNameType)
+        public static TType ParseValue<TType>(CefV8Value value, Naming propertyNameType)
         {
             return (TType)CefUtility.ParseValue(value, typeof(TType), propertyNameType);
         }
@@ -215,7 +215,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <returns></returns>
         public static object ParseValue(CefV8Value value, Type type)
         {
-            return CefUtility.ParseValue(value, type, PropertyNameType.Normal);
+            return CefUtility.ParseValue(value, type, Naming.Normal);
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <returns></returns>
         public static TType ParseValue<TType>(CefV8Value value)
         {
-            return (TType)CefUtility.ParseValue(value, typeof(TType), PropertyNameType.Normal);
+            return (TType)CefUtility.ParseValue(value, typeof(TType), Naming.Normal);
         }
         #endregion
 

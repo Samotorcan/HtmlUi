@@ -166,6 +166,39 @@ namespace Samotorcan.HtmlUi.Core
             return createdController;
         }
         #endregion
+        #region DestroyController
+        /// <summary>
+        /// Destroys the controller.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <returns></returns>
+        internal bool DestroyController(int id)
+        {
+            if (Controllers.ContainsKey(id))
+            {
+                var controller = Controllers[id];
+
+                controller.Dispose();
+                Controllers.Remove(id);
+
+                return true;
+            }
+
+            return false;
+        }
+        #endregion
+        #region DestroyControllers
+        /// <summary>
+        /// Destroys the controllers.
+        /// </summary>
+        internal void DestroyControllers()
+        {
+            foreach (var controller in Controllers.Values)
+                controller.Dispose();
+
+            Controllers.Clear();
+        }
+        #endregion
         #region Digest
         /// <summary>
         /// Digest call. Updates the controllers.
@@ -261,6 +294,12 @@ namespace Samotorcan.HtmlUi.Core
 
                         CefBrowser.Dispose();
                     }
+
+                    // controllers
+                    foreach (var controller in Controllers.Values)
+                        controller.Dispose();
+
+                    Controllers.Clear();
                 }
 
                 _disposed = true;

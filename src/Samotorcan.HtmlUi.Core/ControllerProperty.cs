@@ -39,7 +39,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The access.
         /// </value>
-        public PropertyAccess Access { get; set; }
+        public Access Access { get; set; }
         #endregion
 
         #endregion

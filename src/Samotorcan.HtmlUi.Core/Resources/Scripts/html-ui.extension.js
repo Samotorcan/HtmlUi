@@ -35,6 +35,15 @@
             createController(JSON.stringify({ name: name, id: id }), convertCallback(callback));
         },
 
+        destroyController: function (id) {
+            return nativeSynchronous('destroy-controller', id);
+        },
+
+        destroyControllerAsync: function (id, callback) {
+            // !native function destroyController();
+            destroyController(JSON.stringify(id), convertCallback(callback));
+        },
+
         log: function (type, messageType, message) {
             return nativeSynchronous('log', { type: type, messageType: messageType, message: message });
         }
@@ -78,7 +87,9 @@
             var controllerName = controllerNames[i];
 
             htmlUi.app.controller(controllerName, ['$scope', function ($scope) {
+                // create controller
                 var controller = native.createController(controllerName, $scope.$id);
+                console.log($scope.$id);
 
                 // properties
                 for (var j = 0; j < controller.properties.length; j++) {
@@ -86,6 +97,20 @@
 
                     $scope[property.name] = property.value;
                 }
+
+                // methods
+                for (var j = 0; j < controller.methods.length; j++) {
+                    var method = controller.methods[j];
+
+                    $scope[method.name] = function () {
+                        return native.callMethod($scope.$id, method.name, arguments);
+                    };
+                }
+
+                // destroy controller
+                $scope.$on('$destroy', function () {
+                    native.destroyController($scope.$id);
+                })
             }]);
         }
     };

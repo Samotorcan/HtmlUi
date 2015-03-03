@@ -168,16 +168,19 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 switch (Path)
                 {
                     case "controller-names":
-                        Data = ControllerNames(request);
+                        Data = ProcessCall(ControllerNames, request);
                         break;
                     case "create-controller":
-                        Data = CreateController(request);
+                        Data = ProcessCall(CreateController, request);
+                        break;
+                    case "destroy-controller":
+                        Data = ProcessCall(DestroyController, request);
                         break;
                     case "digest":
-                        Data = Digest(request);
+                        Data = ProcessCall(Digest, request);
                         break;
                     case "log":
-                        Data = Log(request);
+                        Data = ProcessCall(Log, request);
                         break;
                 }
             }
@@ -251,17 +254,35 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// <returns></returns>
         private byte[] CreateController(CefRequest request)
         {
-            var controllerData = GetAnonymousPostData(request, new { Name = string.Empty, id = 0 });
+            var controllerData = GetAnonymousPostData(request, new { Name = string.Empty, Id = 0 });
             ControllerDescription controllerDescription = null;
 
             BaseMainApplication.Current.InvokeOnMain(() =>
             {
-                var controller = BaseMainApplication.Current.Window.CreateController(controllerData.Name, controllerData.id);
+                var controller = BaseMainApplication.Current.Window.CreateController(controllerData.Name, controllerData.Id);
 
                 controllerDescription = controller.GetDescription();
             });
 
             return JsonUtility.SerializeToJson(controllerDescription);
+        }
+        #endregion
+        #region DestroyController
+        /// <summary>
+        /// Destroys the controller.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        private byte[] DestroyController(CefRequest request)
+        {
+            var controllerId = GetPostData<int>(request);
+
+            BaseMainApplication.Current.InvokeOnMain(() =>
+            {
+                BaseMainApplication.Current.Window.DestroyController(controllerId);
+            });
+
+            return null;
         }
         #endregion
         #region Digest
@@ -280,7 +301,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 application.Window.Digest(controllerChanges);
             });
 
-            return new byte[0];
+            return null;
         }
         #endregion
         #region Log
@@ -300,7 +321,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             if (type == LogType.GeneralLog)
                 GeneralLog.Log(messageType, message);
 
-            return new byte[0];
+            return null;
         }
         #endregion
 
@@ -355,6 +376,18 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             var json = GetPostJson(request);
 
             return JToken.Parse(json);
+        }
+        #endregion
+        #region ProcessCall
+        /// <summary>
+        /// Processes the call.
+        /// </summary>
+        /// <param name="action">The action.</param>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        private byte[] ProcessCall(Func<CefRequest, byte[]> action, CefRequest request)
+        {
+            return action(request) ?? new byte[0];
         }
         #endregion
 

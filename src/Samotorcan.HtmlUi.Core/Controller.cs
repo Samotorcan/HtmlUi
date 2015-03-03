@@ -38,6 +38,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         private List<ControllerPropertyInfo> Properties { get; set; }
         #endregion
+        #region Methods
+        /// <summary>
+        /// Gets or sets the methods.
+        /// </summary>
+        /// <value>
+        /// The methods.
+        /// </value>
+        private List<ControllerMethodInfo> Methods { get; set; }
+        #endregion
         #region Name
         /// <summary>
         /// Gets or sets the name.
@@ -79,32 +88,16 @@ namespace Samotorcan.HtmlUi.Core
             Id = id;
 
             Properties = new List<ControllerPropertyInfo>();
-            IgnoreProperties = new List<string>
+            Methods = new List<ControllerMethodInfo>();
+            IgnoreProperties = new List<string> // TODO: create attributes
             {
                 "Id"
             };
             Type = GetType();
             Name = Type.Name;
 
-            // find all properties
-            foreach (var property in Type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => !IgnoreProperties.Contains(p.Name)))
-            {
-                var readAccess = property.CanRead && property.GetGetMethod(false) != null;
-                var writeAccess = property.CanWrite && property.GetSetMethod(false) != null;
-                PropertyAccess? access = null;
-
-                // access
-                if (readAccess && writeAccess)
-                    access = PropertyAccess.Read | PropertyAccess.Write;
-                else if (readAccess)
-                    access = PropertyAccess.Read;
-                else if (writeAccess)
-                    access = PropertyAccess.Write;
-
-                // add
-                if (access != null)
-                    Properties.Add(new ControllerPropertyInfo { Name = property.Name, PropertyInfo = property, Access = access.Value });
-            }
+            Properties = FindProperties(Type);
+            Methods = FindMethods(Type);
         }
 
         #endregion
@@ -116,15 +109,15 @@ namespace Samotorcan.HtmlUi.Core
         /// Gets the properties.
         /// </summary>
         /// <param name="access">The access.</param>
-        /// <param name="propertyNameType">Type of the property name.</param>
+        /// <param name="naming">The naming.</param>
         /// <returns></returns>
-        private List<ControllerProperty> GetProperties(PropertyAccess? access, PropertyNameType propertyNameType)
+        private List<ControllerProperty> GetProperties(Access? access, Naming naming)
         {
             return Properties.Where(p => access == null || p.Access.HasFlag(access.Value))
                 .Select(p => new ControllerProperty
                 {
-                    Name = propertyNameType == PropertyNameType.CamelCase ? StringUtility.CamelCase(p.Name) : p.Name,
-                    Value = p.Access.HasFlag(PropertyAccess.Read) ? p.PropertyInfo.GetValue(this, null) : null,
+                    Name = naming == Naming.CamelCase ? StringUtility.CamelCase(p.Name) : p.Name,
+                    Value = p.Access.HasFlag(Access.Read) ? p.PropertyInfo.GetValue(this, null) : null,
                     Access = p.Access
                 })
                 .ToList();
@@ -134,21 +127,21 @@ namespace Samotorcan.HtmlUi.Core
         /// Gets the properties.
         /// </summary>
         /// <param name="access">The access.</param>
-        /// <param name="propertyNameType">Type of the property name.</param>
+        /// <param name="naming">The naming.</param>
         /// <returns></returns>
-        internal List<ControllerProperty> GetProperties(PropertyAccess access, PropertyNameType propertyNameType)
+        internal List<ControllerProperty> GetProperties(Access access, Naming naming)
         {
-            return GetProperties((PropertyAccess?)access, propertyNameType);
+            return GetProperties((Access?)access, naming);
         }
 
         /// <summary>
         /// Gets the properties.
         /// </summary>
-        /// <param name="propertyNameType">Type of the property name.</param>
+        /// <param name="naming">The naming.</param>
         /// <returns></returns>
-        internal List<ControllerProperty> GetProperties(PropertyNameType propertyNameType)
+        internal List<ControllerProperty> GetProperties(Naming naming)
         {
-            return GetProperties(null, propertyNameType);
+            return GetProperties(null, naming);
         }
 
         /// <summary>
@@ -157,20 +150,50 @@ namespace Samotorcan.HtmlUi.Core
         /// <returns></returns>
         internal List<ControllerProperty> GetProperties()
         {
-            return GetProperties(null, PropertyNameType.Normal);
+            return GetProperties(null, Naming.Normal);
+        }
+        #endregion
+        #region GetMethods
+        /// <summary>
+        /// Gets the methods.
+        /// </summary>
+        /// <param name="naming">The naming.</param>
+        /// <returns></returns>
+        internal List<ControllerMethod> GetMethods(Naming naming)
+        {
+            return Methods.Select(m => new ControllerMethod
+                {
+                    Name = naming == Naming.CamelCase
+                        ? StringUtility.CamelCase(m.Name)
+                        : m.Name
+                })
+                .GroupBy(m => m.Name)
+                .Select(g => g.First())
+                .ToList();
+        }
+
+        /// <summary>
+        /// Gets the methods.
+        /// </summary>
+        /// <returns></returns>
+        internal List<ControllerMethod> GetMethods()
+        {
+            return GetMethods(Naming.CamelCase);
         }
         #endregion
         #region GetDescription
         /// <summary>
         /// Gets the description.
         /// </summary>
+        /// <param name="naming">The naming.</param>
         /// <returns></returns>
-        internal ControllerDescription GetDescription(PropertyNameType propertyNameType)
+        internal ControllerDescription GetDescription(Naming naming)
         {
             return new ControllerDescription
             {
                 Name = Name,
-                Properties = GetProperties(propertyNameType)
+                Properties = GetProperties(naming),
+                Methods = GetMethods(naming)
             };
         }
 
@@ -180,7 +203,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <returns></returns>
         internal ControllerDescription GetDescription()
         {
-            return GetDescription(PropertyNameType.CamelCase);
+            return GetDescription(Naming.CamelCase);
         }
         #endregion
         #region TrySetProperty
@@ -192,13 +215,13 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="propertyNameType">Type of the property name.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">propertyName</exception>
-        internal bool TrySetProperty(string propertyName, object value, PropertyNameType propertyNameType)
+        internal bool TrySetProperty(string propertyName, object value, Naming propertyNameType)
         {
             if (string.IsNullOrWhiteSpace(propertyName))
                 throw new ArgumentNullException("propertyName");
 
-            var property = Properties.FirstOrDefault(p => p.Access.HasFlag(PropertyAccess.Write) &&
-                (propertyNameType == PropertyNameType.CamelCase
+            var property = Properties.FirstOrDefault(p => p.Access.HasFlag(Access.Write) &&
+                (propertyNameType == Naming.CamelCase
                     ? StringUtility.CamelCase(p.Name) == propertyName
                     : p.Name == propertyName));
 
@@ -238,7 +261,70 @@ namespace Samotorcan.HtmlUi.Core
         /// <returns></returns>
         internal bool TrySetProperty(string propertyName, object value)
         {
-            return TrySetProperty(propertyName, value, PropertyNameType.CamelCase);
+            return TrySetProperty(propertyName, value, Naming.CamelCase);
+        }
+        #endregion
+
+        #endregion
+        #region Private
+
+        #region FindProperties
+        /// <summary>
+        /// Finds the properties.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns></returns>
+        private List<ControllerPropertyInfo> FindProperties(Type type)
+        {
+            var properties = new List<ControllerPropertyInfo>();
+
+            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (!IgnoreProperties.Contains(property.Name))
+                {
+                    var readAccess = property.CanRead && property.GetGetMethod(false) != null;
+                    var writeAccess = property.CanWrite && property.GetSetMethod(false) != null;
+                    Access? access = null;
+
+                    // access
+                    if (readAccess && writeAccess)
+                        access = Access.Read | Access.Write;
+                    else if (readAccess)
+                        access = Access.Read;
+                    else if (writeAccess)
+                        access = Access.Write;
+
+                    // add
+                    if (access != null)
+                        properties.Add(new ControllerPropertyInfo { Name = property.Name, PropertyInfo = property, Access = access.Value });
+                }
+            }
+
+            return properties;
+        }
+        #endregion
+        #region FindMethods
+        /// <summary>
+        /// Finds the methods.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns></returns>
+        private List<ControllerMethodInfo> FindMethods(Type type)
+        {
+            var methods = new List<ControllerMethodInfo>();
+
+            while (type != typeof(object))
+            {
+                foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                {
+                    if (!method.IsSpecialName && method.Name != "Dispose")  // TODO: ignore attribute
+                        methods.Add(new ControllerMethodInfo { Name = method.Name, MethodInfo = method });
+                }
+
+                type = type.BaseType;
+            }
+
+            return methods;
         }
         #endregion
 
@@ -259,6 +345,21 @@ namespace Samotorcan.HtmlUi.Core
             /// The property info.
             /// </value>
             public PropertyInfo PropertyInfo { get; set; }
+        }
+        #endregion
+        #region ControllerMethodInfo
+        /// <summary>
+        /// Controller method info.
+        /// </summary>
+        private class ControllerMethodInfo : ControllerMethod
+        {
+            /// <summary>
+            /// Gets or sets the method information.
+            /// </summary>
+            /// <value>
+            /// The method information.
+            /// </value>
+            public MethodInfo MethodInfo { get; set; }
         }
         #endregion
 

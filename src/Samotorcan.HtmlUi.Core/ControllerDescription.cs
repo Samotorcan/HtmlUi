@@ -32,6 +32,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         public List<ControllerProperty> Properties { get; set; }
         #endregion
+        #region Methods
+        /// <summary>
+        /// Gets or sets the methods.
+        /// </summary>
+        /// <value>
+        /// The methods.
+        /// </value>
+        public List<ControllerMethod> Methods { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -43,6 +52,7 @@ namespace Samotorcan.HtmlUi.Core
         public ControllerDescription()
         {
             Properties = new List<ControllerProperty>();
+            Methods = new List<ControllerMethod>();
         }
 
         #endregion
