@@ -27,18 +27,31 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         public ObservableCollection<Assembly> Assemblies { get; private set; }
         #endregion
+        #region ControllerTypes
+        /// <summary>
+        /// Gets controller types.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<Type> ControllerTypes
+        {
+            get
+            {
+                return ControllerTypesInternal.ToList();
+            }
+        }
+        #endregion
 
         #endregion
         #region Private
 
-        #region ControllerTypes
+        #region ControllerTypesInternal
         /// <summary>
-        /// Gets or sets the controller types.
+        /// Gets or sets the controller types internal.
         /// </summary>
         /// <value>
-        /// The controller types.
+        /// The controller types internal.
         /// </value>
-        private List<Type> ControllerTypes { get; set; }
+        private List<Type> ControllerTypesInternal { get; set; }
         #endregion
 
         #endregion
@@ -50,7 +63,7 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         public AssemblyControllerProvider()
         {
-            ControllerTypes = new List<Type>();
+            ControllerTypesInternal = new List<Type>();
 
             Assemblies = new ObservableCollection<Assembly>();
             Assemblies.CollectionChanged += Assemblies_CollectionChanged;
@@ -79,16 +92,6 @@ namespace Samotorcan.HtmlUi.Core
             return (Controller)Activator.CreateInstance(GetControllerType(name), id);
         }
         #endregion
-        #region GetControllerTypes
-        /// <summary>
-        /// Gets controller types.
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<Type> GetControllerTypes()
-        {
-            return ControllerTypes.ToArray();
-        }
-        #endregion
         #region IsUniqueControllerName
         /// <summary>
         /// Determines whether the specified controller name is unique.
@@ -100,7 +103,7 @@ namespace Samotorcan.HtmlUi.Core
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException("name");
 
-            var controllerTypesCount = ControllerTypes.Where(c => c.Name == name).Count();
+            var controllerTypesCount = ControllerTypesInternal.Where(c => c.Name == name).Count();
 
             if (controllerTypesCount == 0)
                 throw new ControllerNotFoundException(name);
@@ -120,7 +123,7 @@ namespace Samotorcan.HtmlUi.Core
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException("name");
 
-            return ControllerTypes.Where(c => c.Name == name).Count() > 0;
+            return ControllerTypesInternal.Where(c => c.Name == name).Count() > 0;
         }
         #endregion
 
@@ -162,7 +165,7 @@ namespace Samotorcan.HtmlUi.Core
         /// </exception>
         private Type GetControllerType(string name)
         {
-            var controllerTypes = ControllerTypes.Where(c => c.Name == name).ToList();
+            var controllerTypes = ControllerTypesInternal.Where(c => c.Name == name).ToList();
 
             if (controllerTypes.Count > 1)
                 throw new MoreThanOneControllerFoundException(name);
@@ -183,12 +186,12 @@ namespace Samotorcan.HtmlUi.Core
         private void Assemblies_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             // set controller types
-            ControllerTypes.Clear();
+            ControllerTypesInternal.Clear();
 
             foreach (var type in Assemblies.SelectMany(a => a.GetTypes()))
             {
                 if (IsControllerType(type))
-                    ControllerTypes.Add(type);
+                    ControllerTypesInternal.Add(type);
             }
         }
         #endregion

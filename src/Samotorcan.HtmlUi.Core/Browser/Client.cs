@@ -78,14 +78,14 @@ namespace Samotorcan.HtmlUi.Core.Browser
         private KeyboardHandler KeyboardHandler { get; set; }
         #endregion
 
-        #region ProcessMessages
+        #region V8NativeBrowserHandler
         /// <summary>
-        /// Gets or sets the process messages.
+        /// Gets or sets the v8 native browser handler.
         /// </summary>
         /// <value>
-        /// The process messages.
+        /// The v8 native browser handler.
         /// </value>
-        private Dictionary<string, Action<CefBrowser, CefProcessId, CefProcessMessage>> ProcessMessages { get; set; }
+        private V8NativeBrowserHandler V8NativeBrowserHandler { get; set; }
         #endregion
 
         #endregion
@@ -110,13 +110,14 @@ namespace Samotorcan.HtmlUi.Core.Browser
                     BrowserCreated(this, e);
             };
 
-            ProcessMessages = new Dictionary<string, Action<CefBrowser, CefProcessId, CefProcessMessage>>
+            // native calls
+            V8NativeBrowserHandler = new V8NativeBrowserHandler(new Dictionary<string, Func<string, object>>
             {
-                { "Digest", Digest },
-                { "ControllerNames", ControllerNames },
-                { "CreateController", CreateController },
-                { "DestroyController", DestroyController },
-            };
+                { "digest", Digest },
+                { "getControllerNames", GetControllerNames },
+                { "createController", CreateController },
+                { "destroyController", DestroyController }
+            });
         }
 
         #endregion
@@ -181,21 +182,15 @@ namespace Samotorcan.HtmlUi.Core.Browser
         /// </summary>
         /// <param name="browser"></param>
         /// <param name="sourceProcess"></param>
-        /// <param name="processMessage"></param>
+        /// <param name="message"></param>
         /// <returns></returns>
-        protected override bool OnProcessMessageReceived(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        protected override bool OnProcessMessageReceived(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage message)
         {
-            if (processMessage == null)
+            if (message == null)
                 throw new ArgumentNullException("message");
 
-            if (ProcessMessages.ContainsKey(processMessage.Name))
-            {
-                ProcessMessages[processMessage.Name](browser, sourceProcess, processMessage);
-
-                return true;
-            }
-
-            return BaseMainApplication.Current.BrowserMessageRouter.OnProcessMessageReceived(browser, sourceProcess, processMessage);
+            return V8NativeBrowserHandler.ProcessMessage(browser, sourceProcess, message) ||
+                BaseMainApplication.Current.BrowserMessageRouter.OnProcessMessageReceived(browser, sourceProcess, message);
         }
         #endregion
 
@@ -204,91 +199,58 @@ namespace Samotorcan.HtmlUi.Core.Browser
 
         #region Digest
         /// <summary>
-        /// Digest call.
+        /// Digests the specified json.
         /// </summary>
-        /// <param name="browser">The browser.</param>
-        /// <param name="sourceProcess">The source process.</param>
-        /// <param name="processMessage">The process message.</param>
-        private void Digest(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        /// <param name="json">The json.</param>
+        /// <returns></returns>
+        private object Digest(string json)
         {
-            var message = MessageUtility.DeserializeMessage<List<ControllerChange>>(processMessage);
+            var controllerChanges = JsonConvert.DeserializeObject<List<ControllerChange>>(json);
 
-            BaseMainApplication.Current.InvokeOnMainAsync(() =>
-            {
-                BaseMainApplication.Current.Window.Digest(message.Data);
+            BaseMainApplication.Current.Window.Digest(controllerChanges);
 
-                // callback
-                if (message.CallbackId != null)
-                {
-                    MessageUtility.SendMessage(browser, "DigestCallback", message.CallbackId);
-                }
-            });
+            return null;
         }
         #endregion
-        #region ControllerNames
+        #region GetControllerNames
         /// <summary>
-        /// Controller names call.
+        /// Gets the controller names.
         /// </summary>
-        /// <param name="browser">The browser.</param>
-        /// <param name="sourceProcess">The source process.</param>
-        /// <param name="processMessage">The process message.</param>
-        private void ControllerNames(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        /// <param name="json">The json.</param>
+        /// <returns></returns>
+        private object GetControllerNames(string json)
         {
-            var message = MessageUtility.DeserializeMessage(processMessage);
-
-            BaseMainApplication.Current.InvokeOnMainAsync(() =>
-            {
-                // callback
-                if (message.CallbackId != null)
-                {
-                    var controllerTypes = BaseMainApplication.Current.ControllerProvider.GetControllerTypes();
-                    var controllerNames = controllerTypes.Select(c => c.Name).ToList();
-
-                    MessageUtility.SendMessage(browser, "ControllerNamesCallback", message.CallbackId, controllerNames);
-                }
-            });
+            return BaseMainApplication.Current.ControllerProvider.ControllerTypes
+                .Select(c => c.Name).ToList();
         }
         #endregion
         #region CreateController
         /// <summary>
-        /// Create controller call.
+        /// Creates the controller.
         /// </summary>
-        /// <param name="browser">The browser.</param>
-        /// <param name="sourceProcess">The source process.</param>
-        /// <param name="processMessage">The process message.</param>
-        private void CreateController(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        /// <param name="json">The json.</param>
+        /// <returns></returns>
+        private object CreateController(string json)
         {
-            var message = MessageUtility.DeserializeAnonymousMessage(processMessage, new { Name = string.Empty, Id = 0 });
+            var createController = JsonConvert.DeserializeAnonymousType(json, new { Name = string.Empty, Id = 0 });
+            var controller = BaseMainApplication.Current.Window.CreateController(createController.Name, createController.Id);
 
-            BaseMainApplication.Current.InvokeOnMainAsync(() =>
-            {
-                var controller = BaseMainApplication.Current.Window.CreateController(message.Data.Name, message.Data.Id);
-
-                // callback
-                if (message.CallbackId != null)
-                    MessageUtility.SendMessage(browser, "CreateControllerCallback", message.CallbackId, controller.GetDescription());
-            });
+            return controller.GetDescription();
         }
         #endregion
         #region DestroyController
         /// <summary>
-        /// Destroy controller call.
+        /// Destroys the controller.
         /// </summary>
-        /// <param name="browser">The browser.</param>
-        /// <param name="sourceProcess">The source process.</param>
-        /// <param name="processMessage">The process message.</param>
-        private void DestroyController(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        /// <param name="json">The json.</param>
+        /// <returns></returns>
+        private object DestroyController(string json)
         {
-            var message = MessageUtility.DeserializeMessage<int>(processMessage);
+            var controllerId = JsonConvert.DeserializeObject<int>(json);
 
-            BaseMainApplication.Current.InvokeOnMainAsync(() =>
-            {
-                var controller = BaseMainApplication.Current.Window.DestroyController(message.Data);
+            BaseMainApplication.Current.Window.DestroyController(controllerId);
 
-                // callback
-                if (message.CallbackId != null)
-                    MessageUtility.SendMessage(browser, "DestroyControllerCallback", message.CallbackId);
-            });
+            return null;
         }
         #endregion
 

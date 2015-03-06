@@ -92,6 +92,15 @@ namespace Samotorcan.HtmlUi.Core
         {
             CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[] { CefV8Value.CreateString(JsonConvert.SerializeObject(data)) });
         }
+
+        /// <summary>
+        /// Executes the callback with json.
+        /// </summary>
+        /// <param name="json">The json.</param>
+        public void Execute(string json)
+        {
+            CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[] { CefV8Value.CreateString(json) });
+        }
         #endregion
 
         #endregion

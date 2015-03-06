@@ -30,6 +30,9 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// <param name="frame"></param>
         protected override void OnLoadStart(CefBrowser browser, CefFrame frame)
         {
+            if (frame == null)
+                throw new ArgumentNullException("frame");
+
             if (frame.IsMain)
             {
                 BaseMainApplication.Current.InvokeOnMain(() =>

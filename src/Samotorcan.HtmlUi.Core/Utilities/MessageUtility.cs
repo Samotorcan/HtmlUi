@@ -41,30 +41,6 @@ namespace Samotorcan.HtmlUi.Core.Utilities
 
             SendBinaryMessage(cefBrowser, name, message);
         }
-
-        /// <summary>
-        /// Sends the message.
-        /// </summary>
-        /// <param name="cefBrowser">The cef browser.</param>
-        /// <param name="name">The name.</param>
-        /// <param name="callbackId">The callback identifier.</param>
-        /// <exception cref="System.ArgumentNullException">
-        /// cefBrowser
-        /// or
-        /// name
-        /// </exception>
-        public static void SendMessage(CefBrowser cefBrowser, string name, Guid? callbackId)
-        {
-            if (cefBrowser == null)
-                throw new ArgumentNullException("cefBrowser");
-
-            if (string.IsNullOrWhiteSpace("name"))
-                throw new ArgumentNullException("name");
-
-            var message = JsonUtility.SerializeToBson(new Message(callbackId));
-
-            SendBinaryMessage(cefBrowser, name, message);
-        }
         #endregion
         #region DeserializeMessage
         /// <summary>
@@ -74,29 +50,6 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <param name="processMessage">The process message.</param>
         /// <returns></returns>
         public static Message<TType> DeserializeMessage<TType>(CefProcessMessage processMessage)
-        {
-            return JsonUtility.DeserializeFromBson<Message<TType>>(processMessage.Arguments.GetBinary(0).ToArray());
-        }
-
-        /// <summary>
-        /// Deserializes the message.
-        /// </summary>
-        /// <param name="processMessage">The process message.</param>
-        /// <returns></returns>
-        public static Message DeserializeMessage(CefProcessMessage processMessage)
-        {
-            return JsonUtility.DeserializeFromBson<Message>(processMessage.Arguments.GetBinary(0).ToArray());
-        }
-        #endregion
-        #region DeserializeAnonymousMessage
-        /// <summary>
-        /// Deserializes the anonymous message.
-        /// </summary>
-        /// <typeparam name="TType">The type of the type.</typeparam>
-        /// <param name="processMessage">The process message.</param>
-        /// <param name="anonymousObject">The anonymous object.</param>
-        /// <returns></returns>
-        public static Message<TType> DeserializeAnonymousMessage<TType>(CefProcessMessage processMessage, TType anonymousObject)
         {
             return JsonUtility.DeserializeFromBson<Message<TType>>(processMessage.Arguments.GetBinary(0).ToArray());
         }

@@ -51,21 +51,4 @@ namespace Samotorcan.HtmlUi.Core
 
         #endregion
     }
-
-    /// <summary>
-    /// Message.
-    /// </summary>
-    internal class Message : Message<object>
-    {
-        #region Constructors
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Message"/> class.
-        /// </summary>
-        /// <param name="callbackId">The callback identifier.</param>
-        public Message(Guid? callbackId)
-            : base(callbackId, null) { }
-
-        #endregion
-    }
 }

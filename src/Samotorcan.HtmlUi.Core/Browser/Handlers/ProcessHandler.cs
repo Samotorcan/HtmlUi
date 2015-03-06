@@ -59,6 +59,9 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// <param name="extraInfo"></param>
         protected override void OnRenderProcessThreadCreated(CefListValue extraInfo)
         {
+            if (extraInfo == null)
+                throw new ArgumentNullException("extraInfo");
+
             extraInfo.SetString(0, BaseMainApplication.Current.NativeRequestUrl);
         }
         #endregion

@@ -87,6 +87,8 @@
     <Compile Include="Renderer\App.cs" />
     <Compile Include="HtmlUiRuntime.cs" />
     <Compile Include="Message.cs" />
+    <Compile Include="V8NativeBrowserHandler.cs" />
+    <Compile Include="V8NativeHandler.cs" />
     <Compile Include="V8ActionHandler.cs" />
     <Compile Include="V8ActionHandlerFunction.cs" />
     <Compile Include="Argument.cs" />

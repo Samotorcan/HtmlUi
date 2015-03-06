@@ -7,47 +7,46 @@
     nativeRequestUrl = nativeRequestUrl || null;
 
     // TODO: make it private when done testing
-    var native = htmlUi.native = {
-        digest: function (controllers) {
-            return nativeSynchronous('digest', controllers);
-        },
+    var native = htmlUi.native = (function () {
+        var native = function (name, data, callback) {
+            // !native function native();
+            native(name, JSON.stringify(data), convertCallback(callback));
+        };
 
-        digestAsync: function (controllers, callback) {
-            // !native function digest();
-            digest(JSON.stringify(controllers), callback);
-        },
+        return {
+            digest: function (controllers) {
+                return nativeSynchronous('digest', controllers);
+            },
+            digestAsync: function (controllers, callback) {
+                native('digest', controllers, callback);
+            },
 
-        controllerNames: function () {
-            return nativeSynchronous('controller-names');
-        },
+            getControllerNames: function () {
+                return nativeSynchronous('controller-names');
+            },
+            getControllerNamesAsync: function (callback) {
+                native('getControllerNames', null, callback);
+            },
 
-        controllerNamesAsync: function (callback) {
-            // !native function controllerNames();
-            controllerNames(null, convertCallback(callback));
-        },
+            createController: function (name, id) {
+                return nativeSynchronous('create-controller', { name: name, id: id });
+            },
+            createControllerAsync: function (name, id, callback) {
+                native('createController', { name: name, id: id }, callback);
+            },
 
-        createController: function (name, id) {
-            return nativeSynchronous('create-controller', { name: name, id: id });
-        },
+            destroyController: function (id) {
+                return nativeSynchronous('destroy-controller', id);
+            },
+            destroyControllerAsync: function (id, callback) {
+                native('destroyController', id, callback);
+            },
 
-        createControllerAsync: function (name, id, callback) {
-            // !native function createController();
-            createController(JSON.stringify({ name: name, id: id }), convertCallback(callback));
-        },
-
-        destroyController: function (id) {
-            return nativeSynchronous('destroy-controller', id);
-        },
-
-        destroyControllerAsync: function (id, callback) {
-            // !native function destroyController();
-            destroyController(JSON.stringify(id), convertCallback(callback));
-        },
-
-        log: function (type, messageType, message) {
-            return nativeSynchronous('log', { type: type, messageType: messageType, message: message });
+            log: function (type, messageType, message) {
+                return nativeSynchronous('log', { type: type, messageType: messageType, message: message });
+            }
         }
-    };
+    })();
 
     htmlUi.init = function () {
         // create module
@@ -81,7 +80,7 @@
         }]);
 
         // create controllers   // TODO: add methods
-        var controllerNames = native.controllerNames();
+        var controllerNames = native.getControllerNames();
 
         for (var i = 0; i < controllerNames.length; i++) {
             var controllerName = controllerNames[i];

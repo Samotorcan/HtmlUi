@@ -160,6 +160,9 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             if (request == null)
                 throw new ArgumentNullException("request");
 
+            if (callback == null)
+                throw new ArgumentNullException("callback");
+
             Url = request.Url;
             Path = BaseMainApplication.Current.GetNativeRequestPath(Url);
 
@@ -236,14 +239,15 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// <returns></returns>
         private byte[] ControllerNames(CefRequest request)
         {
-            IEnumerable<Type> controllerTypes = null;
+            List<string> controllerNames = null;
 
             BaseMainApplication.Current.InvokeOnMain(() =>
             {
-                controllerTypes = BaseMainApplication.Current.ControllerProvider.GetControllerTypes();
+                controllerNames = BaseMainApplication.Current.ControllerProvider.ControllerTypes
+                    .Select(c => c.Name).ToList();
             });
 
-            return JsonUtility.SerializeToJson(controllerTypes.Select(c => c.Name).ToList());
+            return JsonUtility.SerializeToJson(controllerNames);
         }
         #endregion
         #region CreateController

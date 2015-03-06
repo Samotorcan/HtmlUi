@@ -12,6 +12,12 @@ namespace Samotorcan.HtmlUi.Core
     public interface IControllerProvider
     {
         /// <summary>
+        /// Gets controller types.
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<Type> ControllerTypes { get; }
+
+        /// <summary>
         /// Creates the controller.
         /// </summary>
         /// <param name="name">The name.</param>
@@ -25,11 +31,5 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="name">The name.</param>
         /// <returns></returns>
         bool ControllerExists(string name);
-
-        /// <summary>
-        /// Gets controller types.
-        /// </summary>
-        /// <returns></returns>
-        IEnumerable<Type> GetControllerTypes();
     }
 }

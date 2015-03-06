@@ -41,7 +41,7 @@ namespace Samotorcan.HtmlUi.Core
         /// Initializes a new instance of the <see cref="BaseChildApplication"/> class.
         /// </summary>
         /// <exception cref="System.InvalidOperationException">Application must be run on child application process.</exception>
-        public BaseChildApplication()
+        protected BaseChildApplication()
             : base()
         {
             if (HtmlUiRuntime.ApplicationType != ApplicationType.ChildApplication)
