@@ -69,8 +69,29 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// </value>
         private int AllBytesRead { get; set; }
         #endregion
+        #region NativeFunctions
+        /// <summary>
+        /// Gets or sets the native functions.
+        /// </summary>
+        /// <value>
+        /// The native functions.
+        /// </value>
+        private Dictionary<string, Func<CefRequest, object>> NativeFunctions { get; set; }
+        #endregion
 
         #endregion
+        #endregion
+        #region Constructors
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NativeRequestResourceHandler"/> class.
+        /// </summary>
+        public NativeRequestResourceHandler()
+            : base()
+        {
+            NativeFunctions = NativeFunctionAttribute.GetMethods<NativeRequestResourceHandler, Func<CefRequest, object>>(this);
+        }
+
         #endregion
         #region Methods
         #region Protected
@@ -168,24 +189,8 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             try
             {
-                switch (Path)
-                {
-                    case "controller-names":
-                        Data = ProcessCall(ControllerNames, request);
-                        break;
-                    case "create-controller":
-                        Data = ProcessCall(CreateController, request);
-                        break;
-                    case "destroy-controller":
-                        Data = ProcessCall(DestroyController, request);
-                        break;
-                    case "digest":
-                        Data = ProcessCall(Digest, request);
-                        break;
-                    case "log":
-                        Data = ProcessCall(Log, request);
-                        break;
-                }
+                if (NativeFunctions.ContainsKey(Path))
+                    Data = ProcessCall(NativeFunctions[Path], request);
             }
             catch (Exception e)
             {
@@ -231,13 +236,14 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         #endregion
         #region Private
 
-        #region ControllerNames
+        #region GetControllerNames
         /// <summary>
-        /// Controller names.
+        /// Gets the controller names.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <returns></returns>
-        private byte[] ControllerNames(CefRequest request)
+        [NativeFunction]
+        private object GetControllerNames(CefRequest request)
         {
             List<string> controllerNames = null;
 
@@ -247,7 +253,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                     .Select(c => c.Name).ToList();
             });
 
-            return JsonUtility.SerializeToJson(controllerNames);
+            return controllerNames;
         }
         #endregion
         #region CreateController
@@ -256,7 +262,8 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// </summary>
         /// <param name="request">The request.</param>
         /// <returns></returns>
-        private byte[] CreateController(CefRequest request)
+        [NativeFunction]
+        private object CreateController(CefRequest request)
         {
             var controllerData = GetAnonymousPostData(request, new { Name = string.Empty, Id = 0 });
             ControllerDescription controllerDescription = null;
@@ -268,7 +275,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 controllerDescription = controller.GetDescription();
             });
 
-            return JsonUtility.SerializeToJson(controllerDescription);
+            return controllerDescription;
         }
         #endregion
         #region DestroyController
@@ -277,7 +284,8 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// </summary>
         /// <param name="request">The request.</param>
         /// <returns></returns>
-        private byte[] DestroyController(CefRequest request)
+        [NativeFunction]
+        private object DestroyController(CefRequest request)
         {
             var controllerId = GetPostData<int>(request);
 
@@ -295,7 +303,8 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// </summary>
         /// <param name="request">The request.</param>
         /// <returns></returns>
-        private byte[] Digest(CefRequest request)
+        [NativeFunction]
+        private object Digest(CefRequest request)
         {
             var controllerChanges = GetPostData<List<ControllerChange>>(request);
 
@@ -308,13 +317,34 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             return null;
         }
         #endregion
+        #region CallMethod
+        /// <summary>
+        /// Calls the method.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        [NativeFunction]
+        private object CallMethod(CefRequest request)
+        {
+            var methodData = GetAnonymousPostData(request, new { Id = 0, Name = string.Empty, Args = new JArray() });
+            object response = null;
+
+            BaseMainApplication.Current.InvokeOnMain(() =>
+            {
+                response = BaseMainApplication.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Args);
+            });
+
+            return response;
+        }
+        #endregion
         #region Log
         /// <summary>
         /// Calls the log.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <returns></returns>
-        private byte[] Log(CefRequest request)
+        [NativeFunction]
+        private object Log(CefRequest request)
         {
             var jsonToken = GetPostJsonToken(request);
 
@@ -389,9 +419,14 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// <param name="action">The action.</param>
         /// <param name="request">The request.</param>
         /// <returns></returns>
-        private byte[] ProcessCall(Func<CefRequest, byte[]> action, CefRequest request)
+        private byte[] ProcessCall(Func<CefRequest, object> action, CefRequest request)
         {
-            return action(request) ?? new byte[0];
+            var response = action(request);
+
+            if (response != null)
+                return JsonUtility.SerializeToJson(response);
+
+            return new byte[0];
         }
         #endregion
 

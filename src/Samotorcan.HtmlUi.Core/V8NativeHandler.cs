@@ -66,13 +66,21 @@ namespace Samotorcan.HtmlUi.Core
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "sourceProcess", Justification = "I want it to match to OnProcessMessageReceived method.")]
         public bool ProcessCallback(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
         {
+            if (processMessage == null)
+                throw new ArgumentNullException("processMessage");
+
             if (processMessage.Name == "native")
             {
                 var message = MessageUtility.DeserializeMessage<string>(processMessage);
-                var returnJson = message.Data;
-                var callback = GetCallback(message.CallbackId.Value);
 
-                callback.Execute(returnJson);
+                if (message.CallbackId != null)
+                {
+                    var returnJson = message.Data;
+                    var callback = GetCallback(message.CallbackId.Value);
+
+                    callback.Execute(returnJson);
+                }
+
                 return true;
             }
 
@@ -105,7 +113,7 @@ namespace Samotorcan.HtmlUi.Core
             {
                 var functionName = arguments[0].GetStringValue();
                 var jsonData = arguments[1].GetStringValue();
-                var callbackFunction = arguments[2];
+                var callbackFunction = arguments.Length > 2 ? arguments[2] : null;
 
                 var callbackId = AddCallback(callbackFunction, CefV8Context.GetCurrentContext());
 

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Samotorcan.HtmlUi.Core.Browser;
 using Samotorcan.HtmlUi.Core.Events;
 using Samotorcan.HtmlUi.Core.Logs;
@@ -220,6 +221,25 @@ namespace Samotorcan.HtmlUi.Core
                         controller.TrySetProperty(changeProperty.Key, changeProperty.Value);
                 }
             }
+        }
+        #endregion
+        #region CallMethod
+        /// <summary>
+        /// Calls the method.
+        /// </summary>
+        /// <param name="controllerId">The controller identifier.</param>
+        /// <param name="methodName">Name of the method.</param>
+        /// <param name="arguments">The arguments.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">methodName</exception>
+        internal object CallMethod(int controllerId, string methodName, JArray arguments)
+        {
+            if (string.IsNullOrWhiteSpace(methodName))
+                throw new ArgumentNullException("methodName");
+
+            // TODO: find method and validate arguments
+
+            return null;
         }
         #endregion
 

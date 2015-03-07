@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Samotorcan.HtmlUi.Core.Browser.Handlers;
 using Samotorcan.HtmlUi.Core.Events;
 using Samotorcan.HtmlUi.Core.Logs;
@@ -6,6 +7,7 @@ using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
@@ -111,13 +113,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
             };
 
             // native calls
-            V8NativeBrowserHandler = new V8NativeBrowserHandler(new Dictionary<string, Func<string, object>>
-            {
-                { "digest", Digest },
-                { "getControllerNames", GetControllerNames },
-                { "createController", CreateController },
-                { "destroyController", DestroyController }
-            });
+            V8NativeBrowserHandler = new V8NativeBrowserHandler(NativeFunctionAttribute.GetMethods<Client, Func<string, object>>(this));
         }
 
         #endregion
@@ -203,6 +199,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         /// </summary>
         /// <param name="json">The json.</param>
         /// <returns></returns>
+        [NativeFunction]
         private object Digest(string json)
         {
             var controllerChanges = JsonConvert.DeserializeObject<List<ControllerChange>>(json);
@@ -218,6 +215,8 @@ namespace Samotorcan.HtmlUi.Core.Browser
         /// </summary>
         /// <param name="json">The json.</param>
         /// <returns></returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "json", Justification = "It has to match to the delegate.")]
+        [NativeFunction]
         private object GetControllerNames(string json)
         {
             return BaseMainApplication.Current.ControllerProvider.ControllerTypes
@@ -230,6 +229,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         /// </summary>
         /// <param name="json">The json.</param>
         /// <returns></returns>
+        [NativeFunction]
         private object CreateController(string json)
         {
             var createController = JsonConvert.DeserializeAnonymousType(json, new { Name = string.Empty, Id = 0 });
@@ -244,6 +244,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         /// </summary>
         /// <param name="json">The json.</param>
         /// <returns></returns>
+        [NativeFunction]
         private object DestroyController(string json)
         {
             var controllerId = JsonConvert.DeserializeObject<int>(json);
@@ -251,6 +252,20 @@ namespace Samotorcan.HtmlUi.Core.Browser
             BaseMainApplication.Current.Window.DestroyController(controllerId);
 
             return null;
+        }
+        #endregion
+        #region CallMethod
+        /// <summary>
+        /// Calls the method.
+        /// </summary>
+        /// <param name="json">The json.</param>
+        /// <returns></returns>
+        [NativeFunction]
+        private object CallMethod(string json)
+        {
+            var methodData = JsonConvert.DeserializeAnonymousType(json, new { Id = 0, Name = string.Empty, Args = new JArray() });
+
+            return BaseMainApplication.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Args);
         }
         #endregion
 

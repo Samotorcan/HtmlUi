@@ -82,6 +82,7 @@
     <Compile Include="BaseMainApplication.cs" />
     <Compile Include="BaseChildApplication.cs" />
     <Compile Include="ControllerMethod.cs" />
+    <Compile Include="NativeFunctionAttribute.cs" />
     <Compile Include="LogMessageType.cs" />
     <Compile Include="LogType.cs" />
     <Compile Include="Renderer\App.cs" />

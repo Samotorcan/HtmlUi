@@ -67,9 +67,14 @@ namespace Samotorcan.HtmlUi.Core
                 BaseMainApplication.Current.InvokeOnMainAsync(() =>
                 {
                     var returnData = ProcessMessages[name](message.Data);
-                    var returnJson = JsonConvert.SerializeObject(returnData);
 
-                    MessageUtility.SendMessage(browser, "native", message.CallbackId, returnJson);
+                    // callback
+                    if (message.CallbackId != null)
+                    {
+                        var returnJson = JsonConvert.SerializeObject(returnData);
+
+                        MessageUtility.SendMessage(browser, "native", message.CallbackId, returnJson);
+                    }
                 }).ContinueWith(t =>
                 {
                     GeneralLog.Error("Native call exception.", t.Exception);

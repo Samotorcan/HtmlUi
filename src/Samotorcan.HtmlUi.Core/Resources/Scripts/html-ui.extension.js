@@ -22,24 +22,31 @@
             },
 
             getControllerNames: function () {
-                return nativeSynchronous('controller-names');
+                return nativeSynchronous('getControllerNames');
             },
             getControllerNamesAsync: function (callback) {
                 native('getControllerNames', null, callback);
             },
 
             createController: function (name, id) {
-                return nativeSynchronous('create-controller', { name: name, id: id });
+                return nativeSynchronous('createController', { name: name, id: id });
             },
             createControllerAsync: function (name, id, callback) {
                 native('createController', { name: name, id: id }, callback);
             },
 
             destroyController: function (id) {
-                return nativeSynchronous('destroy-controller', id);
+                return nativeSynchronous('destroyController', id);
             },
             destroyControllerAsync: function (id, callback) {
                 native('destroyController', id, callback);
+            },
+
+            callMethod: function (id, name, args) {
+                return nativeSynchronous('callMethod', { id: id, name: name, args: args });
+            },
+            callMethodAsync: function (id, name, args, callback) {
+                native('callMethod', { id: id, name: name, args: args }, callback);
             },
 
             log: function (type, messageType, message) {
@@ -79,7 +86,7 @@
             });
         }]);
 
-        // create controllers   // TODO: add methods
+        // create controllers
         var controllerNames = native.getControllerNames();
 
         for (var i = 0; i < controllerNames.length; i++) {
@@ -88,7 +95,6 @@
             htmlUi.app.controller(controllerName, ['$scope', function ($scope) {
                 // create controller
                 var controller = native.createController(controllerName, $scope.$id);
-                console.log($scope.$id);
 
                 // properties
                 for (var j = 0; j < controller.properties.length; j++) {
@@ -102,7 +108,7 @@
                     var method = controller.methods[j];
 
                     $scope[method.name] = function () {
-                        return native.callMethod($scope.$id, method.name, arguments);
+                        return native.callMethod($scope.$id, method.name, argumentsToArray(arguments));
                     };
                 }
 
@@ -145,5 +151,14 @@
             if (callback != null)
                 callback(JSON.parse(json))
         }
+    }
+
+    function argumentsToArray(args) {
+        var argsArray = [];
+
+        for (var i = 0; i < args.length; i++)
+            argsArray.push(args[i]);
+
+        return argsArray;
     }
 })(htmlUi);
