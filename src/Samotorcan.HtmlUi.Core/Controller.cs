@@ -1,4 +1,7 @@
-﻿using Samotorcan.HtmlUi.Core.Utilities;
+﻿using Newtonsoft.Json.Linq;
+using Samotorcan.HtmlUi.Core.Exceptions;
+using Samotorcan.HtmlUi.Core.Logs;
+using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -77,7 +80,6 @@ namespace Samotorcan.HtmlUi.Core
 
         #endregion
         #endregion
-
         #region Constructors
 
         /// <summary>
@@ -167,8 +169,6 @@ namespace Samotorcan.HtmlUi.Core
                         ? StringUtility.CamelCase(m.Name)
                         : m.Name
                 })
-                .GroupBy(m => m.Name)
-                .Select(g => g.First())
                 .ToList();
         }
 
@@ -212,16 +212,16 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <param name="propertyName">Name of the property.</param>
         /// <param name="value">The value.</param>
-        /// <param name="propertyNameType">Type of the property name.</param>
+        /// <param name="naming">Type of the naming.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">propertyName</exception>
-        internal bool TrySetProperty(string propertyName, object value, Naming propertyNameType)
+        internal bool TrySetProperty(string propertyName, object value, Naming naming)
         {
             if (string.IsNullOrWhiteSpace(propertyName))
                 throw new ArgumentNullException("propertyName");
 
             var property = Properties.FirstOrDefault(p => p.Access.HasFlag(Access.Write) &&
-                (propertyNameType == Naming.CamelCase
+                (naming == Naming.CamelCase
                     ? StringUtility.CamelCase(p.Name) == propertyName
                     : p.Name == propertyName));
 
@@ -242,10 +242,27 @@ namespace Samotorcan.HtmlUi.Core
                 {
                     var valueType = value.GetType();
 
+                    // same type
                     if (valueType == propertyType)
                     {
                         propertyInfo.SetValue(this, value);
                         return true;
+                    }
+
+                    // try convert
+                    else if (typeof(IConvertible).IsAssignableFrom(valueType))
+                    {
+                        try
+                        {
+                            value = Convert.ChangeType(value, propertyType);
+
+                            propertyInfo.SetValue(this, value);
+                            return true;
+                        }
+                        catch (Exception)
+                        {
+                            return false;
+                        }
                     }
                 }
             }
@@ -262,6 +279,65 @@ namespace Samotorcan.HtmlUi.Core
         internal bool TrySetProperty(string propertyName, object value)
         {
             return TrySetProperty(propertyName, value, Naming.CamelCase);
+        }
+        #endregion
+        #region CallMethod
+        /// <summary>
+        /// Calls the method.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="arguments">The arguments.</param>
+        /// <param name="naming">The naming.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">name</exception>
+        /// <exception cref="Samotorcan.HtmlUi.Core.Exceptions.MethodNotFoundException"></exception>
+        /// <exception cref="Samotorcan.HtmlUi.Core.Exceptions.ParameterCountMismatchException"></exception>
+        internal object CallMethod(string name, JArray arguments, Naming naming)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentNullException("name");
+
+            if (arguments == null)
+                arguments = new JArray();
+
+            var method = Methods.FirstOrDefault(m => naming == Naming.CamelCase
+                ? StringUtility.CamelCase(m.Name) == name
+                : m.Name == name);
+
+            if (method == null)
+                throw new MethodNotFoundException(name, Name);
+
+            var parameterInfos = method.MethodInfo.GetParameters();
+            if (parameterInfos.Length != arguments.Count)
+                throw new ParameterCountMismatchException(name, Name);
+
+            // parse parameters
+            var parameters = parameterInfos
+                .Select((p, i) =>
+                {
+                    try
+                    {
+                        return arguments[i].ToObject(p.ParameterType);
+                    }
+                    catch (FormatException)
+                    {
+                        throw new ParameterMismatchException(i, p.ParameterType.Name, Enum.GetName(typeof(JTokenType), arguments[i].Type), name, Name);
+                    }
+                })
+                .ToArray();
+
+            return method.MethodInfo.Invoke(this, parameters);
+        }
+
+        /// <summary>
+        /// Calls the method.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="arguments">The arguments.</param>
+        /// <returns></returns>
+        internal object CallMethod(string name, JArray arguments)
+        {
+            return CallMethod(name, arguments, Naming.CamelCase);
         }
         #endregion
 
@@ -315,10 +391,21 @@ namespace Samotorcan.HtmlUi.Core
 
             while (type != typeof(object))
             {
-                foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                var methodInfos = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                    .Where(m => !m.IsSpecialName && m.Name != "Dispose")    // TODO: ignore attribute
+                    .ToList();
+
+                foreach (var methodInfo in methodInfos)
                 {
-                    if (!method.IsSpecialName && method.Name != "Dispose")  // TODO: ignore attribute
-                        methods.Add(new ControllerMethodInfo { Name = method.Name, MethodInfo = method });
+                    // check for method overload, ref and out parameters
+                    if (methodInfos.Count(m => m.Name == methodInfo.Name) > 1)
+                        GeneralLog.Warn(string.Format("Overloaded methods are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
+                    else if (methodInfo.GetParameters().Any(p => p.ParameterType.IsByRef))
+                        GeneralLog.Warn(string.Format("Ref parameters are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
+                    else if (methodInfo.GetParameters().Any(p => p.IsOut))
+                        GeneralLog.Warn(string.Format("Out parameters are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
+                    else
+                        methods.Add(new ControllerMethodInfo { Name = methodInfo.Name, MethodInfo = methodInfo });
                 }
 
                 type = type.BaseType;

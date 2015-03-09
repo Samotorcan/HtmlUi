@@ -13,8 +13,10 @@
     <h1>Index.html</h1>
     <img src="/Images/home.png" />
     <div ng-controller="GreetingController">
-        {{inputStringPS}}
-        <input type="text" ng-model="inputString" />
+        <input type="number" ng-model="firstNumber" />
+        <input type="number" ng-model="secondNumber" />
+        <button type="button" ng-click="sum()">sum</button>
+        <input type="number" ng-model="result" />
     </div>
 </body>
 </html>

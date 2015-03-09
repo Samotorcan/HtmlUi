@@ -472,6 +472,17 @@ namespace Samotorcan.HtmlUi.Core
             return match.Groups.OfType<Group>().Last().Value;
         }
         #endregion
+        #region GetControllerNames
+        /// <summary>
+        /// Gets the controller names.
+        /// </summary>
+        /// <returns></returns>
+        internal List<string> GetControllerNames()
+        {
+            return BaseMainApplication.Current.ControllerProvider.ControllerTypes
+                .Select(c => c.Name).ToList();
+        }
+        #endregion
 
         #endregion
         #region Protected

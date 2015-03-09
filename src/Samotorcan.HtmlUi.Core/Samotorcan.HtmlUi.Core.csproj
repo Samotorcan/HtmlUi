@@ -82,6 +82,9 @@
     <Compile Include="BaseMainApplication.cs" />
     <Compile Include="BaseChildApplication.cs" />
     <Compile Include="ControllerMethod.cs" />
+    <Compile Include="Exceptions\MethodNotFoundException.cs" />
+    <Compile Include="Exceptions\ParameterMismatchException.cs" />
+    <Compile Include="Exceptions\ParameterCountMismatchException.cs" />
     <Compile Include="NativeFunctionAttribute.cs" />
     <Compile Include="LogMessageType.cs" />
     <Compile Include="LogType.cs" />

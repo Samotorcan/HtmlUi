@@ -219,8 +219,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         [NativeFunction]
         private object GetControllerNames(string json)
         {
-            return BaseMainApplication.Current.ControllerProvider.ControllerTypes
-                .Select(c => c.Name).ToList();
+            return BaseMainApplication.Current.GetControllerNames();
         }
         #endregion
         #region CreateController

@@ -237,9 +237,13 @@ namespace Samotorcan.HtmlUi.Core
             if (string.IsNullOrWhiteSpace(methodName))
                 throw new ArgumentNullException("methodName");
 
-            // TODO: find method and validate arguments
+            if (!Controllers.ContainsKey(controllerId))
+            {
+                GeneralLog.Warn(string.Format("Controller not found. (controller id = \"{0}\")", controllerId));
+                return null;
+            }
 
-            return null;
+            return Controllers[controllerId].CallMethod(methodName, arguments);
         }
         #endregion
 

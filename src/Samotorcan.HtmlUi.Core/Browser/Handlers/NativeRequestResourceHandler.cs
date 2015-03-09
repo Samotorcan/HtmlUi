@@ -249,8 +249,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             BaseMainApplication.Current.InvokeOnMain(() =>
             {
-                controllerNames = BaseMainApplication.Current.ControllerProvider.ControllerTypes
-                    .Select(c => c.Name).ToList();
+                controllerNames = BaseMainApplication.Current.GetControllerNames();
             });
 
             return controllerNames;
