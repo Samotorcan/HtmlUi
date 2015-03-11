@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Samotorcan.HtmlUi.Core.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -12,7 +13,7 @@ namespace Samotorcan.HtmlUi.Core.Exceptions
     /// Controller not found exception.
     /// </summary>
     [Serializable]
-    public class ControllerNotFoundException : Exception
+    public class ControllerNotFoundException : Exception, INativeException
     {
         #region Properties
         #region Public
@@ -122,6 +123,29 @@ namespace Samotorcan.HtmlUi.Core.Exceptions
                 throw new ArgumentNullException("info");
 
             info.AddValue("ControllerName", ControllerName);
+        }
+        #endregion
+
+        #endregion
+        #region Internal
+
+        #region ToJavascriptException
+        /// <summary>
+        /// To the javascript exception.
+        /// </summary>
+        /// <returns></returns>
+        JavascriptException INativeException.ToJavascriptException()
+        {
+            return new JavascriptException
+            {
+                Message = Message,
+                Type = "ControllerNotFoundException",
+                InnerException = InnerException != null ? ExceptionUtility.CreateJavascriptException(InnerException) : null,
+                AdditionalData = new Dictionary<string, object>
+                {
+                    { "ControllerName", ControllerName }
+                }
+            };
         }
         #endregion
 

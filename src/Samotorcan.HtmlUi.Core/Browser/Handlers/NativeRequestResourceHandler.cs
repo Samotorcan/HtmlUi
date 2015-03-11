@@ -60,6 +60,15 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// </value>
         private byte[] Data { get; set; }
         #endregion
+        #region ResponseValue
+        /// <summary>
+        /// Gets or sets the response value.
+        /// </summary>
+        /// <value>
+        /// The response value.
+        /// </value>
+        private object ResponseValue { get; set; }
+        #endregion
         #region AllBytesRead
         /// <summary>
         /// Gets or sets all bytes read.
@@ -138,35 +147,40 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             redirectUrl = null;
 
+            response.Status = 200;
+            response.StatusText = "OK";
+            response.MimeType = "application/json";
             response.SetHeaderMap(new NameValueCollection { { "Access-Control-Allow-Origin", "*" } });
 
+            var nativeResponse = new NativeResponse();
+
+            // exception
             if (Exception != null)
             {
-                Data = Encoding.UTF8.GetBytes(string.Format(ResourceUtility.GetResourceAsString("Views/NativeRequestException.html"),
-                    Url,
-                    Exception.ToString().Replace(Environment.NewLine, "<br>")));
+                nativeResponse.Type = NativeResponseType.Exception;
+                nativeResponse.Value = null;
+                nativeResponse.Exception = ExceptionUtility.CreateJavascriptException(Exception);
+            }
 
-                responseLength = Data.Length;
-                response.Status = 500;
-                response.StatusText = "Internal Server Error";
-                response.MimeType = "text/html";
-            }
-            else if (Data != null)
-            {
-                responseLength = Data.Length;
-                response.Status = 200;
-                response.StatusText = "OK";
-                response.MimeType = "application/json";
-            }
+            // ok
             else
             {
-                Data = Encoding.UTF8.GetBytes(string.Format(ResourceUtility.GetResourceAsString("Views/NativeRequestNotFound.html"), Url));
+                if (ResponseValue == Undefined.Value)
+                {
+                    nativeResponse.Type = NativeResponseType.Undefined;
+                    nativeResponse.Value = null;
+                }
+                else
+                {
+                    nativeResponse.Type = NativeResponseType.Value;
+                    nativeResponse.Value = ResponseValue;
+                }
 
-                responseLength = Data.Length;
-                response.Status = 404;
-                response.StatusText = "Not Found";
-                response.MimeType = "text/html";
+                nativeResponse.Exception = null;
             }
+
+            Data = JsonUtility.SerializeToByteJson(nativeResponse);
+            responseLength = Data.Length;
         }
         #endregion
         #region ProcessRequest
@@ -190,14 +204,14 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             try
             {
                 if (NativeFunctions.ContainsKey(Path))
-                    Data = ProcessCall(NativeFunctions[Path], request);
+                    ResponseValue = NativeFunctions[Path](request);
+                else
+                    Exception = new NativeNotFoundException(Path);
             }
             catch (Exception e)
             {
-                Data = null;
+                ResponseValue = null;
                 Exception = e;
-
-                GeneralLog.Error("Native request exception.", e);
             }
 
             callback.Continue();
@@ -293,7 +307,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 BaseMainApplication.Current.Window.DestroyController(controllerId);
             });
 
-            return null;
+            return Undefined.Value;
         }
         #endregion
         #region Digest
@@ -313,7 +327,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 application.Window.Digest(controllerChanges);
             });
 
-            return null;
+            return Undefined.Value;
         }
         #endregion
         #region CallMethod
@@ -354,7 +368,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             if (type == LogType.GeneralLog)
                 GeneralLog.Log(messageType, message);
 
-            return null;
+            return Undefined.Value;
         }
         #endregion
 
@@ -409,23 +423,6 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             var json = GetPostJson(request);
 
             return JToken.Parse(json);
-        }
-        #endregion
-        #region ProcessCall
-        /// <summary>
-        /// Processes the call.
-        /// </summary>
-        /// <param name="action">The action.</param>
-        /// <param name="request">The request.</param>
-        /// <returns></returns>
-        private byte[] ProcessCall(Func<CefRequest, object> action, CefRequest request)
-        {
-            var response = action(request);
-
-            if (response != null)
-                return JsonUtility.SerializeToJson(response);
-
-            return new byte[0];
         }
         #endregion
 

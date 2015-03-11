@@ -117,7 +117,7 @@ namespace Samotorcan.HtmlUi.Core
 
                 var callbackId = AddCallback(callbackFunction, CefV8Context.GetCurrentContext());
 
-                MessageUtility.SendMessage(CefBrowser, functionName, callbackId, jsonData);
+                MessageUtility.SendMessage(CefBrowser, "native", callbackId, new { Name = functionName, Json = jsonData });
 
                 return true;
             }

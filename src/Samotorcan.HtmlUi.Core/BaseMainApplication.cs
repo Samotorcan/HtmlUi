@@ -273,7 +273,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">action</exception>
         /// <exception cref="System.InvalidOperationException">Application is shutting down.</exception>
-        public Task<bool> InvokeOnMainAsync(Action action)
+        public Task InvokeOnMainAsync(Action action)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
@@ -283,7 +283,7 @@ namespace Samotorcan.HtmlUi.Core
 
             GeneralLog.Debug("Invoke on main called.");
 
-            var taskCompletionSource = new TaskCompletionSource<bool>();
+            var taskCompletionSource = new TaskCompletionSource<object>();
 
             InvokeQueue.Add(() =>
             {
@@ -291,7 +291,7 @@ namespace Samotorcan.HtmlUi.Core
                 {
                     action();
 
-                    taskCompletionSource.SetResult(true);
+                    taskCompletionSource.SetResult(null);
                 }
                 catch (Exception e)
                 {
@@ -307,17 +307,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <param name="action">The action.</param>
         /// <returns></returns>
-        public bool InvokeOnMain(Action action)
+        public void InvokeOnMain(Action action)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
 
             if (!IsMainThread)
-                return InvokeOnMainAsync(action).Result;
-
-            action();
-
-            return true;
+                InvokeOnMainAsync(action).Wait();
+            else
+                action();
         }
         #endregion
         #region GetAbsoluteContentUrl
@@ -538,7 +536,6 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Initializes the cef.
         /// </summary>
-        /// <exception cref="Samotorcan.HtmlUi.Core.Exceptions.CefProcessException"></exception>
         private void InitializeCef()
         {
             CefRuntime.Load();

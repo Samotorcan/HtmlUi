@@ -6,56 +6,73 @@
     // !inject-constants
     nativeRequestUrl = nativeRequestUrl || null;
 
-    // TODO: make it private when done testing
-    var native = htmlUi.native = (function () {
-        var native = function (name, data, callback) {
-            // !native function native();
-            native(name, JSON.stringify(data), convertCallback(callback));
-        };
-
-        return {
-            digest: function (controllers) {
-                return nativeSynchronous('digest', controllers);
-            },
-            digestAsync: function (controllers, callback) {
-                native('digest', controllers, callback);
-            },
-
-            getControllerNames: function () {
-                return nativeSynchronous('getControllerNames');
-            },
-            getControllerNamesAsync: function (callback) {
-                native('getControllerNames', null, callback);
-            },
-
-            createController: function (name, id) {
-                return nativeSynchronous('createController', { name: name, id: id });
-            },
-            createControllerAsync: function (name, id, callback) {
-                native('createController', { name: name, id: id }, callback);
-            },
-
-            destroyController: function (id) {
-                return nativeSynchronous('destroyController', id);
-            },
-            destroyControllerAsync: function (id, callback) {
-                native('destroyController', id, callback);
-            },
-
-            callMethod: function (id, name, args) {
-                return nativeSynchronous('callMethod', { id: id, name: name, args: args });
-            },
-            callMethodAsync: function (id, name, args, callback) {
-                native('callMethod', { id: id, name: name, args: args }, callback);
-            },
-
-            log: function (type, messageType, message) {
-                return nativeSynchronous('log', { type: type, messageType: messageType, message: message });
-            }
-        }
-    })();
-
     htmlUi.init = function () {
+        // services
+        var injector = angular.injector(['ng']);
+        var $q = injector.get('$q');
+
+        // native functions TODO: make it private when done testing
+        var native = htmlUi.native = (function () {
+            var native = function (name, data) {
+                var deferred = $q.defer();
+
+                // !native function native();
+                native(name, JSON.stringify(data), function (json) {
+                    var response = JSON.parse(json);
+
+                    if (response.type == 'Value')
+                        deferred.resolve(response.value);
+                    else if (response.type == 'Exception')
+                        deferred.reject(response.exception);
+                    else
+                        deferred.resolve();
+                });
+
+                return deferred.promise;
+            };
+
+            return {
+                digest: function (controllers) {
+                    return nativeSynchronous('digest', controllers);
+                },
+                digestAsync: function (controllers) {
+                    return native('digest', controllers);
+                },
+
+                getControllerNames: function () {
+                    return nativeSynchronous('getControllerNames');
+                },
+                getControllerNamesAsync: function () {
+                    return native('getControllerNames', null);
+                },
+
+                createController: function (name, id) {
+                    return nativeSynchronous('createController', { name: name, id: id });
+                },
+                createControllerAsync: function (name, id) {
+                    return native('createController', { name: name, id: id });
+                },
+
+                destroyController: function (id) {
+                    return nativeSynchronous('destroyController', id);
+                },
+                destroyControllerAsync: function (id) {
+                    return native('destroyController', id);
+                },
+
+                callMethod: function (id, name, args) {
+                    return nativeSynchronous('callMethod', { id: id, name: name, args: args });
+                },
+                callMethodAsync: function (id, name, args) {
+                    return native('callMethod', { id: id, name: name, args: args });
+                },
+
+                log: function (type, messageType, message) {
+                    return nativeSynchronous('log', { type: type, messageType: messageType, message: message });
+                }
+            }
+        })();
+
         // create module
         htmlUi.app = angular.module('htmlUiApp', []);
 
@@ -141,16 +158,13 @@
             xhr.send();
         }
 
-        var response = xhr.responseText;
+        var response = JSON.parse(xhr.responseText);
 
-        return response != null && response != '' && xhr.status == 200 ? JSON.parse(response) : undefined;
-    }
+        if (response.type == 'Value')
+            return response.value;
 
-    function convertCallback(callback) {
-        return function (json) {
-            if (callback != null)
-                callback(JSON.parse(json))
-        }
+        if (response.type == 'Exception')
+            throw response.exception;
     }
 
     function argumentsToArray(args) {

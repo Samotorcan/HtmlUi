@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Samotorcan.HtmlUi.Core.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -12,7 +13,7 @@ namespace Samotorcan.HtmlUi.Core.Exceptions
     /// Parameter mismatch exception.
     /// </summary>
     [Serializable]
-    public class ParameterMismatchException : Exception
+    public class ParameterMismatchException : Exception, INativeException
     {
         #region Properties
         #region Public
@@ -182,6 +183,33 @@ namespace Samotorcan.HtmlUi.Core.Exceptions
             info.AddValue("GotType", GotType);
             info.AddValue("MethodName", MethodName);
             info.AddValue("ControllerName", ControllerName);
+        }
+        #endregion
+
+        #endregion
+        #region Internal
+
+        #region ToJavascriptException
+        /// <summary>
+        /// To the javascript exception.
+        /// </summary>
+        /// <returns></returns>
+        JavascriptException INativeException.ToJavascriptException()
+        {
+            return new JavascriptException
+            {
+                Message = Message,
+                Type = "ParameterMismatchException",
+                InnerException = InnerException != null ? ExceptionUtility.CreateJavascriptException(InnerException) : null,
+                AdditionalData = new Dictionary<string, object>
+                {
+                    { "Parameter", Parameter },
+                    { "ExpectedType", ExpectedType },
+                    { "GotType", GotType },
+                    { "MethodName", MethodName },
+                    { "ControllerName", ControllerName }
+                }
+            };
         }
         #endregion
 

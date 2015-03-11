@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 namespace Samotorcan.HtmlUi.Core.Exceptions
 {
     /// <summary>
-    /// More than one controller found exception.
+    /// Property mismatch exception.
     /// </summary>
     [Serializable]
-    public class MoreThanOneControllerFoundException : Exception, INativeException
+    public class PropertyMismatchException : Exception, INativeException
     {
         #region Properties
         #region Public
@@ -27,76 +27,118 @@ namespace Samotorcan.HtmlUi.Core.Exceptions
         /// </value>
         public string ControllerName { get; private set; }
         #endregion
+        #region PropertyName
+        /// <summary>
+        /// Gets the name of the property.
+        /// </summary>
+        /// <value>
+        /// The name of the property.
+        /// </value>
+        public string PropertyName { get; private set; }
+        #endregion
+        #region ExpectedType
+        /// <summary>
+        /// Gets the expected type.
+        /// </summary>
+        /// <value>
+        /// The expected type.
+        /// </value>
+        public string ExpectedType { get; private set; }
+        #endregion
+        #region GotType
+        /// <summary>
+        /// Gets the type of the got.
+        /// </summary>
+        /// <value>
+        /// The type of the got.
+        /// </value>
+        public string GotType { get; private set; }
+        #endregion
 
         #endregion
         #endregion
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MoreThanOneControllerFoundException"/> class.
+        /// Initializes a new instance of the <see cref="PropertyMismatchException"/> class.
         /// </summary>
-        public MoreThanOneControllerFoundException()
-            : base() { }
+        public PropertyMismatchException()
+            : base("Property mismatch.") { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MoreThanOneControllerFoundException"/> class.
+        /// Initializes a new instance of the <see cref="PropertyMismatchException"/> class.
         /// </summary>
         /// <param name="controllerName">Name of the controller.</param>
-        public MoreThanOneControllerFoundException(string controllerName)
-            : base("More than one controller found.")
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="expectedType">The expected type.</param>
+        /// <param name="gotType">Type of the got.</param>
+        public PropertyMismatchException(string controllerName, string propertyName, string expectedType, string gotType)
+            : base("Property mismatch.")
         {
             ControllerName = controllerName;
+            PropertyName = propertyName;
+            ExpectedType = expectedType;
+            GotType = gotType;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MoreThanOneControllerFoundException"/> class.
+        /// Initializes a new instance of the <see cref="PropertyMismatchException"/> class.
         /// </summary>
         /// <param name="message">The message.</param>
         /// <param name="controllerName">Name of the controller.</param>
-        public MoreThanOneControllerFoundException(string message, string controllerName)
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="expectedType">The expected type.</param>
+        /// <param name="gotType">Type of the got.</param>
+        public PropertyMismatchException(string message, string controllerName, string propertyName, string expectedType, string gotType)
             : base(message)
         {
             ControllerName = controllerName;
+            PropertyName = propertyName;
+            ExpectedType = expectedType;
+            GotType = gotType;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MoreThanOneControllerFoundException"/> class.
+        /// Initializes a new instance of the <see cref="PropertyMismatchException"/> class.
         /// </summary>
         /// <param name="format">The format.</param>
         /// <param name="args">The arguments.</param>
-        public MoreThanOneControllerFoundException(string format, params object[] args)
+        public PropertyMismatchException(string format, params object[] args)
             : base(string.Format(format, args)) { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MoreThanOneControllerFoundException"/> class.
+        /// Initializes a new instance of the <see cref="PropertyMismatchException"/> class.
         /// </summary>
         /// <param name="message">The error message that explains the reason for the exception.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-        public MoreThanOneControllerFoundException(string message, Exception innerException)
+        public PropertyMismatchException(string message, Exception innerException)
             : base(message, innerException) { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MoreThanOneControllerFoundException"/> class.
+        /// Initializes a new instance of the <see cref="PropertyMismatchException"/> class.
         /// </summary>
         /// <param name="format">The format.</param>
         /// <param name="innerException">The inner exception.</param>
         /// <param name="args">The arguments.</param>
-        public MoreThanOneControllerFoundException(string format, Exception innerException, params object[] args)
+        public PropertyMismatchException(string format, Exception innerException, params object[] args)
             : base(string.Format(format, args), innerException) { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MoreThanOneControllerFoundException"/> class.
+        /// Initializes a new instance of the <see cref="PropertyMismatchException"/> class.
         /// </summary>
         /// <param name="info">The <see cref="T:System.Runtime.Serialization.SerializationInfo" /> that holds the serialized object data about the exception being thrown.</param>
         /// <param name="context">The <see cref="T:System.Runtime.Serialization.StreamingContext" /> that contains contextual information about the source or destination.</param>
         /// <exception cref="System.ArgumentNullException">info</exception>
-        protected MoreThanOneControllerFoundException(SerializationInfo info, StreamingContext context)
+        protected PropertyMismatchException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             if (info == null)
                 throw new ArgumentNullException("info");
 
             ControllerName = info.GetString("ControllerName");
+            PropertyName = info.GetString("PropertyName");
+            ExpectedType = info.GetString("ExpectedType");
+            GotType = info.GetString("GotType");
         }
 
         #endregion
@@ -123,6 +165,9 @@ namespace Samotorcan.HtmlUi.Core.Exceptions
                 throw new ArgumentNullException("info");
 
             info.AddValue("ControllerName", ControllerName);
+            info.AddValue("PropertyName", PropertyName);
+            info.AddValue("ExpectedType", ExpectedType);
+            info.AddValue("GotType", GotType);
         }
         #endregion
 
@@ -139,11 +184,14 @@ namespace Samotorcan.HtmlUi.Core.Exceptions
             return new JavascriptException
             {
                 Message = Message,
-                Type = "MoreThanOneControllerFoundException",
+                Type = "PropertyMismatchException",
                 InnerException = InnerException != null ? ExceptionUtility.CreateJavascriptException(InnerException) : null,
                 AdditionalData = new Dictionary<string, object>
                 {
-                    { "ControllerName", ControllerName }
+                    { "ControllerName", ControllerName },
+                    { "PropertyName", PropertyName },
+                    { "ExpectedType", ExpectedType },
+                    { "GotType", GotType }
                 }
             };
         }

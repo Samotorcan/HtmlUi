@@ -53,6 +53,18 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         {
             return JsonUtility.DeserializeFromBson<Message<TType>>(processMessage.Arguments.GetBinary(0).ToArray());
         }
+
+        /// <summary>
+        /// Deserializes the message.
+        /// </summary>
+        /// <typeparam name="TType">The type of the type.</typeparam>
+        /// <param name="processMessage">The process message.</param>
+        /// <param name="anonymousObject">The anonymous object.</param>
+        /// <returns></returns>
+        public static Message<TType> DeserializeMessage<TType>(CefProcessMessage processMessage, TType anonymousObject)
+        {
+            return JsonUtility.DeserializeFromBson<Message<TType>>(processMessage.Arguments.GetBinary(0).ToArray());
+        }
         #endregion
 
         #endregion

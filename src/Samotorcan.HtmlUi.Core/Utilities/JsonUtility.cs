@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
@@ -84,9 +85,24 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns></returns>
-        public static byte[] SerializeToJson(object value)
+        public static string SerializeToJson(object value)
         {
-            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, Formatting.Indented, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }));
+            return JsonConvert.SerializeObject(value, Formatting.Indented, new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                Converters = new List<JsonConverter> { new KeyValuePairConverter() }
+            });
+        }
+        #endregion
+        #region SerializeToByteJson
+        /// <summary>
+        /// Serializes to byte json.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        public static byte[] SerializeToByteJson(object value)
+        {
+            return Encoding.UTF8.GetBytes(JsonUtility.SerializeToJson(value));
         }
         #endregion
 

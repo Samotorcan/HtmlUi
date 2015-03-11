@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Samotorcan.HtmlUi.Core.Attributes;
 using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
@@ -26,6 +28,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The identifier.
         /// </value>
+        [Exclude]
         public int Id { get; private set; }
         #endregion
 
@@ -68,15 +71,6 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         private Type Type { get; set; }
         #endregion
-        #region IgnoreProperties
-        /// <summary>
-        /// Gets or sets the ignore properties.
-        /// </summary>
-        /// <value>
-        /// The ignore properties.
-        /// </value>
-        private List<string> IgnoreProperties { get; set; }
-        #endregion
 
         #endregion
         #endregion
@@ -91,10 +85,6 @@ namespace Samotorcan.HtmlUi.Core
 
             Properties = new List<ControllerPropertyInfo>();
             Methods = new List<ControllerMethodInfo>();
-            IgnoreProperties = new List<string> // TODO: create attributes
-            {
-                "Id"
-            };
             Type = GetType();
             Name = Type.Name;
 
@@ -206,16 +196,17 @@ namespace Samotorcan.HtmlUi.Core
             return GetDescription(Naming.CamelCase);
         }
         #endregion
-        #region TrySetProperty
+        #region SetProperty
         /// <summary>
-        /// Tries to set property.
+        /// Sets the property.
         /// </summary>
         /// <param name="propertyName">Name of the property.</param>
         /// <param name="value">The value.</param>
-        /// <param name="naming">Type of the naming.</param>
-        /// <returns></returns>
+        /// <param name="naming">The naming.</param>
         /// <exception cref="System.ArgumentNullException">propertyName</exception>
-        internal bool TrySetProperty(string propertyName, object value, Naming naming)
+        /// <exception cref="Samotorcan.HtmlUi.Core.Exceptions.PropertyNotFoundException"></exception>
+        /// <exception cref="Samotorcan.HtmlUi.Core.Exceptions.PropertyMismatchException"></exception>
+        internal void SetProperty(string propertyName, JToken value, Naming naming)
         {
             if (string.IsNullOrWhiteSpace(propertyName))
                 throw new ArgumentNullException("propertyName");
@@ -225,60 +216,40 @@ namespace Samotorcan.HtmlUi.Core
                     ? StringUtility.CamelCase(p.Name) == propertyName
                     : p.Name == propertyName));
 
-            if (property != null)
+            if (property == null)
+                throw new PropertyNotFoundException(propertyName, Name);
+
+            var propertyInfo = property.PropertyInfo;
+            var propertyType = propertyInfo.PropertyType;
+
+            if (value == null)
             {
-                var propertyInfo = property.PropertyInfo;
-                var propertyType = propertyInfo.PropertyType;
-
-                if (value == null)
-                {
-                    if (!propertyType.IsValueType || Nullable.GetUnderlyingType(propertyType) != null)
-                    {
-                        propertyInfo.SetValue(this, value);
-                        return true;
-                    }
-                }
+                if (!propertyType.IsValueType || Nullable.GetUnderlyingType(propertyType) != null)
+                    propertyInfo.SetValue(this, value);
                 else
+                    throw new PropertyMismatchException(Name, propertyName, propertyType.Name, "null");
+            }
+            else
+            {
+                try
                 {
-                    var valueType = value.GetType();
-
-                    // same type
-                    if (valueType == propertyType)
-                    {
-                        propertyInfo.SetValue(this, value);
-                        return true;
-                    }
-
-                    // try convert
-                    else if (typeof(IConvertible).IsAssignableFrom(valueType))
-                    {
-                        try
-                        {
-                            value = Convert.ChangeType(value, propertyType);
-
-                            propertyInfo.SetValue(this, value);
-                            return true;
-                        }
-                        catch (Exception)
-                        {
-                            return false;
-                        }
-                    }
+                    propertyInfo.SetValue(this, value.ToObject(propertyType));
+                }
+                catch (FormatException)
+                {
+                    throw new PropertyMismatchException(Name, propertyName, propertyType.Name, Enum.GetName(typeof(JTokenType), value.Type));
                 }
             }
-
-            return false;
         }
 
         /// <summary>
-        /// Tries to set property.
+        /// Sets the property.
         /// </summary>
         /// <param name="propertyName">Name of the property.</param>
         /// <param name="value">The value.</param>
-        /// <returns></returns>
-        internal bool TrySetProperty(string propertyName, object value)
+        internal void SetProperty(string propertyName, JToken value)
         {
-            return TrySetProperty(propertyName, value, Naming.CamelCase);
+            SetProperty(propertyName, value, Naming.CamelCase);
         }
         #endregion
         #region CallMethod
@@ -326,7 +297,17 @@ namespace Samotorcan.HtmlUi.Core
                 })
                 .ToArray();
 
-            return method.MethodInfo.Invoke(this, parameters);
+            // return
+            if (method.MethodInfo.ReturnType == typeof(void))
+            {
+                method.MethodInfo.Invoke(this, parameters);
+
+                return Undefined.Value;
+            }
+            else
+            {
+                return method.MethodInfo.Invoke(this, parameters);
+            }
         }
 
         /// <summary>
@@ -356,7 +337,8 @@ namespace Samotorcan.HtmlUi.Core
 
             foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                if (!IgnoreProperties.Contains(property.Name))
+                // ignore properties with exclude attribute
+                if (property.GetCustomAttribute<ExcludeAttribute>() == null)
                 {
                     var readAccess = property.CanRead && property.GetGetMethod(false) != null;
                     var writeAccess = property.CanWrite && property.GetSetMethod(false) != null;
@@ -392,7 +374,7 @@ namespace Samotorcan.HtmlUi.Core
             while (type != typeof(object))
             {
                 var methodInfos = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-                    .Where(m => !m.IsSpecialName && m.Name != "Dispose")    // TODO: ignore attribute
+                    .Where(m => !m.IsSpecialName && m.GetCustomAttribute<ExcludeAttribute>() == null)
                     .ToList();
 
                 foreach (var methodInfo in methodInfos)
@@ -479,6 +461,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
+        [Exclude]
         public void Dispose()
         {
             Dispose(true);

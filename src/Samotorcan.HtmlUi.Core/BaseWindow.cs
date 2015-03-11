@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using Samotorcan.HtmlUi.Core.Browser;
 using Samotorcan.HtmlUi.Core.Events;
+using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
@@ -213,13 +214,13 @@ namespace Samotorcan.HtmlUi.Core
 
             foreach (var controllerChange in controllerChanges)
             {
-                if (Controllers.ContainsKey(controllerChange.Id))
-                {
-                    var controller = Controllers[controllerChange.Id];
+                if (!Controllers.ContainsKey(controllerChange.Id))
+                    throw new ControllerNotFoundException();
 
-                    foreach (var changeProperty in controllerChange.Properties)
-                        controller.TrySetProperty(changeProperty.Key, changeProperty.Value);
-                }
+                var controller = Controllers[controllerChange.Id];
+
+                foreach (var changeProperty in controllerChange.Properties)
+                    controller.SetProperty(changeProperty.Key, changeProperty.Value);
             }
         }
         #endregion
@@ -238,10 +239,7 @@ namespace Samotorcan.HtmlUi.Core
                 throw new ArgumentNullException("methodName");
 
             if (!Controllers.ContainsKey(controllerId))
-            {
-                GeneralLog.Warn(string.Format("Controller not found. (controller id = \"{0}\")", controllerId));
-                return null;
-            }
+                throw new ControllerNotFoundException();
 
             return Controllers[controllerId].CallMethod(methodName, arguments);
         }

@@ -206,7 +206,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
 
             BaseMainApplication.Current.Window.Digest(controllerChanges);
 
-            return null;
+            return Undefined.Value;
         }
         #endregion
         #region GetControllerNames
@@ -250,7 +250,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
 
             BaseMainApplication.Current.Window.DestroyController(controllerId);
 
-            return null;
+            return Undefined.Value;
         }
         #endregion
         #region CallMethod

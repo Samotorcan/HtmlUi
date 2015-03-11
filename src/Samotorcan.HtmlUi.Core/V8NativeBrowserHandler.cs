@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
@@ -58,20 +59,61 @@ namespace Samotorcan.HtmlUi.Core
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "sourceProcess", Justification = "I want it to match to OnProcessMessageReceived method.")]
         public bool ProcessMessage(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
         {
-            var name = processMessage.Name;
-
-            if (ProcessMessages.ContainsKey(name))
+            if (processMessage.Name == "native")
             {
-                var message = MessageUtility.DeserializeMessage<string>(processMessage);
+                var message = MessageUtility.DeserializeMessage(processMessage, new { Name = string.Empty, Json = string.Empty });
 
                 BaseMainApplication.Current.InvokeOnMainAsync(() =>
                 {
-                    var returnData = ProcessMessages[name](message.Data);
+                    var returnData = (object)null;
+                    var exception = (Exception)null;
+
+                    // native found
+                    if (ProcessMessages.ContainsKey(message.Data.Name))
+                    {
+                        try
+                        {
+                            returnData = ProcessMessages[message.Data.Name](message.Data.Json);
+                        }
+                        catch (Exception e)
+                        {
+                            exception = e;
+                            returnData = null;
+                        }
+                    }
+                    else
+                    {
+                        exception = new NativeNotFoundException(message.Data.Name);
+                    }
 
                     // callback
                     if (message.CallbackId != null)
                     {
-                        var returnJson = JsonConvert.SerializeObject(returnData);
+                        var nativeResponse = new NativeResponse();
+
+                        if (exception != null)
+                        {
+                            nativeResponse.Exception = ExceptionUtility.CreateJavascriptException(exception);
+                            nativeResponse.Type = NativeResponseType.Exception;
+                            nativeResponse.Value = null;
+                        }
+                        else
+                        {
+                            if (returnData == Undefined.Value)
+                            {
+                                nativeResponse.Exception = null;
+                                nativeResponse.Type = NativeResponseType.Undefined;
+                                nativeResponse.Value = null;
+                            }
+                            else
+                            {
+                                nativeResponse.Exception = null;
+                                nativeResponse.Type = NativeResponseType.Value;
+                                nativeResponse.Value = returnData;
+                            }
+                        }
+
+                        var returnJson = JsonUtility.SerializeToJson(nativeResponse);
 
                         MessageUtility.SendMessage(browser, "native", message.CallbackId, returnJson);
                     }

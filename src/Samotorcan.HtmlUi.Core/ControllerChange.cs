@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -31,7 +32,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The properties.
         /// </value>
-        public Dictionary<string, object> Properties { get; set; }
+        public Dictionary<string, JToken> Properties { get; set; }
         #endregion
 
         #endregion
@@ -43,7 +44,7 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         public ControllerChange()
         {
-            Properties = new Dictionary<string, object>();
+            Properties = new Dictionary<string, JToken>();
         }
 
         #endregion

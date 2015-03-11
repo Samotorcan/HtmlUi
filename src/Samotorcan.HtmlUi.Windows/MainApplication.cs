@@ -136,7 +136,7 @@ namespace Samotorcan.HtmlUi.Windows
         /// <param name="action">The action.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">action</exception>
-        public Task<bool> InvokeOnUiAsync(Action action)
+        public Task InvokeOnUiAsync(Action action)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
@@ -164,17 +164,15 @@ namespace Samotorcan.HtmlUi.Windows
         /// Invokes the specified action on the UI thread synchronous.
         /// </summary>
         /// <param name="action">The action.</param>
-        public bool InvokeOnUi(Action action)
+        public void InvokeOnUi(Action action)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
 
             if (!IsUiThread)
-                return InvokeOnUiAsync(action).Result;
-
-            action();
-
-            return true;
+                InvokeOnUiAsync(action).Wait();
+            else
+                action();
         }
         #endregion
 
