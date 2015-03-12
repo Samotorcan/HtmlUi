@@ -10,8 +10,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
     /// <summary>
     /// Load handler.
     /// </summary>
-    [CLSCompliant(false)]
-    public class LoadHandler : CefLoadHandler
+    internal class LoadHandler : CefLoadHandler
     {
         #region Properties
         #region Protected

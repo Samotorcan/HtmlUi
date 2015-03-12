@@ -83,6 +83,9 @@
     <Compile Include="BaseMainApplication.cs" />
     <Compile Include="BaseChildApplication.cs" />
     <Compile Include="ControllerMethod.cs" />
+    <Compile Include="Exceptions\FunctionNotFoundException.cs" />
+    <Compile Include="Exceptions\ReadOnlyPropertyException.cs" />
+    <Compile Include="Exceptions\WriteOnlyPropertyException.cs" />
     <Compile Include="Exceptions\INativeException.cs" />
     <Compile Include="Exceptions\NativeNotFoundException.cs" />
     <Compile Include="Exceptions\PropertyNotFoundException.cs" />
@@ -134,9 +137,9 @@
     <Compile Include="IContentProvider.cs" />
     <Compile Include="FileAssemblyContentProvider.cs" />
     <Compile Include="IControllerProvider.cs" />
-    <Compile Include="JavascriptCallback.cs" />
+    <Compile Include="JavascriptFunction.cs" />
     <Compile Include="Access.cs" />
-    <Compile Include="Naming.cs" />
+    <Compile Include="NormalizeType.cs" />
     <Compile Include="Utilities\JsonUtility.cs" />
     <Compile Include="Utilities\MessageUtility.cs" />
     <Compile Include="Utilities\ResourceUtility.cs" />

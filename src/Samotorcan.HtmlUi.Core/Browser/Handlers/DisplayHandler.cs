@@ -10,8 +10,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
     /// <summary>
     /// Display handler.
     /// </summary>
-    [CLSCompliant(false)]
-    public class DisplayHandler : CefDisplayHandler
+    internal class DisplayHandler : CefDisplayHandler
     {
 
     }

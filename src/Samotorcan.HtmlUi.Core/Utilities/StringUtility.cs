@@ -14,18 +14,24 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         #region Methods
         #region Public
 
-        #region CamelCase
+        #region Normalize
         /// <summary>
-        /// Camel case.
+        /// Normalizes the specified value.
         /// </summary>
         /// <param name="value">The value.</param>
+        /// <param name="normalizeType">The normalize type.</param>
         /// <returns></returns>
-        public static string CamelCase(string value)
+        public static string Normalize(string value, NormalizeType normalizeType)
         {
             if (string.IsNullOrWhiteSpace(value))
                 return value;
 
-            return Char.ToLowerInvariant(value[0]) + value.Substring(1);
+            if (normalizeType == NormalizeType.CamelCase)
+                return Char.ToLowerInvariant(value[0]) + value.Substring(1);
+            else if (normalizeType == NormalizeType.PascalCase)
+                return Char.ToUpperInvariant(value[0]) + value.Substring(1);
+
+            return value;
         }
         #endregion
 

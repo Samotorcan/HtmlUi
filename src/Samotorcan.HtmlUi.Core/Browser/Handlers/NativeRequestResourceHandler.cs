@@ -271,7 +271,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         #endregion
         #region CreateController
         /// <summary>
-        /// Controller names.
+        /// Creates the controller.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <returns></returns>
@@ -310,21 +310,21 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             return Undefined.Value;
         }
         #endregion
-        #region Digest
+        #region SyncControllerChanges
         /// <summary>
-        /// Calls the digest.
+        /// Synchronizes the controller changes.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <returns></returns>
         [NativeFunction]
-        private object Digest(CefRequest request)
+        private object SyncControllerChanges(CefRequest request)
         {
             var controllerChanges = GetPostData<List<ControllerChange>>(request);
 
             var application = BaseMainApplication.Current;
             application.InvokeOnMain(() =>
             {
-                application.Window.Digest(controllerChanges);
+                application.Window.SyncControllerChanges(controllerChanges);
             });
 
             return Undefined.Value;
@@ -352,7 +352,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         #endregion
         #region Log
         /// <summary>
-        /// Calls the log.
+        /// Logs the message.
         /// </summary>
         /// <param name="request">The request.</param>
         /// <returns></returns>

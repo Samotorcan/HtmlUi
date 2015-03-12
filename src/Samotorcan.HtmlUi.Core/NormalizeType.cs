@@ -7,14 +7,19 @@ using System.Threading.Tasks;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// Naming.
+    /// Normalize type.
     /// </summary>
-    internal enum Naming
+    internal enum NormalizeType
     {
         /// <summary>
-        /// The normal.
+        /// The none.
         /// </summary>
-        Normal,
+        None,
+
+        /// <summary>
+        /// The pascal case,
+        /// </summary>
+        PascalCase,
 
         /// <summary>
         /// The camel case.

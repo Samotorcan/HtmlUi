@@ -1,4 +1,6 @@
 ﻿using Newtonsoft.Json;
+using Samotorcan.HtmlUi.Core.Logs;
+using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +11,9 @@ using Xilium.CefGlue;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// Javascript callback.
+    /// Javascript function.
     /// </summary>
-    internal class JavascriptCallback
+    internal class JavascriptFunction
     {
         #region Properties
         #region Public
@@ -49,25 +51,25 @@ namespace Samotorcan.HtmlUi.Core
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="JavascriptCallback"/> class.
+        /// Initializes a new instance of the <see cref="JavascriptFunction"/> class.
         /// </summary>
-        /// <param name="callbackFunction">The callback function.</param>
+        /// <param name="function">The function.</param>
         /// <param name="context">The context.</param>
         /// <exception cref="System.ArgumentNullException">
-        /// callbackFunction
+        /// function
         /// or
         /// context
         /// </exception>
-        public JavascriptCallback(CefV8Value callbackFunction, CefV8Context context)
+        public JavascriptFunction(CefV8Value function, CefV8Context context)
         {
-            if (callbackFunction == null)
-                throw new ArgumentNullException("callbackFunction");
+            if (function == null)
+                throw new ArgumentNullException("function");
 
             if (context == null)
                 throw new ArgumentNullException("context");
 
             Id = Guid.NewGuid();
-            CallbackFunction = callbackFunction;
+            CallbackFunction = function;
             Context = context;
         }
 
@@ -77,7 +79,7 @@ namespace Samotorcan.HtmlUi.Core
 
         #region Execute
         /// <summary>
-        /// Executes the callback.
+        /// Executes the function.
         /// </summary>
         public void Execute()
         {
@@ -85,16 +87,16 @@ namespace Samotorcan.HtmlUi.Core
         }
 
         /// <summary>
-        /// Executes the callback with data.
+        /// Executes the function with data.
         /// </summary>
         /// <param name="data">The data.</param>
         public void Execute(object data)
         {
-            CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[] { CefV8Value.CreateString(JsonConvert.SerializeObject(data)) });
+            CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[] { CefV8Value.CreateString(JsonUtility.SerializeToJson(data)) });
         }
 
         /// <summary>
-        /// Executes the callback with json.
+        /// Executes the function with json.
         /// </summary>
         /// <param name="json">The json.</param>
         public void Execute(string json)

@@ -10,8 +10,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
     /// <summary>
     /// Request handler.
     /// </summary>
-    [CLSCompliant(false)]
-    public class RequestHandler : CefRequestHandler
+    internal class RequestHandler : CefRequestHandler
     {
         #region Methods
         #region Protected

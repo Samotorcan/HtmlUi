@@ -151,6 +151,35 @@ namespace Samotorcan.HtmlUi.Core
                 KeyPress(this, new KeyPressEventArgs(nativeKeyCode));
         }
         #endregion
+        #region CallFunction
+        /// <summary>
+        /// Calls the function.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="data">The data.</param>
+        /// <exception cref="System.ArgumentNullException">name</exception>
+        internal void CallFunction(string name, object data)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentNullException("name");
+
+            MessageUtility.SendMessage(CefBrowser, "callFunction", null, new { Name = name, Data = data });
+        }
+
+        /// <summary>
+        /// Calls the function.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <exception cref="System.ArgumentNullException">name</exception>
+        internal void CallFunction(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentNullException("name");
+
+            MessageUtility.SendMessage(CefBrowser, "callFunction", null, new { Name = name, Data = Undefined.Value });
+        }
+        #endregion
+
         #region CreateController
         /// <summary>
         /// Creates the controllers.
@@ -162,10 +191,37 @@ namespace Samotorcan.HtmlUi.Core
 
             var controllerProvider = BaseMainApplication.Current.ControllerProvider;
 
-            var createdController = controllerProvider.CreateController(name, id);
-            Controllers.Add(id, createdController);
+            // create
+            var controller = controllerProvider.CreateController(name, id);
+            Controllers.Add(id, controller);
 
-            return createdController;
+            // notify on property change    TODO: bundle changes
+            controller.PropertyChanged += (sender, e) =>
+            {
+                var propertyName = e.PropertyName;
+                var propertyValue = controller.GetPropertyValue(propertyName);
+
+                // log
+                GeneralLog.Debug(string.Format("Controller id: {0} property changed: {1} = {2}.",
+                    controller.Id,
+                    e.PropertyName,
+                    JsonConvert.SerializeObject(propertyValue)));
+
+                // sync controller changes
+                CallFunction("syncControllerChanges", new List<ControllerChange>
+                {
+                    new ControllerChange
+                    {
+                        Id = controller.Id,
+                        Properties = new Dictionary<string, JToken>
+                        {
+                            { e.PropertyName, JToken.FromObject(propertyValue) }
+                        }
+                    }
+                });
+            };
+
+            return controller;
         }
         #endregion
         #region DestroyController
@@ -201,16 +257,17 @@ namespace Samotorcan.HtmlUi.Core
             Controllers.Clear();
         }
         #endregion
-        #region Digest
+        #region SyncControllerChanges
         /// <summary>
-        /// Digest call. Updates the controllers.
+        /// Synchronizes the controller changes.
         /// </summary>
         /// <param name="controllerChanges">The controller changes.</param>
-        internal void Digest(IEnumerable<ControllerChange> controllerChanges)
+        /// <exception cref="ControllerNotFoundException"></exception>
+        internal void SyncControllerChanges(IEnumerable<ControllerChange> controllerChanges)
         {
             BaseMainApplication.Current.EnsureMainThread();
 
-            GeneralLog.Debug(string.Format("Digest call: {0}", JsonConvert.SerializeObject(controllerChanges)));
+            GeneralLog.Debug(string.Format("Sync controller changes: {0}", JsonConvert.SerializeObject(controllerChanges)));
 
             foreach (var controllerChange in controllerChanges)
             {
@@ -220,7 +277,7 @@ namespace Samotorcan.HtmlUi.Core
                 var controller = Controllers[controllerChange.Id];
 
                 foreach (var changeProperty in controllerChange.Properties)
-                    controller.SetProperty(changeProperty.Key, changeProperty.Value);
+                    controller.SetPropertyValue(changeProperty.Key, changeProperty.Value);
             }
         }
         #endregion

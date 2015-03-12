@@ -17,8 +17,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
     /// <summary>
     /// Render process handler.
     /// </summary>
-    [CLSCompliant(false)]
-    public class ProcessHandler : CefRenderProcessHandler
+    internal class ProcessHandler : CefRenderProcessHandler
     {
         #region Properties
         #region Private
@@ -114,7 +113,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             if (message == null)
                 throw new ArgumentNullException("message");
 
-            return V8NativeHandler.ProcessCallback(browser, sourceProcess, message) ||
+            return V8NativeHandler.ProcessMessage(browser, sourceProcess, message) ||
                 MessageRouter.OnProcessMessageReceived(browser, sourceProcess, message);
         }
         #endregion

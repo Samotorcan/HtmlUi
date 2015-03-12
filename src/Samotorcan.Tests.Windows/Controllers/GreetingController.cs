@@ -14,7 +14,13 @@ namespace Samotorcan.Tests.Windows.Controllers
     {
         public int FirstNumber { get; set; }
         public int SecondNumber { get; set; }
-        public int Result { get; set; }
+
+        private int _result;
+        public int Result
+        {
+            get { return _result; }
+            set { SetField(ref _result, value); }
+        }
 
         public GreetingController(int id)
             : base(id)

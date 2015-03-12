@@ -1,4 +1,7 @@
-﻿using Samotorcan.HtmlUi.Core.Utilities;
+﻿using Newtonsoft.Json.Linq;
+using Samotorcan.HtmlUi.Core.Exceptions;
+using Samotorcan.HtmlUi.Core.Logs;
+using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,7 +39,16 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The callbacks.
         /// </value>
-        private Dictionary<Guid, JavascriptCallback> Callbacks { get; set; }
+        private Dictionary<Guid, JavascriptFunction> Callbacks { get; set; }
+        #endregion
+        #region Functions
+        /// <summary>
+        /// Gets or sets the functions.
+        /// </summary>
+        /// <value>
+        /// The functions.
+        /// </value>
+        private Dictionary<string, JavascriptFunction> Functions { get; set; }
         #endregion
 
         #endregion
@@ -48,27 +60,29 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         public V8NativeHandler()
         {
-            Callbacks = new Dictionary<Guid, JavascriptCallback>();
+            Callbacks = new Dictionary<Guid, JavascriptFunction>();
+            Functions = new Dictionary<string, JavascriptFunction>();
         }
 
         #endregion
         #region Methods
         #region Public
 
-        #region ProcessCallback
+        #region ProcessMessage
         /// <summary>
-        /// Processes the callback.
+        /// Processes the message.
         /// </summary>
         /// <param name="browser">The browser.</param>
         /// <param name="sourceProcess">The source process.</param>
         /// <param name="processMessage">The process message.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "browser", Justification = "I want it to match to OnProcessMessageReceived method.")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "sourceProcess", Justification = "I want it to match to OnProcessMessageReceived method.")]
-        public bool ProcessCallback(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
+        public bool ProcessMessage(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
         {
             if (processMessage == null)
                 throw new ArgumentNullException("processMessage");
 
+            // native
             if (processMessage.Name == "native")
             {
                 var message = MessageUtility.DeserializeMessage<string>(processMessage);
@@ -79,6 +93,28 @@ namespace Samotorcan.HtmlUi.Core
                     var callback = GetCallback(message.CallbackId.Value);
 
                     callback.Execute(returnJson);
+                }
+
+                return true;
+            }
+
+            // call function
+            else if (processMessage.Name == "callFunction")
+            {
+                var message = MessageUtility.DeserializeMessage(processMessage, new { Name = string.Empty, Data = new object() });
+                var functionName = message.Data.Name;
+                var data = message.Data.Data;
+
+                if (Functions.ContainsKey(functionName))
+                {
+                    if (data != Undefined.Value)
+                        Functions[functionName].Execute(data);
+                    else
+                        Functions[functionName].Execute();
+                }
+                else
+                {
+                    GeneralLog.Error(string.Format("Call function - function {0} is not registered.", functionName));
                 }
 
                 return true;
@@ -109,17 +145,30 @@ namespace Samotorcan.HtmlUi.Core
             returnValue = null;
             exception = null;
 
+            // native
             if (name == "native")
             {
                 var functionName = arguments[0].GetStringValue();
                 var jsonData = arguments[1].GetStringValue();
-                var callbackFunction = arguments.Length > 2 ? arguments[2] : null;
+                var callbackFunction = arguments.Length > 2 && arguments[2].IsFunction ? arguments[2] : null;
 
                 var callbackId = AddCallback(callbackFunction, CefV8Context.GetCurrentContext());
 
                 MessageUtility.SendMessage(CefBrowser, "native", callbackId, new { Name = functionName, Json = jsonData });
 
                 return true;
+            }
+
+            // register function
+            else if (name == "registerFunction")
+            {
+                var functionName = arguments[0].GetStringValue();
+                var function = arguments[1];
+
+                if (!Functions.ContainsKey(functionName))
+                    Functions.Add(functionName, new JavascriptFunction(function, CefV8Context.GetCurrentContext()));
+                else
+                    GeneralLog.Error(string.Format("Register function - function {0} is already registered.", functionName));
             }
 
             return false;
@@ -140,7 +189,7 @@ namespace Samotorcan.HtmlUi.Core
         {
             if (callbackFunction != null && callbackFunction.IsFunction)
             {
-                var callback = new JavascriptCallback(callbackFunction, context);
+                var callback = new JavascriptFunction(callbackFunction, context);
                 Callbacks.Add(callback.Id, callback);
 
                 return callback.Id;
@@ -155,7 +204,7 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <param name="id">The identifier.</param>
         /// <returns></returns>
-        private JavascriptCallback GetCallback(Guid id)
+        private JavascriptFunction GetCallback(Guid id)
         {
             if (Callbacks.ContainsKey(id))
             {

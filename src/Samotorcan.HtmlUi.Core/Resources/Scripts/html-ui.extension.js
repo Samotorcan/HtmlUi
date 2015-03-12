@@ -32,11 +32,11 @@
             };
 
             return {
-                digest: function (controllers) {
-                    return nativeSynchronous('digest', controllers);
+                syncControllerChanges: function (controllers) {
+                    return nativeSynchronous('syncControllerChanges', controllers);
                 },
-                digestAsync: function (controllers) {
-                    return native('digest', controllers);
+                syncControllerChangesAsync: function (controllers) {
+                    return native('syncControllerChanges', controllers);
                 },
 
                 getControllerNames: function () {
@@ -67,11 +67,19 @@
                     return native('callMethod', { id: id, name: name, args: args });
                 },
 
+                registerFunction: function (name, func) {
+                    // !native function registerFunction();
+                    registerFunction(name, func);
+                },
+
                 log: function (type, messageType, message) {
                     return nativeSynchronous('log', { type: type, messageType: messageType, message: message });
                 }
             }
         })();
+
+        // register functions
+        native.registerFunction('syncControllerChanges', syncControllerChanges);
 
         // create module
         htmlUi.app = angular.module('htmlUiApp', []);
@@ -81,59 +89,84 @@
             
         });
 
-        // digest
+        // sync controller changes
         htmlUi.app.run(['$rootScope', function ($rootScope) {
-            // scope change
-            $rootScope.$watch(function (rootScope) {
+            $rootScope.htmlUiChanges = {};
+
+            // changes
+            $rootScope.$watch('htmlUiChanges', function (changes) {
                 var controllers = [];
 
-                // prepare controller values
-                for (var scope = rootScope.$$childHead; scope; scope = scope.$$nextSibling) {
-                    var controller = { id: scope.$id, properties: {} };
+                // prepare changes
+                angular.forEach(changes, function (properties, controllerId) {
+                    if (properties != null && Object.keys(properties).length > 0)
+                        controllers.push({ id: controllerId, properties: properties });
+                });
 
-                    angular.forEach(scope, function (value, key) {
-                        if (key.charAt(0) != "$")
-                            controller.properties[key] = value;
-                    });
+                // call sync controller changes
+                if (controllers.length > 0)
+                    native.syncControllerChanges(controllers);
 
-                    controllers.push(controller);
-                }
-
-                native.digest(controllers);
-            });
+                // clear changes
+                $rootScope.htmlUiChanges = {};
+            }, true);
         }]);
 
         // create controllers
         var controllerNames = native.getControllerNames();
+        var controllers = {};
 
         for (var i = 0; i < controllerNames.length; i++) {
             var controllerName = controllerNames[i];
 
-            htmlUi.app.controller(controllerName, ['$scope', function ($scope) {
+            htmlUi.app.controller(controllerName, ['$scope', '$rootScope', function ($scope, $rootScope) {
+                // save controller
+                controllers[$scope.$id] = $scope;
+
                 // create controller
                 var controller = native.createController(controllerName, $scope.$id);
 
                 // properties
-                for (var j = 0; j < controller.properties.length; j++) {
-                    var property = controller.properties[j];
+                angular.forEach(controller.properties, function (property) {
+                    var propertyName = property.name;
+                    $scope[propertyName] = property.value;
 
-                    $scope[property.name] = property.value;
-                }
+                    // watch property
+                    $scope.$watch(propertyName, function (newValue, oldValue) {
+                        if (newValue !== oldValue) {
+                            var changeProperties = $rootScope.htmlUiChanges[$scope.$id] = ($rootScope.htmlUiChanges[$scope.$id] || {});
+
+                            changeProperties[propertyName] = newValue;
+                        }
+                    });
+                });
 
                 // methods
-                for (var j = 0; j < controller.methods.length; j++) {
-                    var method = controller.methods[j];
-
+                angular.forEach(controller.methods, function (method) {
                     $scope[method.name] = function () {
                         return native.callMethod($scope.$id, method.name, argumentsToArray(arguments));
                     };
-                }
+                });
 
                 // destroy controller
                 $scope.$on('$destroy', function () {
                     native.destroyController($scope.$id);
-                })
+                });
             }]);
+        }
+
+        function syncControllerChanges(json) {
+            var controllerChanges = JSON.parse(json);
+
+            angular.forEach(controllerChanges, function (controllerChange) {
+                var controller = controllers[controllerChange.Id];
+                
+                controller.$apply(function () {
+                    angular.forEach(controllerChange.Properties, function (value, propertyName) {
+                        controller[camelize(propertyName)] = value;
+                    });
+                });
+            });
         }
     };
 
@@ -174,5 +207,12 @@
             argsArray.push(args[i]);
 
         return argsArray;
+    }
+
+    function camelize(str) {
+        return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
+            if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
+            return index == 0 ? match.toLowerCase() : match.toUpperCase();
+        });
     }
 })(htmlUi);

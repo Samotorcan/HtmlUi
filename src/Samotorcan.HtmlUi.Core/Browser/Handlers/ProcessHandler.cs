@@ -12,8 +12,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
     /// <summary>
     /// Browser process handler.
     /// </summary>
-    [CLSCompliant(false)]
-    public class ProcessHandler : CefBrowserProcessHandler
+    internal class ProcessHandler : CefBrowserProcessHandler
     {
         #region Methods
         #region Protected

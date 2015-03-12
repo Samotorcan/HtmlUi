@@ -193,18 +193,18 @@ namespace Samotorcan.HtmlUi.Core.Browser
         #endregion
         #region Private
 
-        #region Digest
+        #region SyncControllerChanges
         /// <summary>
-        /// Digests the specified json.
+        /// Synchronizes the controller changes.
         /// </summary>
         /// <param name="json">The json.</param>
         /// <returns></returns>
         [NativeFunction]
-        private object Digest(string json)
+        private object SyncControllerChanges(string json)
         {
             var controllerChanges = JsonConvert.DeserializeObject<List<ControllerChange>>(json);
 
-            BaseMainApplication.Current.Window.Digest(controllerChanges);
+            BaseMainApplication.Current.Window.SyncControllerChanges(controllerChanges);
 
             return Undefined.Value;
         }

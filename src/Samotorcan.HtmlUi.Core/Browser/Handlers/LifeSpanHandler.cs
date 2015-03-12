@@ -12,8 +12,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
     /// Life span handler.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "LifeSpan", Justification = "The base class has the same name.")]
-    [CLSCompliant(false)]
-    public class LifeSpanHandler : CefLifeSpanHandler
+    internal class LifeSpanHandler : CefLifeSpanHandler
     {
         #region Events
 

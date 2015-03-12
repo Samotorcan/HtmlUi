@@ -33,7 +33,7 @@ namespace Samotorcan.HtmlUi.Core
 
             return typeof(TType).GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
                 .Where(m => m.GetCustomAttribute<NativeFunctionAttribute>() != null)
-                .ToDictionary(m => StringUtility.CamelCase(m.Name), m => m.IsStatic
+                .ToDictionary(m => StringUtility.Normalize(m.Name, NormalizeType.CamelCase), m => m.IsStatic
                     ? (TDelegate)(object)Delegate.CreateDelegate(typeof(TDelegate), m)
                     : (TDelegate)(object)Delegate.CreateDelegate(typeof(TDelegate), obj, m));
         }

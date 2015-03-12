@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Bson;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using Samotorcan.HtmlUi.Core.Logs;
 using System;
 using System.Collections.Generic;
 using System.IO;
