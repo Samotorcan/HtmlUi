@@ -85,6 +85,12 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// <param name="context">The context.</param>
         protected override void OnContextCreated(CefBrowser browser, CefFrame frame, CefV8Context context)
         {
+            if (frame == null)
+                throw new ArgumentNullException("frame");
+
+            if (frame.IsMain && V8NativeHandler != null)
+                V8NativeHandler.Reset();
+
             MessageRouter.OnContextCreated(browser, frame, context);
         }
         #endregion

@@ -92,7 +92,8 @@ namespace Samotorcan.HtmlUi.Core
                     var returnJson = message.Data;
                     var callback = GetCallback(message.CallbackId.Value);
 
-                    callback.Execute(returnJson);
+                    if (callback != null)
+                        callback.Execute(returnJson);
                 }
 
                 return true;
@@ -121,6 +122,16 @@ namespace Samotorcan.HtmlUi.Core
             }
 
             return false;
+        }
+        #endregion
+        #region Reset
+        /// <summary>
+        /// Resets this instance.
+        /// </summary>
+        public void Reset()
+        {
+            Callbacks.Clear();
+            Functions.Clear();
         }
         #endregion
 

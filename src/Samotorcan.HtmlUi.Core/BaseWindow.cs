@@ -284,7 +284,7 @@ namespace Samotorcan.HtmlUi.Core
 
             application.EnsureMainThread();
 
-            GeneralLog.Debug("Sync controller changes to view.");
+            GeneralLog.Debug("Sync controller changes to client.");
 
             var controllerChanges = GetControllerChanges();
 

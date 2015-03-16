@@ -104,11 +104,14 @@
                 });
 
                 // call sync controller changes
-                if (controllers.length > 0)
-                    native.syncControllerChanges(controllers);
-
-                // clear changes
-                $rootScope.htmlUiChanges = {};
+                if (controllers.length > 0) {
+                    try {
+                        native.syncControllerChanges(controllers);
+                    } finally {
+                        // clear changes
+                        $rootScope.htmlUiChanges = {};
+                    }
+                }
             }, true);
         }]);
 
