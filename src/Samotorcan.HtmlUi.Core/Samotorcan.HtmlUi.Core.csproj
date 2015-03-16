@@ -83,6 +83,7 @@
     <Compile Include="BaseMainApplication.cs" />
     <Compile Include="BaseChildApplication.cs" />
     <Compile Include="ControllerMethod.cs" />
+    <Compile Include="Exceptions\SyncMaxDepthException.cs" />
     <Compile Include="Exceptions\FunctionNotFoundException.cs" />
     <Compile Include="Exceptions\ReadOnlyPropertyException.cs" />
     <Compile Include="Exceptions\WriteOnlyPropertyException.cs" />
@@ -179,7 +180,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\Views\NativeRequestException.html" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scripts\lodash.js" />
+    <EmbeddedResource Include="Resources\Scripts\lodash.min.js" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -13,7 +13,14 @@ namespace Samotorcan.Tests.Windows.Controllers
     public class GreetingController : Controller
     {
         public int FirstNumber { get; set; }
-        public int SecondNumber { get; set; }
+
+
+        private int _secondNumber;
+        public int SecondNumber
+        {
+            get { return _secondNumber; }
+            set { SetField(ref _secondNumber, value); }
+        }
 
         private int _result;
         public int Result
@@ -30,6 +37,7 @@ namespace Samotorcan.Tests.Windows.Controllers
 
         public void Sum()
         {
+            SecondNumber += 10;
             Result = FirstNumber + SecondNumber;
         }
     }

@@ -61,6 +61,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <param name="processMessage">The process message.</param>
         /// <param name="anonymousObject">The anonymous object.</param>
         /// <returns></returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "anonymousObject", Justification = "The type for anonymous object.")]
         public static Message<TType> DeserializeMessage<TType>(CefProcessMessage processMessage, TType anonymousObject)
         {
             return JsonUtility.DeserializeFromBson<Message<TType>>(processMessage.Arguments.GetBinary(0).ToArray());

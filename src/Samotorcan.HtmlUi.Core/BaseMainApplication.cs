@@ -131,6 +131,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         public Dictionary<string, string> MimeTypes { get; private set; }
         #endregion
+        #region SyncMaxDepth
+        /// <summary>
+        /// Gets or sets the synchronize maximum depth.
+        /// </summary>
+        /// <value>
+        /// The synchronize maximum depth.
+        /// </value>
+        public int SyncMaxDepth { get; set; }
+        #endregion
 
         #region RequestHostname
         private string _requestHostname;
@@ -259,6 +268,7 @@ namespace Samotorcan.HtmlUi.Core
             NativeRequestPort = 16556;
 
             MimeTypes = GetDefaultMimeTypes();
+            SyncMaxDepth = 10;
         }
 
         #endregion
@@ -290,6 +300,7 @@ namespace Samotorcan.HtmlUi.Core
                 try
                 {
                     action();
+                    Window.SyncControllerChanges();
 
                     taskCompletionSource.SetResult(null);
                 }
@@ -313,9 +324,14 @@ namespace Samotorcan.HtmlUi.Core
                 throw new ArgumentNullException("action");
 
             if (!IsMainThread)
+            {
                 InvokeOnMainAsync(action).Wait();
+            }
             else
+            {
                 action();
+                Window.SyncControllerChanges();
+            }
         }
         #endregion
         #region GetAbsoluteContentUrl

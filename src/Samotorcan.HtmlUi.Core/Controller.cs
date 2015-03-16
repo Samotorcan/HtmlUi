@@ -33,6 +33,29 @@ namespace Samotorcan.HtmlUi.Core
         [Exclude]
         public int Id { get; private set; }
         #endregion
+        #region Name
+        /// <summary>
+        /// Gets or sets the name.
+        /// </summary>
+        /// <value>
+        /// The name.
+        /// </value>
+        [Exclude]
+        public string Name { get; private set; }
+        #endregion
+
+        #endregion
+        #region Internal
+
+        #region PropertyChanges
+        /// <summary>
+        /// Gets or sets the property changes.
+        /// </summary>
+        /// <value>
+        /// The property changes.
+        /// </value>
+        internal HashSet<string> PropertyChanges { get; private set; }
+        #endregion
 
         #endregion
         #region Private
@@ -55,15 +78,6 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         private List<ControllerMethodInfo> Methods { get; set; }
         #endregion
-        #region Name
-        /// <summary>
-        /// Gets or sets the name.
-        /// </summary>
-        /// <value>
-        /// The name.
-        /// </value>
-        private string Name { get; set; }
-        #endregion
         #region Type
         /// <summary>
         /// Gets or sets the type.
@@ -72,6 +86,15 @@ namespace Samotorcan.HtmlUi.Core
         /// The type.
         /// </value>
         private Type Type { get; set; }
+        #endregion
+        #region SyncPropertyValue
+        /// <summary>
+        /// Gets or sets a value indicating whether to synchronize property value.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> to synchronize property value; otherwise, <c>false</c>.
+        /// </value>
+        private bool SyncPropertyValue { get; set; }
         #endregion
 
         #endregion
@@ -87,11 +110,16 @@ namespace Samotorcan.HtmlUi.Core
 
             Properties = new List<ControllerPropertyInfo>();
             Methods = new List<ControllerMethodInfo>();
+            PropertyChanges = new HashSet<string>();
+
             Type = GetType();
             Name = Type.Name;
 
             Properties = FindProperties(Type);
             Methods = FindMethods(Type);
+
+            SyncPropertyValue = true;
+            PropertyChanged += Controller_PropertyChanged;
         }
 
         #endregion
@@ -202,11 +230,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <param name="propertyName">Name of the property.</param>
         /// <param name="value">The value.</param>
-        /// <param name="normalizeType">The normalize type.</param>
+        /// <param name="sync">if set to <c>true</c> synchronize changes.</param>
+        /// <param name="normalizeType">Type of the normalize.</param>
         /// <exception cref="System.ArgumentNullException">propertyName</exception>
-        /// <exception cref="Samotorcan.HtmlUi.Core.Exceptions.PropertyNotFoundException"></exception>
-        /// <exception cref="Samotorcan.HtmlUi.Core.Exceptions.PropertyMismatchException"></exception>
-        internal void SetPropertyValue(string propertyName, JToken value, NormalizeType normalizeType)
+        /// <exception cref="PropertyNotFoundException"></exception>
+        /// <exception cref="PropertyMismatchException">
+        /// null
+        /// or
+        /// </exception>
+        internal void SetPropertyValue(string propertyName, JToken value, bool sync, NormalizeType normalizeType)
         {
             if (string.IsNullOrWhiteSpace(propertyName))
                 throw new ArgumentNullException("propertyName");
@@ -223,7 +255,7 @@ namespace Samotorcan.HtmlUi.Core
             if (value == null)
             {
                 if (!propertyType.IsValueType || Nullable.GetUnderlyingType(propertyType) != null)
-                    propertyInfo.SetValue(this, value);
+                    SetPropertyInfoValue(propertyInfo, value, sync);
                 else
                     throw new PropertyMismatchException(Name, propertyName, propertyType.Name, "null");
             }
@@ -231,7 +263,7 @@ namespace Samotorcan.HtmlUi.Core
             {
                 try
                 {
-                    propertyInfo.SetValue(this, value.ToObject(propertyType));
+                    SetPropertyInfoValue(propertyInfo, value.ToObject(propertyType), sync);
                 }
                 catch (FormatException)
                 {
@@ -245,9 +277,20 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <param name="propertyName">Name of the property.</param>
         /// <param name="value">The value.</param>
+        /// <param name="sync">if set to <c>true</c> synchronize changes.</param>
+        internal void SetPropertyValue(string propertyName, JToken value, bool sync)
+        {
+            SetPropertyValue(propertyName, value, sync, NormalizeType.CamelCase);
+        }
+
+        /// <summary>
+        /// Sets the property value.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="value">The value.</param>
         internal void SetPropertyValue(string propertyName, JToken value)
         {
-            SetPropertyValue(propertyName, value, NormalizeType.CamelCase);
+            SetPropertyValue(propertyName, value, false, NormalizeType.CamelCase);
         }
         #endregion
         #region GetPropertyValue
@@ -433,6 +476,39 @@ namespace Samotorcan.HtmlUi.Core
             return methods;
         }
         #endregion
+        #region Controller_PropertyChanged
+        /// <summary>
+        /// Handles the PropertyChanged event of the Controller control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
+        private void Controller_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (SyncPropertyValue)
+                PropertyChanges.Add(e.PropertyName);
+        }
+        #endregion
+        #region SetPropertyInfoValue
+        /// <summary>
+        /// Sets the property information value.
+        /// </summary>
+        /// <param name="propertyInfo">The property information.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="sync">if set to <c>true</c> [synchronize].</param>
+        private void SetPropertyInfoValue(PropertyInfo propertyInfo, object value, bool sync)
+        {
+            try
+            {
+                SyncPropertyValue = sync;
+
+                propertyInfo.SetValue(this, value);
+            }
+            finally
+            {
+                SyncPropertyValue = true;
+            }
+        }
+        #endregion
 
         #endregion
         #endregion
@@ -521,8 +597,12 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="value">The value.</param>
         /// <param name="propertyName">Name of the property.</param>
         /// <returns></returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Justification = "Used for CallerMemberName.")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "0#", Justification = "It must be a ref field.")]
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
         {
+            BaseMainApplication.Current.EnsureMainThread();
+
             if (EqualityComparer<T>.Default.Equals(field, value))
                 return false;
 

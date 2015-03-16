@@ -195,32 +195,6 @@ namespace Samotorcan.HtmlUi.Core
             var controller = controllerProvider.CreateController(name, id);
             Controllers.Add(id, controller);
 
-            // notify on property change    TODO: bundle changes
-            controller.PropertyChanged += (sender, e) =>
-            {
-                var propertyName = e.PropertyName;
-                var propertyValue = controller.GetPropertyValue(propertyName);
-
-                // log
-                GeneralLog.Debug(string.Format("Controller id: {0} property changed: {1} = {2}.",
-                    controller.Id,
-                    e.PropertyName,
-                    JsonConvert.SerializeObject(propertyValue)));
-
-                // sync controller changes
-                CallFunction("syncControllerChanges", new List<ControllerChange>
-                {
-                    new ControllerChange
-                    {
-                        Id = controller.Id,
-                        Properties = new Dictionary<string, JToken>
-                        {
-                            { e.PropertyName, JToken.FromObject(propertyValue) }
-                        }
-                    }
-                });
-            };
-
             return controller;
         }
         #endregion
@@ -301,6 +275,22 @@ namespace Samotorcan.HtmlUi.Core
             return Controllers[controllerId].CallMethod(methodName, arguments);
         }
         #endregion
+        /// <summary>
+        /// Synchronizes the controller changes.
+        /// </summary>
+        internal void SyncControllerChanges()
+        {
+            var application = BaseMainApplication.Current;
+
+            application.EnsureMainThread();
+
+            GeneralLog.Debug("Sync controller changes to view.");
+
+            var controllerChanges = GetControllerChanges();
+
+            if (controllerChanges.Any())
+                CallFunction("syncControllerChanges", controllerChanges);
+        }
 
         #endregion
         #region Protected
@@ -335,6 +325,77 @@ namespace Samotorcan.HtmlUi.Core
             CefBrowserHost.CreateBrowser(cefWindowInfo, cefClient, cefSettings, BaseMainApplication.Current.GetAbsoluteContentUrl(View));
 
             IsBrowserCreated = true;
+        }
+        #endregion
+
+        #endregion
+        #region Private
+
+        #region GetControllerChanges
+        /// <summary>
+        /// Gets the controller changes.
+        /// </summary>
+        /// <returns></returns>
+        private Dictionary<int, ControllerChange> GetControllerChanges()
+        {
+            return GetControllerChanges(1);
+        }
+
+        /// <summary>
+        /// Gets the controller changes.
+        /// </summary>
+        /// <param name="depth">The depth.</param>
+        /// <returns></returns>
+        /// <exception cref="Samotorcan.HtmlUi.Core.Exceptions.SyncMaxDepthException"></exception>
+        private Dictionary<int, ControllerChange> GetControllerChanges(int depth)
+        {
+            if (depth > BaseMainApplication.Current.SyncMaxDepth)
+                throw new SyncMaxDepthException(BaseMainApplication.Current.SyncMaxDepth);
+
+            var controllerChanges = new Dictionary<int, ControllerChange>();
+
+            // controller changes
+            foreach (var controller in Controllers.Values)
+            {
+                if (controller.PropertyChanges.Any())
+                {
+                    // clear property changes
+                    var propertyChanges = new HashSet<string>(controller.PropertyChanges);
+                    controller.PropertyChanges.Clear();
+
+                    // save property changes
+                    controllerChanges.Add(controller.Id, new ControllerChange
+                    {
+                        Id = controller.Id,
+                        Properties = propertyChanges
+                            .ToDictionary(p => p, p => JToken.FromObject(controller.GetPropertyValue(p)))
+                    });
+                }
+            }
+
+            // next changes triggered by getter for property
+            if (controllerChanges.Any())
+            {
+                // add next controller changes
+                foreach (var nextControllerChange in GetControllerChanges(++depth).Values)
+                {
+                    if (!controllerChanges.ContainsKey(nextControllerChange.Id))
+                        controllerChanges.Add(nextControllerChange.Id, new ControllerChange());
+
+                    var controllerChange = controllerChanges[nextControllerChange.Id];
+
+                    // properties
+                    foreach (var nextProperty in nextControllerChange.Properties.Keys)
+                    {
+                        if (!controllerChange.Properties.ContainsKey(nextProperty))
+                            controllerChange.Properties.Add(nextProperty, null);
+
+                        controllerChange.Properties[nextProperty] = nextControllerChange.Properties[nextProperty];
+                    }
+                }
+            }
+
+            return controllerChanges;
         }
         #endregion
 

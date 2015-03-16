@@ -256,6 +256,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// </summary>
         /// <param name="request">The request.</param>
         /// <returns></returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "request", Justification = "It has to match to the delegate.")]
         [NativeFunction]
         private object GetControllerNames(CefRequest request)
         {
