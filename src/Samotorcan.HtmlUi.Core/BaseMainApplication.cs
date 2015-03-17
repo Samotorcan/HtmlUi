@@ -300,7 +300,7 @@ namespace Samotorcan.HtmlUi.Core
                 try
                 {
                     action();
-                    Window.SyncControllerChanges();
+                    Window.SyncControllerChangesToClient();
 
                     taskCompletionSource.SetResult(null);
                 }
@@ -330,7 +330,7 @@ namespace Samotorcan.HtmlUi.Core
             else
             {
                 action();
-                Window.SyncControllerChanges();
+                Window.SyncControllerChangesToClient();
             }
         }
         #endregion

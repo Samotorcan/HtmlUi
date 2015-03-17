@@ -204,7 +204,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         {
             var controllerChanges = JsonConvert.DeserializeObject<List<ControllerChange>>(json);
 
-            BaseMainApplication.Current.Window.SyncControllerChanges(controllerChanges);
+            BaseMainApplication.Current.Window.SyncControllerChangesToServer(controllerChanges);
 
             return Undefined.Value;
         }
@@ -262,9 +262,9 @@ namespace Samotorcan.HtmlUi.Core.Browser
         [NativeFunction]
         private object CallMethod(string json)
         {
-            var methodData = JsonConvert.DeserializeAnonymousType(json, new { Id = 0, Name = string.Empty, Args = new JArray() });
+            var methodData = JsonConvert.DeserializeAnonymousType(json, new { Id = 0, Name = string.Empty, Args = new JArray(), InternalMethod = false });
 
-            return BaseMainApplication.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Args);
+            return BaseMainApplication.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Args, methodData.InternalMethod);
         }
         #endregion
 

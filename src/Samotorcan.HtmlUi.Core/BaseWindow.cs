@@ -231,13 +231,13 @@ namespace Samotorcan.HtmlUi.Core
             Controllers.Clear();
         }
         #endregion
-        #region SyncControllerChanges
+        #region SyncControllerChangesToServer
         /// <summary>
-        /// Synchronizes the controller changes.
+        /// Synchronizes the controller changes to server.
         /// </summary>
         /// <param name="controllerChanges">The controller changes.</param>
         /// <exception cref="ControllerNotFoundException"></exception>
-        internal void SyncControllerChanges(IEnumerable<ControllerChange> controllerChanges)
+        internal void SyncControllerChangesToServer(IEnumerable<ControllerChange> controllerChanges)
         {
             BaseMainApplication.Current.EnsureMainThread();
 
@@ -255,30 +255,11 @@ namespace Samotorcan.HtmlUi.Core
             }
         }
         #endregion
-        #region CallMethod
+        #region SyncControllerChangesToClient
         /// <summary>
-        /// Calls the method.
+        /// Synchronizes the controller changes to client.
         /// </summary>
-        /// <param name="controllerId">The controller identifier.</param>
-        /// <param name="methodName">Name of the method.</param>
-        /// <param name="arguments">The arguments.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">methodName</exception>
-        internal object CallMethod(int controllerId, string methodName, JArray arguments)
-        {
-            if (string.IsNullOrWhiteSpace(methodName))
-                throw new ArgumentNullException("methodName");
-
-            if (!Controllers.ContainsKey(controllerId))
-                throw new ControllerNotFoundException();
-
-            return Controllers[controllerId].CallMethod(methodName, arguments);
-        }
-        #endregion
-        /// <summary>
-        /// Synchronizes the controller changes.
-        /// </summary>
-        internal void SyncControllerChanges()
+        internal void SyncControllerChangesToClient()
         {
             var application = BaseMainApplication.Current;
 
@@ -291,6 +272,43 @@ namespace Samotorcan.HtmlUi.Core
             if (controllerChanges.Any())
                 CallFunction("syncControllerChanges", controllerChanges);
         }
+        #endregion
+        #region CallMethod
+        /// <summary>
+        /// Calls the method.
+        /// </summary>
+        /// <param name="controllerId">The controller identifier.</param>
+        /// <param name="methodName">Name of the method.</param>
+        /// <param name="arguments">The arguments.</param>
+        /// <param name="internalMethod">if set to <c>true</c> [internal method].</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">methodName</exception>
+        /// <exception cref="ControllerNotFoundException"></exception>
+        internal object CallMethod(int controllerId, string methodName, JArray arguments, bool internalMethod)
+        {
+            if (string.IsNullOrWhiteSpace(methodName))
+                throw new ArgumentNullException("methodName");
+
+            if (!Controllers.ContainsKey(controllerId))
+                throw new ControllerNotFoundException();
+
+            return Controllers[controllerId].CallMethod(methodName, arguments, internalMethod);
+        }
+
+        /// <summary>
+        /// Calls the method.
+        /// </summary>
+        /// <param name="controllerId">The controller identifier.</param>
+        /// <param name="methodName">Name of the method.</param>
+        /// <param name="arguments">The arguments.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">methodName</exception>
+        /// <exception cref="ControllerNotFoundException"></exception>
+        internal object CallMethod(int controllerId, string methodName, JArray arguments)
+        {
+            return CallMethod(controllerId, methodName, arguments, false);
+        }
+        #endregion
 
         #endregion
         #region Protected

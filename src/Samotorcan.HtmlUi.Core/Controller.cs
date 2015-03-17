@@ -78,6 +78,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         private List<ControllerMethodInfo> Methods { get; set; }
         #endregion
+        #region InternalMethods
+        /// <summary>
+        /// Gets or sets the internal methods.
+        /// </summary>
+        /// <value>
+        /// The internal methods.
+        /// </value>
+        private List<ControllerMethodInfo> InternalMethods { get; set; }
+        #endregion
         #region Type
         /// <summary>
         /// Gets or sets the type.
@@ -110,6 +119,7 @@ namespace Samotorcan.HtmlUi.Core
 
             Properties = new List<ControllerPropertyInfo>();
             Methods = new List<ControllerMethodInfo>();
+            InternalMethods = new List<ControllerMethodInfo>();
             PropertyChanges = new HashSet<string>();
 
             Type = GetType();
@@ -117,6 +127,7 @@ namespace Samotorcan.HtmlUi.Core
 
             Properties = FindProperties(Type);
             Methods = FindMethods(Type);
+            InternalMethods = FindInternalMethods();
 
             SyncPropertyValue = true;
             PropertyChanged += Controller_PropertyChanged;
@@ -184,10 +195,10 @@ namespace Samotorcan.HtmlUi.Core
         internal List<ControllerMethod> GetMethods(NormalizeType normalizeType)
         {
             return Methods.Select(m => new ControllerMethod
-                {
-                    Name = StringUtility.Normalize(m.Name, normalizeType)
-                })
-                .ToList();
+            {
+                Name = StringUtility.Normalize(m.Name, normalizeType)
+            })
+            .ToList();
         }
 
         /// <summary>
@@ -336,16 +347,17 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
         #region CallMethod
         /// <summary>
-        /// Calls the method.
+        /// Calls the method.   TODO: cache method info values ...
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="arguments">The arguments.</param>
-        /// <param name="normalizeType">The normalize type.</param>
+        /// <param name="internalMethod">if set to <c>true</c> [internal method].</param>
+        /// <param name="normalizeType">Type of the normalize.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">name</exception>
-        /// <exception cref="Samotorcan.HtmlUi.Core.Exceptions.MethodNotFoundException"></exception>
-        /// <exception cref="Samotorcan.HtmlUi.Core.Exceptions.ParameterCountMismatchException"></exception>
-        internal object CallMethod(string name, JArray arguments, NormalizeType normalizeType)
+        /// <exception cref="MethodNotFoundException"></exception>
+        /// <exception cref="ParameterCountMismatchException"></exception>
+        internal object CallMethod(string name, JArray arguments, bool internalMethod, NormalizeType normalizeType)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException("name");
@@ -353,7 +365,7 @@ namespace Samotorcan.HtmlUi.Core
             if (arguments == null)
                 arguments = new JArray();
 
-            var method = Methods.FirstOrDefault(m => StringUtility.Normalize(m.Name, normalizeType) == name);
+            var method = (internalMethod ? InternalMethods : Methods).FirstOrDefault(m => StringUtility.Normalize(m.Name, normalizeType) == name);
 
             if (method == null)
                 throw new MethodNotFoundException(name, Name);
@@ -395,10 +407,28 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="arguments">The arguments.</param>
+        /// <param name="internalMethod">if set to <c>true</c> [internal method].</param>
         /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">name</exception>
+        /// <exception cref="MethodNotFoundException"></exception>
+        /// <exception cref="ParameterCountMismatchException"></exception>
+        internal object CallMethod(string name, JArray arguments, bool internalMethod)
+        {
+            return CallMethod(name, arguments, internalMethod, NormalizeType.CamelCase);
+        }
+
+        /// <summary>
+        /// Calls the method.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="arguments">The arguments.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">name</exception>
+        /// <exception cref="MethodNotFoundException"></exception>
+        /// <exception cref="ParameterCountMismatchException"></exception>
         internal object CallMethod(string name, JArray arguments)
         {
-            return CallMethod(name, arguments, NormalizeType.CamelCase);
+            return CallMethod(name, arguments, false, NormalizeType.CamelCase);
         }
         #endregion
 
@@ -474,6 +504,19 @@ namespace Samotorcan.HtmlUi.Core
             }
 
             return methods;
+        }
+        #endregion
+        #region FindInternalMethods
+        /// <summary>
+        /// Finds the internal methods.
+        /// </summary>
+        /// <returns></returns>
+        private List<ControllerMethodInfo> FindInternalMethods()
+        {
+            return typeof(Controller).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .Where(m => !m.IsSpecialName && m.GetCustomAttribute<InternalMethodAttribute>() != null)
+                .Select(m => new ControllerMethodInfo { Name = m.Name, MethodInfo = m })
+                .ToList();
         }
         #endregion
         #region Controller_PropertyChanged

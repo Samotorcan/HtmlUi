@@ -40,5 +40,10 @@ namespace Samotorcan.Tests.Windows.Controllers
             SecondNumber += 10;
             Result = FirstNumber + SecondNumber;
         }
+
+        public void Sum1()
+        {
+            
+        }
     }
 }

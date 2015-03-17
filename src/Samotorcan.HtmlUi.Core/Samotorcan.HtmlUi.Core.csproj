@@ -95,6 +95,7 @@
     <Compile Include="Exceptions\ParameterMismatchException.cs" />
     <Compile Include="Exceptions\ParameterCountMismatchException.cs" />
     <Compile Include="JavascriptException.cs" />
+    <Compile Include="InternalMethodAttribute.cs" />
     <Compile Include="NativeFunctionAttribute.cs" />
     <Compile Include="LogMessageType.cs" />
     <Compile Include="LogType.cs" />

@@ -67,6 +67,13 @@
                     return native('callMethod', { id: id, name: name, args: args });
                 },
 
+                callInternalMethod: function (id, name, args) {
+                    return nativeSynchronous('callMethod', { id: id, name: name, args: args, internalMethod: true });
+                },
+                callInternalMethodAsync: function (id, name, args) {
+                    return native('callMethod', { id: id, name: name, args: args, internalMethod: true });
+                },
+
                 registerFunction: function (name, func) {
                     // !native function registerFunction();
                     registerFunction(name, func);

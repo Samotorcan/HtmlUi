@@ -325,7 +325,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             var application = BaseMainApplication.Current;
             application.InvokeOnMain(() =>
             {
-                application.Window.SyncControllerChanges(controllerChanges);
+                application.Window.SyncControllerChangesToServer(controllerChanges);
             });
 
             return Undefined.Value;
@@ -340,12 +340,12 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         [NativeFunction]
         private object CallMethod(CefRequest request)
         {
-            var methodData = GetAnonymousPostData(request, new { Id = 0, Name = string.Empty, Args = new JArray() });
+            var methodData = GetAnonymousPostData(request, new { Id = 0, Name = string.Empty, Args = new JArray(), InternalMethod = false });
             object response = null;
 
             BaseMainApplication.Current.InvokeOnMain(() =>
             {
-                response = BaseMainApplication.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Args);
+                response = BaseMainApplication.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Args, methodData.InternalMethod);
             });
 
             return response;
