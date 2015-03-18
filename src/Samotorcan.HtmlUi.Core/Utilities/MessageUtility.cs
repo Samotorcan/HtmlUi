@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Samotorcan.HtmlUi.Core.Diagnostics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

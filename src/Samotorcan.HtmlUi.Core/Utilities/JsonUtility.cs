@@ -2,11 +2,14 @@
 using Newtonsoft.Json.Bson;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using Samotorcan.HtmlUi.Core.Diagnostics;
 using Samotorcan.HtmlUi.Core.Logs;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
@@ -18,6 +21,32 @@ namespace Samotorcan.HtmlUi.Core.Utilities
     /// </summary>
     internal static class JsonUtility
     {
+        #region Properties
+        #region Private
+
+        #region Serializer
+        /// <summary>
+        /// Gets or sets the serializer.
+        /// </summary>
+        /// <value>
+        /// The serializer.
+        /// </value>
+        private static JsonSerializer Serializer { get; set; }
+        #endregion
+
+        #endregion
+        #endregion
+        #region Constructors
+
+        /// <summary>
+        /// Initializes the <see cref="JsonUtility"/> class.
+        /// </summary>
+        static JsonUtility()
+        {
+            Serializer = new JsonSerializer();
+        }
+
+        #endregion
         #region Methods
         #region Public
 
@@ -36,10 +65,8 @@ namespace Samotorcan.HtmlUi.Core.Utilities
 
             using (var memoryStream = new MemoryStream())
             {
-                JsonSerializer serializer = new JsonSerializer();
-
                 using (BsonWriter writer = new BsonWriter(memoryStream))
-                    serializer.Serialize(writer, value);
+                    Serializer.Serialize(writer, value);
 
                 return memoryStream.ToArray();
             }
@@ -62,10 +89,8 @@ namespace Samotorcan.HtmlUi.Core.Utilities
 
             using (var memoryStream = new MemoryStream(value))
             {
-                JsonSerializer serializer = new JsonSerializer();
-
                 using (BsonReader reader = new BsonReader(memoryStream, readRootValueAsArray, DateTimeKind.Utc))
-                    return serializer.Deserialize<TType>(reader);
+                    return Serializer.Deserialize<TType>(reader);
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Samotorcan.HtmlUi.Core.Browser;
+using Samotorcan.HtmlUi.Core.Diagnostics;
 using Samotorcan.HtmlUi.Core.Events;
 using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
@@ -261,16 +262,18 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         internal void SyncControllerChangesToClient()
         {
-            var application = BaseMainApplication.Current;
+            Stopwatch.Measure(() => {
+                var application = BaseMainApplication.Current;
 
-            application.EnsureMainThread();
+                application.EnsureMainThread();
 
-            GeneralLog.Debug("Sync controller changes to client.");
+                GeneralLog.Debug("Sync controller changes to client.");
 
-            var controllerChanges = GetControllerChanges();
+                var controllerChanges = GetControllerChanges();
 
-            if (controllerChanges.Any())
-                CallFunction("syncControllerChanges", controllerChanges);
+                if (controllerChanges.Any())
+                    CallFunction("syncControllerChanges", controllerChanges);
+            });
         }
         #endregion
         #region CallMethod

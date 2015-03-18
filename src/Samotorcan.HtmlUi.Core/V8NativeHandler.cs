@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using Samotorcan.HtmlUi.Core.Diagnostics;
 using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
@@ -79,49 +80,51 @@ namespace Samotorcan.HtmlUi.Core
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "sourceProcess", Justification = "I want it to match to OnProcessMessageReceived method.")]
         public bool ProcessMessage(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
         {
-            if (processMessage == null)
-                throw new ArgumentNullException("processMessage");
+            return Stopwatch.Measure(() => {
+                if (processMessage == null)
+                    throw new ArgumentNullException("processMessage");
 
-            // native
-            if (processMessage.Name == "native")
-            {
-                var message = MessageUtility.DeserializeMessage<string>(processMessage);
-
-                if (message.CallbackId != null)
+                // native
+                if (processMessage.Name == "native")
                 {
-                    var returnJson = message.Data;
-                    var callback = GetCallback(message.CallbackId.Value);
+                    var message = MessageUtility.DeserializeMessage<string>(processMessage);
 
-                    if (callback != null)
-                        callback.Execute(returnJson);
+                    if (message.CallbackId != null)
+                    {
+                        var returnJson = message.Data;
+                        var callback = GetCallback(message.CallbackId.Value);
+
+                        if (callback != null)
+                            callback.Execute(returnJson);
+                    }
+
+                    return true;
                 }
 
-                return true;
-            }
-
-            // call function
-            else if (processMessage.Name == "callFunction")
-            {
-                var message = MessageUtility.DeserializeMessage(processMessage, new { Name = string.Empty, Data = new object() });
-                var functionName = message.Data.Name;
-                var data = message.Data.Data;
-
-                if (Functions.ContainsKey(functionName))
+                // call function
+                else if (processMessage.Name == "callFunction")
                 {
-                    if (data != Undefined.Value)
-                        Functions[functionName].Execute(data);
+                    var message = MessageUtility.DeserializeMessage(processMessage, new { Name = string.Empty, Data = new object() });
+                    var functionName = message.Data.Name;
+                    var data = message.Data.Data;
+
+                    if (Functions.ContainsKey(functionName))
+                    {
+                        if (data != Undefined.Value)
+                            Functions[functionName].Execute(data);
+                        else
+                            Functions[functionName].Execute();
+                    }
                     else
-                        Functions[functionName].Execute();
-                }
-                else
-                {
-                    GeneralLog.Error(string.Format("Call function - function {0} is not registered.", functionName));
+                    {
+                        GeneralLog.Error(string.Format("Call function - function {0} is not registered.", functionName));
+                    }
+
+                    return true;
                 }
 
-                return true;
-            }
-
-            return false;
+                return false;
+            });
         }
         #endregion
         #region Reset

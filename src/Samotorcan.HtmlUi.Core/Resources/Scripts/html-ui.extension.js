@@ -115,7 +115,6 @@
                     try {
                         native.syncControllerChanges(controllers);
                     } finally {
-                        // clear changes
                         $rootScope.htmlUiChanges = {};
                     }
                 }
@@ -141,19 +140,11 @@
 
                     // watch property
                     $scope.$watch(propertyName, function (newValue, oldValue) {
-                        var values = controllerValues[$scope.$id] || {};
-                        var hasValue = _.has(values, propertyName);
-
-                        // ignore sync if the value is already set in the server controller
-                        if (newValue !== oldValue && (!hasValue || values[propertyName] !== newValue)) {
+                        if (newValue !== oldValue && !syncControllerChangesCall) {
                             var changeProperties = $rootScope.htmlUiChanges[$scope.$id] = ($rootScope.htmlUiChanges[$scope.$id] || {});
 
                             changeProperties[propertyName] = newValue;
                         }
-
-                        // clear value
-                        if (hasValue)
-                            delete values[propertyName];
                     });
                 });
 
@@ -168,27 +159,34 @@
                 $scope.$on('$destroy', function () {
                     native.destroyController($scope.$id);
                 });
+
+                // warm up native calls
+                native.callInternalMethodAsync($scope.$id, 'warmUp', ['warmUp']);
             }]);
         });
 
         // sync controller changes and ignore watch values
-        var controllerValues = {};
+        var syncControllerChangesCall = false;
         function syncControllerChanges(json) {
-            var controllerChanges = JSON.parse(json);
+            syncControllerChangesCall = true;
 
-            _.forEach(controllerChanges, function (controllerChange) {
-                var controller = controllers[controllerChange.Id];
-                var values = controllerValues[controllerChange.Id] = (controllerValues[controllerChange.Id] || {});
+            try {
+                var controllerChanges = JSON.parse(json);
 
-                controller.$apply(function () {
-                    _.forEach(controllerChange.Properties, function (value, propertyName) {
-                        var propertyName = _.camelCase(propertyName);
+                _.forEach(controllerChanges, function (controllerChange) {
+                    var controller = controllers[controllerChange.Id];
 
-                        controller[propertyName] = value;
-                        values[propertyName] = value;
+                    controller.$apply(function () {
+                        _.forEach(controllerChange.Properties, function (value, propertyName) {
+                            var propertyName = _.camelCase(propertyName);
+
+                            controller[propertyName] = value;
+                        });
                     });
                 });
-            });
+            } finally {
+                syncControllerChangesCall = false;
+            }
         }
     };
 
