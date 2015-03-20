@@ -83,6 +83,11 @@
     <Compile Include="BaseMainApplication.cs" />
     <Compile Include="BaseChildApplication.cs" />
     <Compile Include="ControllerMethod.cs" />
+    <Compile Include="ControllerMethodBase.cs" />
+    <Compile Include="ControllerMethodDescription.cs" />
+    <Compile Include="ControllerProperty.cs" />
+    <Compile Include="ControllerPropertyBase.cs" />
+    <Compile Include="ControllerTypeInfo.cs" />
     <Compile Include="Diagnostics\Stopwatch.cs" />
     <Compile Include="Exceptions\SyncMaxDepthException.cs" />
     <Compile Include="Exceptions\FunctionNotFoundException.cs" />
@@ -97,6 +102,7 @@
     <Compile Include="Exceptions\ParameterCountMismatchException.cs" />
     <Compile Include="JavascriptException.cs" />
     <Compile Include="InternalMethodAttribute.cs" />
+    <Compile Include="MethodType.cs" />
     <Compile Include="NativeFunctionAttribute.cs" />
     <Compile Include="LogMessageType.cs" />
     <Compile Include="LogType.cs" />
@@ -107,6 +113,7 @@
     <Compile Include="Message.cs" />
     <Compile Include="Undefined.cs" />
     <Compile Include="Utilities\ExceptionUtility.cs" />
+    <Compile Include="Utilities\ExpressionUtility.cs" />
     <Compile Include="V8NativeBrowserHandler.cs" />
     <Compile Include="V8NativeHandler.cs" />
     <Compile Include="V8ActionHandler.cs" />
@@ -115,7 +122,7 @@
     <Compile Include="Controller.cs" />
     <Compile Include="ControllerChange.cs" />
     <Compile Include="ControllerDescription.cs" />
-    <Compile Include="ControllerProperty.cs" />
+    <Compile Include="ControllerPropertyDescription.cs" />
     <Compile Include="Events\BrowserCreatedEventArgs.cs" />
     <Compile Include="Events\KeyPressEventArgs.cs" />
     <Compile Include="Exceptions\ContentNotFoundException.cs" />
@@ -185,6 +192,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\Scripts\lodash.js" />
     <EmbeddedResource Include="Resources\Scripts\lodash.min.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Messages\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

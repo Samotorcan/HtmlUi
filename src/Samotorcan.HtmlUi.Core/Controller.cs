@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -61,32 +62,14 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
         #region Private
 
-        #region Properties
+        #region ControllerTypeInfo
         /// <summary>
-        /// Gets or sets the properties.
+        /// Gets or sets the controller type information.
         /// </summary>
         /// <value>
-        /// The properties.
+        /// The controller type information.
         /// </value>
-        private List<ControllerPropertyInfo> Properties { get; set; }
-        #endregion
-        #region Methods
-        /// <summary>
-        /// Gets or sets the methods.
-        /// </summary>
-        /// <value>
-        /// The methods.
-        /// </value>
-        private List<ControllerMethodInfo> Methods { get; set; }
-        #endregion
-        #region InternalMethods
-        /// <summary>
-        /// Gets or sets the internal methods.
-        /// </summary>
-        /// <value>
-        /// The internal methods.
-        /// </value>
-        private List<ControllerMethodInfo> InternalMethods { get; set; }
+        private ControllerTypeInfo ControllerTypeInfo { get; set; }
         #endregion
         #region Type
         /// <summary>
@@ -107,9 +90,27 @@ namespace Samotorcan.HtmlUi.Core
         private bool SyncPropertyValue { get; set; }
         #endregion
 
+        #region ControllerTypeInfos
+        /// <summary>
+        /// Gets or sets the controller type informations.
+        /// </summary>
+        /// <value>
+        /// The controller type informations.
+        /// </value>
+        private static Dictionary<Type, ControllerTypeInfo> ControllerTypeInfos { get; set; }
+        #endregion
+
         #endregion
         #endregion
         #region Constructors
+
+        /// <summary>
+        /// Initializes the <see cref="Controller"/> class.
+        /// </summary>
+        static Controller()
+        {
+            ControllerTypeInfos = new Dictionary<Type, ControllerTypeInfo>();
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Controller"/> class.
@@ -118,17 +119,23 @@ namespace Samotorcan.HtmlUi.Core
         {
             Id = id;
 
-            Properties = new List<ControllerPropertyInfo>();
-            Methods = new List<ControllerMethodInfo>();
-            InternalMethods = new List<ControllerMethodInfo>();
             PropertyChanges = new HashSet<string>();
 
             Type = GetType();
             Name = Type.Name;
 
-            Properties = FindProperties(Type);
-            Methods = FindMethods(Type);
-            InternalMethods = FindInternalMethods();
+            // load controller type info if needed
+            if (!ControllerTypeInfos.ContainsKey(Type))
+            {
+                ControllerTypeInfos.Add(Type, new ControllerTypeInfo
+                {
+                    Properties = FindProperties(Type),
+                    Methods = FindMethods(Type),
+                    InternalMethods = FindInternalMethods()
+                });
+            }
+
+            ControllerTypeInfo = ControllerTypeInfos[Type];
 
             SyncPropertyValue = true;
             PropertyChanged += Controller_PropertyChanged;
@@ -138,21 +145,20 @@ namespace Samotorcan.HtmlUi.Core
         #region Methods
         #region Internal
 
-        #region GetProperties
+        #region GetPropertyDescriptions
         /// <summary>
-        /// Gets the properties.
+        /// Gets the property descriptions.
         /// </summary>
         /// <param name="access">The access.</param>
         /// <param name="normalizeType">The normalize type.</param>
         /// <returns></returns>
-        private List<ControllerProperty> GetProperties(Access? access, NormalizeType normalizeType)
+        private List<ControllerPropertyDescription> GetPropertyDescriptions(Access? access, NormalizeType normalizeType)
         {
-            return Properties.Where(p => access == null || p.Access.HasFlag(access.Value))
-                .Select(p => new ControllerProperty
+            return ControllerTypeInfo.Properties.Where(p => access == null || p.Access.HasFlag(access.Value))
+                .Select(p => new ControllerPropertyDescription
                 {
                     Name = StringUtility.Normalize(p.Name, normalizeType),
-                    Value = p.Access.HasFlag(Access.Read) ? p.PropertyInfo.GetValue(this, null) : null,
-                    Access = p.Access
+                    Value = p.Access.HasFlag(Access.Read) ? p.GetDelegate.DynamicInvoke(this) : null
                 })
                 .ToList();
         }
@@ -163,9 +169,9 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="access">The access.</param>
         /// <param name="normalizeType">The normalize type.</param>
         /// <returns></returns>
-        internal List<ControllerProperty> GetProperties(Access access, NormalizeType normalizeType)
+        internal List<ControllerPropertyDescription> GetProperties(Access access, NormalizeType normalizeType)
         {
-            return GetProperties((Access?)access, normalizeType);
+            return GetPropertyDescriptions((Access?)access, normalizeType);
         }
 
         /// <summary>
@@ -173,29 +179,29 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <param name="normalizeType">The normalize type.</param>
         /// <returns></returns>
-        internal List<ControllerProperty> GetProperties(NormalizeType normalizeType)
+        internal List<ControllerPropertyDescription> GetProperties(NormalizeType normalizeType)
         {
-            return GetProperties(null, normalizeType);
+            return GetPropertyDescriptions(null, normalizeType);
         }
 
         /// <summary>
         /// Gets the properties.
         /// </summary>
         /// <returns></returns>
-        internal List<ControllerProperty> GetProperties()
+        internal List<ControllerPropertyDescription> GetProperties()
         {
-            return GetProperties(null, NormalizeType.CamelCase);
+            return GetPropertyDescriptions(null, NormalizeType.CamelCase);
         }
         #endregion
-        #region GetMethods
+        #region GetMethodDescriptions
         /// <summary>
-        /// Gets the methods.
+        /// Gets the method descriptions.
         /// </summary>
         /// <param name="normalizeType">The normalize type.</param>
         /// <returns></returns>
-        internal List<ControllerMethod> GetMethods(NormalizeType normalizeType)
+        internal List<ControllerMethodDescription> GetMethodDescriptions(NormalizeType normalizeType)
         {
-            return Methods.Select(m => new ControllerMethod
+            return ControllerTypeInfo.Methods.Select(m => new ControllerMethodDescription
             {
                 Name = StringUtility.Normalize(m.Name, normalizeType)
             })
@@ -203,12 +209,12 @@ namespace Samotorcan.HtmlUi.Core
         }
 
         /// <summary>
-        /// Gets the methods.
+        /// Gets the method descriptions.
         /// </summary>
         /// <returns></returns>
-        internal List<ControllerMethod> GetMethods()
+        internal List<ControllerMethodDescription> GetMethodDescriptions()
         {
-            return GetMethods(NormalizeType.CamelCase);
+            return GetMethodDescriptions(NormalizeType.CamelCase);
         }
         #endregion
         #region GetDescription
@@ -223,7 +229,7 @@ namespace Samotorcan.HtmlUi.Core
             {
                 Name = Name,
                 Properties = GetProperties(normalizeType),
-                Methods = GetMethods(normalizeType)
+                Methods = GetMethodDescriptions(normalizeType)
             };
         }
 
@@ -256,35 +262,32 @@ namespace Samotorcan.HtmlUi.Core
                 if (string.IsNullOrWhiteSpace(propertyName))
                     throw new ArgumentNullException("propertyName");
 
-                var property = Properties.FirstOrDefault(p => p.Access.HasFlag(Access.Write) &&
+                var property = ControllerTypeInfo.Properties.FirstOrDefault(p => p.Access.HasFlag(Access.Write) &&
                     StringUtility.Normalize(p.Name, normalizeType) == propertyName);
 
                 if (property == null)
                     throw new PropertyNotFoundException(propertyName, Name);
 
-                var propertyInfo = property.PropertyInfo;
-                var propertyType = propertyInfo.PropertyType;
-
                 if (value == null)
                 {
-                    if (!propertyType.IsValueType || Nullable.GetUnderlyingType(propertyType) != null)
-                        SetPropertyInfoValue(propertyInfo, value, sync);
+                    if (!property.PropertyType.IsValueType || Nullable.GetUnderlyingType(property.PropertyType) != null)
+                        SetPropertyValue(property, value, sync);
                     else
-                        throw new PropertyMismatchException(Name, property.Name, propertyType.Name, "null");
+                        throw new PropertyMismatchException(Name, property.Name, property.PropertyType.Name, "null");
                 }
                 else
                 {
                     try
                     {
-                        SetPropertyInfoValue(propertyInfo, value.ToObject(propertyType), sync);
+                        SetPropertyValue(property, value.ToObject(property.PropertyType), sync);
                     }
                     catch (ArgumentException)
                     {
-                        throw new PropertyMismatchException(Name, property.Name, propertyType.Name, Enum.GetName(typeof(JTokenType), value.Type));
+                        throw new PropertyMismatchException(Name, property.Name, property.PropertyType.Name, Enum.GetName(typeof(JTokenType), value.Type));
                     }
                     catch (FormatException)
                     {
-                        throw new PropertyMismatchException(Name, property.Name, propertyType.Name, Enum.GetName(typeof(JTokenType), value.Type));
+                        throw new PropertyMismatchException(Name, property.Name, property.PropertyType.Name, Enum.GetName(typeof(JTokenType), value.Type));
                     }
                 }
             });
@@ -329,7 +332,7 @@ namespace Samotorcan.HtmlUi.Core
 
                 propertyName = StringUtility.Normalize(propertyName, normalizeType);
 
-                var property = Properties.SingleOrDefault(p => p.Name == propertyName);
+                var property = ControllerTypeInfo.Properties.SingleOrDefault(p => p.Name == propertyName);
 
                 if (property == null)
                     throw new PropertyNotFoundException(propertyName, Name);
@@ -337,7 +340,7 @@ namespace Samotorcan.HtmlUi.Core
                 if (!property.Access.HasFlag(Access.Read))
                     throw new WriteOnlyPropertyException(property.Name, Name);
 
-                return property.PropertyInfo.GetValue(this, null);
+                return property.GetDelegate.DynamicInvoke(this);
             });
         }
 
@@ -356,7 +359,7 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
         #region CallMethod
         /// <summary>
-        /// Calls the method.   TODO: cache method info values ...
+        /// Calls the method.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="arguments">The arguments.</param>
@@ -375,40 +378,42 @@ namespace Samotorcan.HtmlUi.Core
                 if (arguments == null)
                     arguments = new JArray();
 
-                var method = (internalMethod ? InternalMethods : Methods).FirstOrDefault(m => StringUtility.Normalize(m.Name, normalizeType) == name);
+                var method = (internalMethod ? ControllerTypeInfo.InternalMethods : ControllerTypeInfo.Methods).FirstOrDefault(m => StringUtility.Normalize(m.Name, normalizeType) == name);
 
                 if (method == null)
                     throw new MethodNotFoundException(name, Name);
 
-                var parameterInfos = method.MethodInfo.GetParameters();
-                if (parameterInfos.Length != arguments.Count)
+                if (method.ParameterTypes.Count != arguments.Count)
                     throw new ParameterCountMismatchException(method.Name, Name);
 
                 // parse parameters
-                var parameters = parameterInfos
-                    .Select((p, i) =>
+                var parameters = method.ParameterTypes
+                    .Select((t, i) =>
                     {
                         try
                         {
-                            return arguments[i].ToObject(p.ParameterType);
+                            return arguments[i].ToObject(t);
                         }
                         catch (FormatException)
                         {
-                            throw new ParameterMismatchException(i, p.ParameterType.Name, Enum.GetName(typeof(JTokenType), arguments[i].Type), method.Name, Name);
+                            throw new ParameterMismatchException(i, t.Name, Enum.GetName(typeof(JTokenType), arguments[i].Type), method.Name, Name);
                         }
                     })
-                    .ToArray();
+                    .ToList();
 
-                // return
-                if (method.MethodInfo.ReturnType == typeof(void))
+                // return result
+                var delegateParameters = new List<object> { this };
+                delegateParameters.AddRange(parameters);
+
+                if (method.MethodType == MethodType.Action)
                 {
-                    method.MethodInfo.Invoke(this, parameters);
+                    method.Delegate.DynamicInvoke(delegateParameters.ToArray());
 
                     return Undefined.Value;
                 }
                 else
                 {
-                    return method.MethodInfo.Invoke(this, parameters);
+                    return method.Delegate.DynamicInvoke(delegateParameters.ToArray());
                 }
             });
         }
@@ -446,37 +451,133 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
         #region Private
 
+        #region SetPropertyValue
+        /// <summary>
+        /// Sets the property value.
+        /// </summary>
+        /// <param name="property">The property.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="sync">if set to <c>true</c> [synchronize].</param>
+        private void SetPropertyValue(ControllerProperty property, object value, bool sync)
+        {
+            try
+            {
+                SyncPropertyValue = sync;
+
+                property.SetDelegate.DynamicInvoke(this, value);
+            }
+            finally
+            {
+                SyncPropertyValue = true;
+            }
+        }
+        #endregion
+        #region IsValidMethod
+        /// <summary>
+        /// Determines whether the method is valid.
+        /// </summary>
+        /// <param name="methodInfo">The method information.</param>
+        /// <param name="methodInfos">The method infos.</param>
+        /// <returns></returns>
+        private bool IsValidMethod(MethodInfo methodInfo, IEnumerable<MethodInfo> methodInfos)
+        {
+            bool isValid = true;
+
+            if (methodInfos.Count(m => m.Name == methodInfo.Name) > 1)
+            {
+                GeneralLog.Warn(string.Format("Overloaded methods are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
+                isValid = false;
+            }
+            else if (methodInfo.GetParameters().Any(p => p.ParameterType.IsByRef))
+            {
+                GeneralLog.Warn(string.Format("Ref parameters are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
+                isValid = false;
+            }
+            else if (methodInfo.GetParameters().Any(p => p.IsOut))
+            {
+                GeneralLog.Warn(string.Format("Out parameters are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
+                isValid = false;
+            }
+            else if (methodInfo.IsGenericMethod)
+            {
+                GeneralLog.Warn(string.Format("Generic methods are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
+                isValid = false;
+            }
+
+            return isValid;
+        }
+        #endregion
+        #region MethodInfoToControllerMethod
+        /// <summary>
+        /// Method info to controller method.
+        /// </summary>
+        /// <param name="method">The method.</param>
+        /// <returns></returns>
+        private ControllerMethod MethodInfoToControllerMethod(MethodInfo method)
+        {
+            return new ControllerMethod
+            {
+                Name = method.Name,
+                Delegate = ExpressionUtility.CreateMethodDelegate(method),
+                MethodType = method.ReturnType == typeof(void) ? MethodType.Action : MethodType.Function,
+                ParameterTypes = method.GetParameters().Select(p => p.ParameterType).ToList()
+            };
+        }
+        #endregion
+        #region WarmUp
+        /// <summary>
+        /// Warms up the native calls.
+        /// </summary>
+        /// <param name="warmUp">The warm up.</param>
+        /// <returns></returns>
+        [InternalMethod]
+        private object WarmUp(string warmUp)
+        {
+            return new object();
+        }
+        #endregion
+
         #region FindProperties
         /// <summary>
         /// Finds the properties.
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns></returns>
-        private List<ControllerPropertyInfo> FindProperties(Type type)
+        private List<ControllerProperty> FindProperties(Type type)
         {
-            return Stopwatch.Measure(() => {
-                var properties = new List<ControllerPropertyInfo>();
+            return Stopwatch.Measure(() =>
+            {
+                var properties = new List<ControllerProperty>();
 
                 foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
                 {
                     // ignore properties with exclude attribute
                     if (property.GetCustomAttribute<ExcludeAttribute>() == null)
                     {
-                        var readAccess = property.CanRead && property.GetGetMethod(false) != null;
-                        var writeAccess = property.CanWrite && property.GetSetMethod(false) != null;
+                        var getMethod = property.GetGetMethod(false);
+                        var setMethod = property.GetSetMethod(false);
                         Access? access = null;
 
                         // access
-                        if (readAccess && writeAccess)
+                        if (property.CanRead && getMethod != null && property.CanWrite && setMethod != null)
                             access = Access.Read | Access.Write;
-                        else if (readAccess)
+                        else if (property.CanRead && getMethod != null)
                             access = Access.Read;
-                        else if (writeAccess)
+                        else if (property.CanWrite && setMethod != null)
                             access = Access.Write;
 
                         // add
                         if (access != null)
-                            properties.Add(new ControllerPropertyInfo { Name = property.Name, PropertyInfo = property, Access = access.Value });
+                        {
+                            properties.Add(new ControllerProperty
+                            {
+                                Name = property.Name,
+                                PropertyType = property.PropertyType,
+                                GetDelegate = getMethod != null ? ExpressionUtility.CreateMethodDelegate(getMethod) : null,
+                                SetDelegate = setMethod != null ? ExpressionUtility.CreateMethodDelegate(setMethod) : null,
+                                Access = access.Value
+                            });
+                        }
                     }
                 }
 
@@ -490,10 +591,11 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns></returns>
-        private List<ControllerMethodInfo> FindMethods(Type type)
+        private List<ControllerMethod> FindMethods(Type type)
         {
-            return Stopwatch.Measure(() => {
-                var methods = new List<ControllerMethodInfo>();
+            return Stopwatch.Measure(() =>
+            {
+                var methods = new List<ControllerMethod>();
 
                 while (type != typeof(object))
                 {
@@ -503,17 +605,8 @@ namespace Samotorcan.HtmlUi.Core
 
                     foreach (var methodInfo in methodInfos)
                     {
-                        // check for method overload, ref and out parameters
-                        if (methodInfos.Count(m => m.Name == methodInfo.Name) > 1)
-                            GeneralLog.Warn(string.Format("Overloaded methods are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
-                        else if (methodInfo.GetParameters().Any(p => p.ParameterType.IsByRef))
-                            GeneralLog.Warn(string.Format("Ref parameters are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
-                        else if (methodInfo.GetParameters().Any(p => p.IsOut))
-                            GeneralLog.Warn(string.Format("Out parameters are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
-                        else if (methodInfo.IsGenericMethod)
-                            GeneralLog.Warn(string.Format("Generic methods are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
-                        else
-                            methods.Add(new ControllerMethodInfo { Name = methodInfo.Name, MethodInfo = methodInfo });
+                        if (IsValidMethod(methodInfo, methodInfos))
+                            methods.Add(MethodInfoToControllerMethod(methodInfo));
                     }
 
                     type = type.BaseType;
@@ -528,48 +621,15 @@ namespace Samotorcan.HtmlUi.Core
         /// Finds the internal methods.
         /// </summary>
         /// <returns></returns>
-        private List<ControllerMethodInfo> FindInternalMethods()
+        private List<ControllerMethod> FindInternalMethods()
         {
-            return Stopwatch.Measure(() => {
+            return Stopwatch.Measure(() =>
+            {
                 return typeof(Controller).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                     .Where(m => !m.IsSpecialName && m.GetCustomAttribute<InternalMethodAttribute>() != null)
-                    .Select(m => new ControllerMethodInfo { Name = m.Name, MethodInfo = m })
+                    .Select(m => MethodInfoToControllerMethod(m))
                     .ToList();
             });
-        }
-        #endregion
-        #region SetPropertyInfoValue
-        /// <summary>
-        /// Sets the property information value.
-        /// </summary>
-        /// <param name="propertyInfo">The property information.</param>
-        /// <param name="value">The value.</param>
-        /// <param name="sync">if set to <c>true</c> [synchronize].</param>
-        private void SetPropertyInfoValue(PropertyInfo propertyInfo, object value, bool sync)
-        {
-            try
-            {
-                SyncPropertyValue = sync;
-
-                propertyInfo.SetValue(this, value);
-            }
-            finally
-            {
-                SyncPropertyValue = true;
-            }
-        }
-        #endregion
-
-        #region WarmUp
-        /// <summary>
-        /// Warms up the native calls.
-        /// </summary>
-        /// <param name="warmUp">The warm up.</param>
-        /// <returns></returns>
-        [InternalMethod]
-        private object WarmUp(string warmUp)
-        {
-            return new object();
         }
         #endregion
 
@@ -587,40 +647,6 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
 
         #endregion
-        #endregion
-        #region Data
-
-        #region ControllerPropertyInfo
-        /// <summary>
-        /// Controller property info.
-        /// </summary>
-        private class ControllerPropertyInfo : ControllerProperty
-        {
-            /// <summary>
-            /// Gets or sets the property info.
-            /// </summary>
-            /// <value>
-            /// The property info.
-            /// </value>
-            public PropertyInfo PropertyInfo { get; set; }
-        }
-        #endregion
-        #region ControllerMethodInfo
-        /// <summary>
-        /// Controller method info.
-        /// </summary>
-        private class ControllerMethodInfo : ControllerMethod
-        {
-            /// <summary>
-            /// Gets or sets the method information.
-            /// </summary>
-            /// <value>
-            /// The method information.
-            /// </value>
-            public MethodInfo MethodInfo { get; set; }
-        }
-        #endregion
-
         #endregion
 
         #region IDisposable

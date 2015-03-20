@@ -7,22 +7,13 @@ using System.Threading.Tasks;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// Controller description.
+    /// Controller type info.
     /// </summary>
-    internal class ControllerDescription
+    internal class ControllerTypeInfo
     {
         #region Properties
         #region Public
 
-        #region Name
-        /// <summary>
-        /// Gets or sets the name.
-        /// </summary>
-        /// <value>
-        /// The name.
-        /// </value>
-        public string Name { get; set; }
-        #endregion
         #region Properties
         /// <summary>
         /// Gets or sets the properties.
@@ -30,7 +21,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The properties.
         /// </value>
-        public List<ControllerPropertyDescription> Properties { get; set; }
+        public List<ControllerProperty> Properties { get; set; }
         #endregion
         #region Methods
         /// <summary>
@@ -39,7 +30,16 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The methods.
         /// </value>
-        public List<ControllerMethodDescription> Methods { get; set; }
+        public List<ControllerMethod> Methods { get; set; }
+        #endregion
+        #region InternalMethods
+        /// <summary>
+        /// Gets or sets the internal methods.
+        /// </summary>
+        /// <value>
+        /// The internal methods.
+        /// </value>
+        public List<ControllerMethod> InternalMethods { get; set; }
         #endregion
 
         #endregion
@@ -47,12 +47,13 @@ namespace Samotorcan.HtmlUi.Core
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ControllerDescription"/> class.
+        /// Initializes a new instance of the <see cref="ControllerTypeInfo"/> class.
         /// </summary>
-        public ControllerDescription()
+        public ControllerTypeInfo()
         {
-            Properties = new List<ControllerPropertyDescription>();
-            Methods = new List<ControllerMethodDescription>();
+            Properties = new List<ControllerProperty>();
+            Methods = new List<ControllerMethod>();
+            InternalMethods = new List<ControllerMethod>();
         }
 
         #endregion

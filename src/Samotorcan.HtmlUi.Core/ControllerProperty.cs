@@ -9,29 +9,11 @@ namespace Samotorcan.HtmlUi.Core
     /// <summary>
     /// Controller property.
     /// </summary>
-    internal class ControllerProperty
+    internal class ControllerProperty : ControllerPropertyBase
     {
         #region Properties
         #region Public
 
-        #region Name
-        /// <summary>
-        /// Gets or sets the name.
-        /// </summary>
-        /// <value>
-        /// The name.
-        /// </value>
-        public string Name { get; set; }
-        #endregion
-        #region Value
-        /// <summary>
-        /// Gets or sets the value.
-        /// </summary>
-        /// <value>
-        /// The value.
-        /// </value>
-        public object Value { get; set; }
-        #endregion
         #region Access
         /// <summary>
         /// Gets or sets the access.
@@ -40,6 +22,33 @@ namespace Samotorcan.HtmlUi.Core
         /// The access.
         /// </value>
         public Access Access { get; set; }
+        #endregion
+        #region PropertyType
+        /// <summary>
+        /// Gets or sets the type of the property.
+        /// </summary>
+        /// <value>
+        /// The type of the property.
+        /// </value>
+        public Type PropertyType { get; set; }
+        #endregion
+        #region GetDelegate
+        /// <summary>
+        /// Gets or sets the get delegate.
+        /// </summary>
+        /// <value>
+        /// The get delegate.
+        /// </value>
+        public Delegate GetDelegate { get; set; }
+        #endregion
+        #region SetDelegate
+        /// <summary>
+        /// Gets or sets the set delegate.
+        /// </summary>
+        /// <value>
+        /// The set delegate.
+        /// </value>
+        public Delegate SetDelegate { get; set; }
         #endregion
 
         #endregion
