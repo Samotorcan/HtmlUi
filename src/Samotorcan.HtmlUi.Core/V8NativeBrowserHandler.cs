@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
+using Samotorcan.HtmlUi.Core.Messages;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
@@ -61,7 +62,7 @@ namespace Samotorcan.HtmlUi.Core
         {
             if (processMessage.Name == "native")
             {
-                var message = MessageUtility.DeserializeMessage(processMessage, new { Name = string.Empty, Json = string.Empty });
+                var message = MessageUtility.DeserializeMessage<CallNative>(processMessage);
 
                 BaseMainApplication.Current.InvokeOnMainAsync(() =>
                 {

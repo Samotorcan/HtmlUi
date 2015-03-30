@@ -23,11 +23,11 @@ namespace Samotorcan.HtmlUi.Core.Diagnostics
         /// </summary>
         /// <param name="action">The action.</param>
         /// <param name="name">The name.</param>
-        /// <exception cref="System.ArgumentException">action</exception>
+        /// <exception cref="System.ArgumentNullException">action</exception>
         public static void Measure(Action action, [CallerMemberName] string name = null)
         {
             if (action == null)
-                throw new ArgumentException("action");
+                throw new ArgumentNullException("action");
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -50,11 +50,11 @@ namespace Samotorcan.HtmlUi.Core.Diagnostics
         /// <param name="action">The action.</param>
         /// <param name="name">The name.</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentException">action</exception>
+        /// <exception cref="System.ArgumentNullException">action</exception>
         public static TReturn Measure<TReturn>(Func<TReturn> action, [CallerMemberName] string name = null)
         {
             if (action == null)
-                throw new ArgumentException("action");
+                throw new ArgumentNullException("action");
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -75,11 +75,11 @@ namespace Samotorcan.HtmlUi.Core.Diagnostics
         /// </summary>
         /// <param name="action">The action.</param>
         /// <param name="name">The name.</param>
-        /// <exception cref="System.ArgumentException">action</exception>
+        /// <exception cref="System.ArgumentNullException">action</exception>
         public static void Measure(Action<System.Diagnostics.Stopwatch> action, [CallerMemberName] string name = null)
         {
             if (action == null)
-                throw new ArgumentException("action");
+                throw new ArgumentNullException("action");
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -102,11 +102,11 @@ namespace Samotorcan.HtmlUi.Core.Diagnostics
         /// <param name="action">The action.</param>
         /// <param name="name">The name.</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentException">action</exception>
+        /// <exception cref="System.ArgumentNullException">action</exception>
         public static TReturn Measure<TReturn>(Func<System.Diagnostics.Stopwatch, TReturn> action, [CallerMemberName] string name = null)
         {
             if (action == null)
-                throw new ArgumentException("action");
+                throw new ArgumentNullException("action");
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 

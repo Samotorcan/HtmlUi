@@ -91,6 +91,8 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             if (frame.IsMain && V8NativeHandler != null)
                 V8NativeHandler.Reset();
 
+            RegisterHtmlUiAsScriptIfNeeded(context);
+
             MessageRouter.OnContextCreated(browser, frame, context);
         }
         #endregion
@@ -152,10 +154,11 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </summary>
         protected override void OnWebKitInitialized()
         {
-            // html-ui extension
-            var htmlUiScript = ProcessExtensionResource(ResourceUtility.GetResourceAsString("Scripts/html-ui.extension.js"));
+            var htmlUiNativeScript = ProcessExtensionResource(ResourceUtility.GetResourceAsString("Scripts/html-ui.extension.native.js"));
 
-            CefRuntime.RegisterExtension("html-ui", htmlUiScript, V8NativeHandler);
+            CefRuntime.RegisterExtension("html-ui-native", htmlUiNativeScript, V8NativeHandler);
+
+            RegisterHtmlUiAsExtensionIfNeeded();
         }
         #endregion
         #region OnRenderThreadCreated
@@ -237,6 +240,36 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         private string CreateStringConstant(string name, string value)
         {
             return string.Format("{0} = '{1}';", name, value);
+        }
+        #endregion
+        #region RegisterHtmlUiAsExtensionIfNeeded
+        /// <summary>
+        /// Registers the HTML UI as extension if needed.
+        /// </summary>
+        private void RegisterHtmlUiAsExtensionIfNeeded()
+        {
+#if !DEBUG
+            var htmlUiMainScript = ProcessExtensionResource(ResourceUtility.GetResourceAsString("Scripts/html-ui.extension.main.js"));
+
+            CefRuntime.RegisterExtension("html-ui-main", htmlUiMainScript, V8NativeHandler);
+#endif
+        }
+        #endregion
+        #region RegisterHtmlUiAsScriptIfNeeded
+        /// <summary>
+        /// Registers the HTML UI as script if needed.
+        /// </summary>
+        private void RegisterHtmlUiAsScriptIfNeeded(CefV8Context context)
+        {
+#if DEBUG
+            var htmlUiScript = ProcessExtensionResource(ResourceUtility.GetResourceAsString("Scripts/html-ui.extension.main.js"));
+
+            CefV8Value returnValue = null;
+            CefV8Exception exception = null;
+
+            if (!context.TryEval(htmlUiScript, out returnValue, out exception))
+                GeneralLog.Error(string.Format("Register html ui script exception: {0}.", JsonConvert.SerializeObject(exception)));
+#endif
         }
         #endregion
 

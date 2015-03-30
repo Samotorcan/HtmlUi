@@ -102,6 +102,10 @@
     <Compile Include="Exceptions\ParameterCountMismatchException.cs" />
     <Compile Include="JavascriptException.cs" />
     <Compile Include="InternalMethodAttribute.cs" />
+    <Compile Include="Messages\CallFunction.cs" />
+    <Compile Include="Messages\CallMethod.cs" />
+    <Compile Include="Messages\CallNative.cs" />
+    <Compile Include="Messages\CreateController.cs" />
     <Compile Include="MethodType.cs" />
     <Compile Include="NativeFunctionAttribute.cs" />
     <Compile Include="LogMessageType.cs" />
@@ -178,7 +182,7 @@
     <EmbeddedResource Include="Resources\Scripts\html-ui.js" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.js" />
+    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.main.js" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Views\ContentNotFound.html" />
@@ -194,7 +198,7 @@
     <EmbeddedResource Include="Resources\Scripts\lodash.min.js" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Messages\" />
+    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.native.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

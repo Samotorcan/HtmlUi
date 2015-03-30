@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using Samotorcan.HtmlUi.Core.Browser.Handlers;
 using Samotorcan.HtmlUi.Core.Events;
 using Samotorcan.HtmlUi.Core.Logs;
+using Samotorcan.HtmlUi.Core.Messages;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
@@ -231,7 +232,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         [NativeFunction]
         private object CreateController(string json)
         {
-            var createController = JsonConvert.DeserializeAnonymousType(json, new { Name = string.Empty, Id = 0 });
+            var createController = JsonConvert.DeserializeObject<CreateController>(json);
             var controller = BaseMainApplication.Current.Window.CreateController(createController.Name, createController.Id);
 
             return controller.GetDescription();
@@ -262,9 +263,9 @@ namespace Samotorcan.HtmlUi.Core.Browser
         [NativeFunction]
         private object CallMethod(string json)
         {
-            var methodData = JsonConvert.DeserializeAnonymousType(json, new { Id = 0, Name = string.Empty, Args = new JArray(), InternalMethod = false });
+            var methodData = JsonConvert.DeserializeObject<CallMethod>(json);
 
-            return BaseMainApplication.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Args, methodData.InternalMethod);
+            return BaseMainApplication.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Arguments, methodData.InternalMethod);
         }
         #endregion
 

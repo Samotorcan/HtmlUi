@@ -5,6 +5,7 @@ using Samotorcan.HtmlUi.Core.Diagnostics;
 using Samotorcan.HtmlUi.Core.Events;
 using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
+using Samotorcan.HtmlUi.Core.Messages;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
@@ -164,7 +165,7 @@ namespace Samotorcan.HtmlUi.Core
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException("name");
 
-            MessageUtility.SendMessage(CefBrowser, "callFunction", null, new { Name = name, Data = data });
+            MessageUtility.SendMessage(CefBrowser, "callFunction", null, new CallFunction { Name = name, Data = data });
         }
 
         /// <summary>
@@ -177,7 +178,7 @@ namespace Samotorcan.HtmlUi.Core
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException("name");
 
-            MessageUtility.SendMessage(CefBrowser, "callFunction", null, new { Name = name, Data = Undefined.Value });
+            MessageUtility.SendMessage(CefBrowser, "callFunction", null, new CallFunction { Name = name, Data = Undefined.Value });
         }
         #endregion
 
@@ -262,18 +263,16 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         internal void SyncControllerChangesToClient()
         {
-            Stopwatch.Measure(() => {
-                var application = BaseMainApplication.Current;
+            var application = BaseMainApplication.Current;
 
-                application.EnsureMainThread();
+            application.EnsureMainThread();
 
-                GeneralLog.Debug("Sync controller changes to client.");
+            GeneralLog.Debug("Sync controller changes to client.");
 
-                var controllerChanges = GetControllerChanges();
+            var controllerChanges = GetControllerChanges();
 
-                if (controllerChanges.Any())
-                    CallFunction("syncControllerChanges", controllerChanges);
-            });
+            if (controllerChanges.Any())
+                CallFunction("syncControllerChanges", controllerChanges);
         }
         #endregion
         #region CallMethod

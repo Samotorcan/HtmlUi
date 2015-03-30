@@ -2,6 +2,7 @@
 using Samotorcan.HtmlUi.Core.Diagnostics;
 using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
+using Samotorcan.HtmlUi.Core.Messages;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
@@ -80,51 +81,49 @@ namespace Samotorcan.HtmlUi.Core
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "sourceProcess", Justification = "I want it to match to OnProcessMessageReceived method.")]
         public bool ProcessMessage(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
         {
-            return Stopwatch.Measure(() => {
-                if (processMessage == null)
-                    throw new ArgumentNullException("processMessage");
+            if (processMessage == null)
+                throw new ArgumentNullException("processMessage");
 
-                // native
-                if (processMessage.Name == "native")
+            // native
+            if (processMessage.Name == "native")
+            {
+                var message = MessageUtility.DeserializeMessage<string>(processMessage);
+
+                if (message.CallbackId != null)
                 {
-                    var message = MessageUtility.DeserializeMessage<string>(processMessage);
+                    var returnJson = message.Data;
+                    var callback = GetCallback(message.CallbackId.Value);
 
-                    if (message.CallbackId != null)
-                    {
-                        var returnJson = message.Data;
-                        var callback = GetCallback(message.CallbackId.Value);
-
-                        if (callback != null)
-                            callback.Execute(returnJson);
-                    }
-
-                    return true;
+                    if (callback != null)
+                        callback.Execute(returnJson);
                 }
 
-                // call function
-                else if (processMessage.Name == "callFunction")
-                {
-                    var message = MessageUtility.DeserializeMessage(processMessage, new { Name = string.Empty, Data = new object() });
-                    var functionName = message.Data.Name;
-                    var data = message.Data.Data;
+                return true;
+            }
 
-                    if (Functions.ContainsKey(functionName))
-                    {
-                        if (data != Undefined.Value)
-                            Functions[functionName].Execute(data);
-                        else
-                            Functions[functionName].Execute();
-                    }
+            // call function
+            else if (processMessage.Name == "callFunction")
+            {
+                var message = MessageUtility.DeserializeMessage<CallFunction>(processMessage);
+                var functionName = message.Data.Name;
+                var data = message.Data.Data;
+
+                if (Functions.ContainsKey(functionName))
+                {
+                    if (data != Undefined.Value)
+                        Functions[functionName].Execute(data);
                     else
-                    {
-                        GeneralLog.Error(string.Format("Call function - function {0} is not registered.", functionName));
-                    }
-
-                    return true;
+                        Functions[functionName].Execute();
+                }
+                else
+                {
+                    GeneralLog.Error(string.Format("Call function - function {0} is not registered.", functionName));
                 }
 
-                return false;
-            });
+                return true;
+            }
+
+            return false;
         }
         #endregion
         #region Reset
@@ -168,7 +167,7 @@ namespace Samotorcan.HtmlUi.Core
 
                 var callbackId = AddCallback(callbackFunction, CefV8Context.GetCurrentContext());
 
-                MessageUtility.SendMessage(CefBrowser, "native", callbackId, new { Name = functionName, Json = jsonData });
+                MessageUtility.SendMessage(CefBrowser, "native", callbackId, new CallNative { Name = functionName, Json = jsonData });
 
                 return true;
             }

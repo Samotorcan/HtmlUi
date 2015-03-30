@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
+using Samotorcan.HtmlUi.Core.Messages;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
@@ -279,7 +280,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         [NativeFunction]
         private object CreateController(CefRequest request)
         {
-            var controllerData = GetAnonymousPostData(request, new { Name = string.Empty, Id = 0 });
+            var controllerData = GetPostData<CreateController>(request);
             ControllerDescription controllerDescription = null;
 
             BaseMainApplication.Current.InvokeOnMain(() =>
@@ -340,12 +341,12 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         [NativeFunction]
         private object CallMethod(CefRequest request)
         {
-            var methodData = GetAnonymousPostData(request, new { Id = 0, Name = string.Empty, Args = new JArray(), InternalMethod = false });
+            var methodData = GetPostData<CallMethod>(request);
             object response = null;
 
             BaseMainApplication.Current.InvokeOnMain(() =>
             {
-                response = BaseMainApplication.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Args, methodData.InternalMethod);
+                response = BaseMainApplication.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Arguments, methodData.InternalMethod);
             });
 
             return response;
