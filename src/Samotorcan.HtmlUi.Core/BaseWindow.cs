@@ -377,13 +377,12 @@ namespace Samotorcan.HtmlUi.Core
             // controller changes
             foreach (var controller in Controllers.Values)
             {
+                // property changes
                 if (controller.PropertyChanges.Any())
                 {
-                    // clear property changes
                     var propertyChanges = new HashSet<string>(controller.PropertyChanges);
-                    controller.PropertyChanges.Clear();
+                    controller.PropertyChanges = new HashSet<string>();
 
-                    // save property changes
                     controllerChanges.Add(controller.Id, new ControllerChange
                     {
                         Id = controller.Id,
@@ -391,16 +390,49 @@ namespace Samotorcan.HtmlUi.Core
                             .ToDictionary(p => p, p => JToken.FromObject(controller.GetPropertyValue(p)))
                     });
                 }
+
+                // observable collection changes
+                if (controller.ObservableCollectionChanges.Any())
+                {
+                    if (!controllerChanges.ContainsKey(controller.Id))
+                        controllerChanges.Add(controller.Id, new ControllerChange { Id = controller.Id });
+
+                    var controllerChange = controllerChanges[controller.Id];
+
+                    controllerChange.ObservableCollections = new Dictionary<string, ObservableCollectionChanges>(controller.ObservableCollectionChanges);
+                    controller.ObservableCollectionChanges = new Dictionary<string, ObservableCollectionChanges>();
+
+                    // change reset to property change
+                    foreach (var observableCollection in controllerChange.ObservableCollections.Values)
+                    {
+                        if (observableCollection.IsReset)
+                            controllerChange.Properties.Add(observableCollection.Name, JToken.FromObject(controller.GetPropertyValue(observableCollection.Name)));
+                    }
+                }
+
+                // remove observable collection changes if not needed
+                if (controllerChanges.ContainsKey(controller.Id))
+                {
+                    var controllerChange = controllerChanges[controller.Id];
+
+                    var removeObservableCollectionKeys = controllerChange.ObservableCollections
+                        .Where(o => controllerChange.Properties.ContainsKey(o.Value.Name) || o.Value.IsReset)
+                        .Select(o => o.Key)
+                        .ToList();
+
+                    foreach (var removeObservableCollectionKey in removeObservableCollectionKeys)
+                        controllerChange.ObservableCollections.Remove(removeObservableCollectionKey);
+                }
             }
 
             // next changes triggered by getter for property
-            if (controllerChanges.Any())
+            if (controllerChanges.Any(c => c.Value.Properties.Any()))
             {
                 // add next controller changes
                 foreach (var nextControllerChange in GetControllerChanges(++depth).Values)
                 {
                     if (!controllerChanges.ContainsKey(nextControllerChange.Id))
-                        controllerChanges.Add(nextControllerChange.Id, new ControllerChange());
+                        controllerChanges.Add(nextControllerChange.Id, new ControllerChange { Id = nextControllerChange.Id });
 
                     var controllerChange = controllerChanges[nextControllerChange.Id];
 

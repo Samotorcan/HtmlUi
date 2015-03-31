@@ -112,6 +112,9 @@
     <Compile Include="LogType.cs" />
     <Compile Include="NativeResponse.cs" />
     <Compile Include="NativeResponseType.cs" />
+    <Compile Include="ObservableCollectionChange.cs" />
+    <Compile Include="ObservableCollectionChangeAction.cs" />
+    <Compile Include="ObservableCollectionChanges.cs" />
     <Compile Include="Renderer\App.cs" />
     <Compile Include="HtmlUiRuntime.cs" />
     <Compile Include="Message.cs" />

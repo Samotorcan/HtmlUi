@@ -105,11 +105,17 @@
                 var values = controllerValues[controllerChange.Id] = (controllerValues[controllerChange.Id] || {});
 
                 controller.$apply(function () {
+                    // properties
                     _.forEach(controllerChange.Properties, function (value, propertyName) {
                         var propertyName = _.camelCase(propertyName);
 
                         controller[propertyName] = value;
                         values[propertyName] = value;
+                    });
+
+                    // observable collections
+                    _.forEach(controllerChange.ObservableCollections, function (changes, propertyName) {
+                        // TODO: implement
                     });
                 });
             });

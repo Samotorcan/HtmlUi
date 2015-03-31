@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -77,7 +78,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The observable collection items.
         /// </value>
-        public Dictionary<int, object> ObservableCollectionItems { get; set; }
+        public IEnumerable ObservableCollectionItems { get; set; }
         #endregion
         #region NotifyCollectionChangedEventHandler
         /// <summary>
@@ -90,17 +91,6 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
 
         #endregion
-        #endregion
-        #region Constructor
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ControllerProperty"/> class.
-        /// </summary>
-        public ControllerProperty()
-        {
-            ObservableCollectionItems = new Dictionary<int, object>();
-        }
-
         #endregion
     }
 }

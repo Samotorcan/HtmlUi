@@ -6,6 +6,7 @@ using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -57,7 +58,16 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The property changes.
         /// </value>
-        internal HashSet<string> PropertyChanges { get; private set; }
+        internal HashSet<string> PropertyChanges { get; set; }
+        #endregion
+        #region ObservableCollectionChanges
+        /// <summary>
+        /// Gets or sets the observable collection changes.
+        /// </summary>
+        /// <value>
+        /// The observable collection changes.
+        /// </value>
+        internal Dictionary<string, ObservableCollectionChanges> ObservableCollectionChanges { get; set; }
         #endregion
 
         #endregion
@@ -121,6 +131,7 @@ namespace Samotorcan.HtmlUi.Core
             Id = id;
 
             PropertyChanges = new HashSet<string>();
+            ObservableCollectionChanges = new Dictionary<string, ObservableCollectionChanges>();
 
             Type = GetType();
             Name = Type.Name;
@@ -532,48 +543,41 @@ namespace Samotorcan.HtmlUi.Core
             return new object();
         }
         #endregion
-        private bool TryAddObservableCollection(ControllerProperty property)
+        #region AddObservableCollection
+        /// <summary>
+        /// Adds the observable collection.
+        /// </summary>
+        /// <param name="property">The property.</param>
+        /// <returns></returns>
+        private void AddObservableCollection(ControllerProperty property)
         {
-            if (property.IsObservableCollection)
+            RemoveObservableCollection(property);
+
+            property.ObservableCollection = (INotifyCollectionChanged)property.GetDelegate.DynamicInvoke(this);
+            property.ObservableCollectionItems = (IEnumerable)property.ObservableCollection;
+
+            if (property.ObservableCollection != null)
             {
-                TryRemoveObservableCollection(property);
-
-                property.ObservableCollection = (INotifyCollectionChanged)property.GetDelegate.DynamicInvoke(this);
-                property.ObservableCollectionItems = new Dictionary<int, object>();
-
-                if (property.ObservableCollection != null)
-                {
-                    property.NotifyCollectionChangedEventHandler = new NotifyCollectionChangedEventHandler((sender, e) => { CollectionChangedHandle(sender, e, property); });
-                    property.ObservableCollection.CollectionChanged += property.NotifyCollectionChangedEventHandler;
-                }
-
-                return true;
+                property.NotifyCollectionChangedEventHandler = new NotifyCollectionChangedEventHandler((sender, e) => { CollectionChangedHandle(sender, e, property); });
+                property.ObservableCollection.CollectionChanged += property.NotifyCollectionChangedEventHandler;
             }
-
-            return false;
         }
-        private bool TryRemoveObservableCollection(ControllerProperty property)
+        #endregion
+        #region RemoveObservableCollection
+        /// <summary>
+        /// Removes the observable collection.
+        /// </summary>
+        /// <param name="property">The property.</param>
+        private void RemoveObservableCollection(ControllerProperty property)
         {
-            if (property.IsObservableCollection)
-            {
-                if (property.ObservableCollection != null)
-                    property.ObservableCollection.CollectionChanged -= property.NotifyCollectionChangedEventHandler;
+            if (property.ObservableCollection != null)
+                property.ObservableCollection.CollectionChanged -= property.NotifyCollectionChangedEventHandler;
 
-                foreach (var observableCollectionItem in property.ObservableCollectionItems)
-                {
-                    // TODO
-                    // observableCollectionItem.PropertyChanged -= CollectionItemChangedHandle;
-                }
-
-                property.ObservableCollectionItems = new Dictionary<int, object>();
-                property.NotifyCollectionChangedEventHandler = null;
-                property.ObservableCollection = null;
-
-                return true;
-            }
-
-            return false;
+            property.NotifyCollectionChangedEventHandler = null;
+            property.ObservableCollection = null;
+            property.ObservableCollectionItems = null;
         }
+        #endregion
 
         #region FindProperties
         /// <summary>
@@ -609,13 +613,15 @@ namespace Samotorcan.HtmlUi.Core
                         {
                             Name = property.Name,
                             PropertyType = property.PropertyType,
-                            IsObservableCollection = typeof(INotifyCollectionChanged).IsAssignableFrom(property.PropertyType),
+                            IsObservableCollection = IsObservableCollection(property.PropertyType),
                             GetDelegate = getMethod != null ? ExpressionUtility.CreateMethodDelegate(getMethod) : null,
                             SetDelegate = setMethod != null ? ExpressionUtility.CreateMethodDelegate(setMethod) : null,
                             Access = access.Value
                         };
 
-                        TryAddObservableCollection(controllerProperty);
+                        if (controllerProperty.IsObservableCollection)
+                            AddObservableCollection(controllerProperty);
+
                         properties.Add(controllerProperty);
                     }
                 }
@@ -665,6 +671,19 @@ namespace Samotorcan.HtmlUi.Core
                 .ToList();
         }
         #endregion
+        #region IsObservableCollection
+        /// <summary>
+        /// Determines whether type is observable collection.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns></returns>
+        private bool IsObservableCollection(Type type)
+        {
+            return typeof(INotifyCollectionChanged).IsAssignableFrom(type) &&
+                (type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)) ||
+                    typeof(IList).IsAssignableFrom(type));
+        }
+        #endregion
 
         #region PropertyChangedHandle
         /// <summary>
@@ -676,31 +695,65 @@ namespace Samotorcan.HtmlUi.Core
         {
             var property = ControllerTypeInfo.Properties.First(p => p.Name == e.PropertyName);
 
-            TryAddObservableCollection(property);
+            if (property.IsObservableCollection)
+                AddObservableCollection(property);
 
             if (SyncPropertyValue)
                 PropertyChanges.Add(e.PropertyName);
         }
         #endregion
+        #region CollectionChangedHandle
+        /// <summary>
+        /// Collection changed handle.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
+        /// <param name="property">The property.</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "sender", Justification = "I want it to be the same as the event parameters.")]
         private void CollectionChangedHandle(object sender, NotifyCollectionChangedEventArgs e, ControllerProperty property)
         {
-            switch (e.Action)
+            if (!ObservableCollectionChanges.ContainsKey(property.Name))
+                ObservableCollectionChanges.Add(property.Name, new ObservableCollectionChanges { Name = property.Name });
+
+            var changes = ObservableCollectionChanges[property.Name];
+
+            if (!changes.IsReset)
             {
-                case NotifyCollectionChangedAction.Add:
-                    break;
-                case NotifyCollectionChangedAction.Move:
-                    break;
-                case NotifyCollectionChangedAction.Remove:
-                    break;
-                case NotifyCollectionChangedAction.Replace:
-                    break;
-                case NotifyCollectionChangedAction.Reset:
-                    break;
+                var changeAction = new ObservableCollectionChange
+                {
+                    NewItems = e.NewItems,
+                    NewStartingIndex = e.NewStartingIndex,
+                    OldItems = e.OldItems,
+                    OldStartingIndex = e.OldStartingIndex
+                };
+
+                switch (e.Action)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                        changeAction.Action = ObservableCollectionChangeAction.Add;
+                        break;
+                    case NotifyCollectionChangedAction.Move:
+                        changeAction.Action = ObservableCollectionChangeAction.Move;
+                        break;
+                    case NotifyCollectionChangedAction.Remove:
+                        changeAction.Action = ObservableCollectionChangeAction.Remove;
+                        break;
+                    case NotifyCollectionChangedAction.Replace:
+                        changeAction.Action = ObservableCollectionChangeAction.Replace;
+                        break;
+                    case NotifyCollectionChangedAction.Reset:
+                        changes.Actions = new List<ObservableCollectionChange>();
+                        changes.IsReset = true;
+                        break;
+                }
+
+                changes.Actions.Add(changeAction);
             }
         }
+        #endregion
         private void CollectionItemChangedHandle(object sender, PropertyChangedEventArgs e)
         {
-
+            // TODO: implement
         }
 
         #endregion

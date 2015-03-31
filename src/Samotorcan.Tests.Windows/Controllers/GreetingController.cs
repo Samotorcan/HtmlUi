@@ -51,18 +51,21 @@ namespace Samotorcan.Tests.Windows.Controllers
             SomeList.Remove("test3");
 
             SomeList.Insert(1, "tt");
-            SomeList.Clear();
         }
 
         public void Sum()
         {
             SecondNumber += 10;
             Result = FirstNumber + SecondNumber;
+
+            SomeList.Clear();
+            SomeList.Add("tt");
+            SomeList.Add("123");
         }
 
         public void Sum1()
         {
-            
+            SomeList.Add("test3");
         }
     }
 }

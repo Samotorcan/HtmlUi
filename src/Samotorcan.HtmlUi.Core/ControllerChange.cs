@@ -34,6 +34,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         public Dictionary<string, JToken> Properties { get; set; }
         #endregion
+        #region ObservableCollections
+        /// <summary>
+        /// Gets or sets the observable collections.
+        /// </summary>
+        /// <value>
+        /// The observable collections.
+        /// </value>
+        public Dictionary<string, ObservableCollectionChanges> ObservableCollections { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -45,6 +54,7 @@ namespace Samotorcan.HtmlUi.Core
         public ControllerChange()
         {
             Properties = new Dictionary<string, JToken>();
+            ObservableCollections = new Dictionary<string, ObservableCollectionChanges>();
         }
 
         #endregion
