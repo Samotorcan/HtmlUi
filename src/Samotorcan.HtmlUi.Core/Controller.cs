@@ -554,7 +554,6 @@ namespace Samotorcan.HtmlUi.Core
             RemoveObservableCollection(property);
 
             property.ObservableCollection = (INotifyCollectionChanged)property.GetDelegate.DynamicInvoke(this);
-            property.ObservableCollectionItems = (IEnumerable)property.ObservableCollection;
 
             if (property.ObservableCollection != null)
             {
@@ -575,7 +574,6 @@ namespace Samotorcan.HtmlUi.Core
 
             property.NotifyCollectionChangedEventHandler = null;
             property.ObservableCollection = null;
-            property.ObservableCollectionItems = null;
         }
         #endregion
 
@@ -751,10 +749,6 @@ namespace Samotorcan.HtmlUi.Core
             }
         }
         #endregion
-        private void CollectionItemChangedHandle(object sender, PropertyChangedEventArgs e)
-        {
-            // TODO: implement
-        }
 
         #endregion
         #endregion
@@ -776,7 +770,13 @@ namespace Samotorcan.HtmlUi.Core
             {
                 if (disposing)
                 {
+                    PropertyChanged -= PropertyChangedHandle;
 
+                    foreach (var property in ControllerTypeInfo.Properties)
+                    {
+                        if (property.ObservableCollection != null && property.NotifyCollectionChangedEventHandler != null)
+                            property.ObservableCollection.CollectionChanged -= property.NotifyCollectionChangedEventHandler;
+                    }
                 }
 
                 _disposed = true;

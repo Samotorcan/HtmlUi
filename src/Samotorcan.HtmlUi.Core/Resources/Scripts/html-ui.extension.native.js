@@ -1,6 +1,9 @@
 ﻿var htmlUi = htmlUi || {};
 
 (function () {
+    // !inject-constants
+    nativeRequestUrl = nativeRequestUrl || null;
+
     var services = {};
 
     var _$q = null;

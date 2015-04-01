@@ -71,15 +71,6 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         public INotifyCollectionChanged ObservableCollection { get; set; }
         #endregion
-        #region ObservableCollectionItems
-        /// <summary>
-        /// Gets or sets the observable collection items.
-        /// </summary>
-        /// <value>
-        /// The observable collection items.
-        /// </value>
-        public IEnumerable ObservableCollectionItems { get; set; }
-        #endregion
         #region NotifyCollectionChangedEventHandler
         /// <summary>
         /// Gets or sets the notify collection changed event handler.

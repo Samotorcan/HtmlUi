@@ -65,7 +65,9 @@ namespace Samotorcan.Tests.Windows.Controllers
 
         public void Sum1()
         {
-            SomeList.Add("test3");
+            var random = new Random();
+
+            SomeList[random.Next(5)] = "55" + random.Next();
         }
     }
 }
