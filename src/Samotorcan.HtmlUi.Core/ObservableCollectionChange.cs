@@ -43,16 +43,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The new index of the starting.
         /// </value>
-        public int NewStartingIndex { get; set; }
-        #endregion
-        #region OldItems
-        /// <summary>
-        /// Gets or sets the old items.
-        /// </summary>
-        /// <value>
-        /// The old items.
-        /// </value>
-        public IList OldItems { get; set; }
+        public int? NewStartingIndex { get; set; }
         #endregion
         #region OldStartingIndex
         /// <summary>
@@ -61,7 +52,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The old index of the starting.
         /// </value>
-        public int OldStartingIndex { get; set; }
+        public int? OldStartingIndex { get; set; }
         #endregion
 
         #endregion

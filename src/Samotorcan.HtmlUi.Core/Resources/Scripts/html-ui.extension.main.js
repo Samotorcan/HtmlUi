@@ -1,4 +1,5 @@
 ﻿// TODO: clean on controller destruction
+// TODO: add methods on controller changes
 
 var htmlUi = htmlUi || {};
 
@@ -6,6 +7,12 @@ var htmlUi = htmlUi || {};
     htmlUi.app = null;
 
     htmlUi.init = function () {
+        var _controllerNames = htmlUi._native.getControllerNames();
+        var _controllerPropertyValues = {};
+        var _controllerObservableCollectionValues = {};
+        var _controllers = {};
+        var _arrayWatches = {};
+
         // register functions
         htmlUi._native.registerFunction('syncControllerChanges', syncControllerChanges);
 
@@ -19,38 +26,33 @@ var htmlUi = htmlUi || {};
 
         // sync controller changes
         htmlUi.app.run(['$rootScope', function ($rootScope) {
-            $rootScope.htmlUiChanges = {};
+            $rootScope.htmlUiControllerChanges = [];
 
-            // changes
-            $rootScope.$watch('htmlUiChanges', function (changes) {
-                var controllerChanges = [];
-
-                // prepare changes
-                _.forEach(changes, function (properties, controllerId) {
-                    if (properties != null && _.keys(properties).length > 0)
-                        controllerChanges.push({ id: controllerId, properties: properties });
-                });
+            // controller changes
+            $rootScope.$watch('htmlUiControllerChanges', function (controllerChanges) {
+                if (controllerChanges == null || controllerChanges.length == 0 ||
+                    _.all(controllerChanges, function (controllerChange) {
+                        return _.keys(controllerChange.properties).length == 0 && _.keys(controllerChange.observableCollections).length == 0;
+                })) {
+                    return;
+                }
 
                 // call sync controller changes
                 if (controllerChanges.length > 0) {
                     try {
                         htmlUi._native.syncControllerChanges(controllerChanges);
                     } finally {
-                        $rootScope.htmlUiChanges = {};
+                        $rootScope.htmlUiControllerChanges = [];
                     }
                 }
             }, true);
         }]);
 
         // create controllers
-        var controllerNames = htmlUi._native.getControllerNames();
-        var controllers = {};
-        var arrayWatches = {};
-
-        _.forEach(controllerNames, function (controllerName) {
+        _.forEach(_controllerNames, function (controllerName) {
             htmlUi.app.controller(controllerName, ['$scope', '$rootScope', function ($scope, $rootScope) {
                 // save controller
-                controllers[$scope.$id] = $scope;
+                _controllers[$scope.$id] = $scope;
 
                 // create controller
                 var controller = htmlUi._native.createController(controllerName, $scope.$id);
@@ -62,29 +64,31 @@ var htmlUi = htmlUi || {};
 
                     // add array watch
                     if (_.isArray(property.value))
-                        addArrayWatch(propertyName, $scope);
+                        addArrayWatch(propertyName, $scope, $rootScope);
 
                     // watch property
                     $scope.$watch(propertyName, function (newValue, oldValue) {
-                        var values = controllerValues[$scope.$id] || {};
-                        var hasValue = _.has(values, propertyName);
+                        var controllerPropertyValue = _controllerPropertyValues[$scope.$id] || {};
+                        var hasPropertyValue = _.has(controllerPropertyValue, propertyName);
 
                         // ignore sync if the value is already set in the server controller
-                        if (newValue !== oldValue && (!hasValue || values[propertyName] !== newValue)) {
-                            var changeProperties = $rootScope.htmlUiChanges[$scope.$id] = ($rootScope.htmlUiChanges[$scope.$id] || {});
+                        if (newValue !== oldValue && (!hasPropertyValue || controllerPropertyValue[propertyName] !== newValue)) {
+                            var controllerChanges = getControllerChanges($scope.$id, $rootScope);
 
-                            changeProperties[propertyName] = newValue;
+                            controllerChanges.properties[propertyName] = newValue;
 
                             if (_.isArray(oldValue))
-                                removeArrayWatch(propertyName, $scope);
+                                removeArrayWatch(propertyName, $scope, $rootScope);
 
                             if (_.isArray(newValue))
-                                addArrayWatch(propertyName, $scope);
+                                addArrayWatch(propertyName, $scope, $rootScope);
+
+                            if (_.has(controllerChanges.observableCollections, propertyName))
+                                delete controllerChanges.observableCollections[propertyName];
                         }
 
-                        // clear value
-                        if (hasValue)
-                            delete values[propertyName];
+                        if (hasPropertyValue)
+                            delete controllerPropertyValue[propertyName];
                     });
                 });
 
@@ -105,19 +109,70 @@ var htmlUi = htmlUi || {};
             }]);
         });
 
-        function addArrayWatch(propertyName, $scope) {
-            var controllerArrayWatches = arrayWatches[$scope.$id] = (arrayWatches[$scope.$id] || {});
+        function getControllerChanges(id, $rootScope) {
+            var controllerChanges = _.find($rootScope.htmlUiControllerChanges, 'id', id);
+            if (controllerChanges == null)
+                $rootScope.htmlUiControllerChanges.push(controllerChanges = { id: id, properties: {}, observableCollections: {} });
 
+            return controllerChanges;
+        }
+
+        function addArrayWatch(propertyName, $scope, $rootScope) {
+            var controllerArrayWatches = _arrayWatches[$scope.$id] = (_arrayWatches[$scope.$id] || {});
+
+            // watch collection
             controllerArrayWatches[propertyName] = $scope.$watchCollection(propertyName, function (newArray, oldArray) {
-                if (newArray == oldArray || isArrayShallowEqual(newArray, oldArray))
-                    return;
+                var controllerChanges = getControllerChanges($scope.$id, $rootScope);
+                var controllerObservableCollectionValue = _controllerObservableCollectionValues[$scope.$id] || {};
+                var hasObservableCollectionValue = _.has(controllerObservableCollectionValue, propertyName);
 
-                console.log(newArray);
+                if (newArray !== oldArray && !isArrayShallowEqual(newArray, oldArray) &&
+                    (!hasObservableCollectionValue || !isArrayShallowEqual(newArray, controllerObservableCollectionValue[propertyName])) &&
+                    !_.has(controllerChanges.properties, propertyName)) {
+
+                    var controllerObservableCollectionChanges = controllerChanges.observableCollections;
+                    var observableCollectionChanges = controllerObservableCollectionChanges[propertyName] = (controllerObservableCollectionChanges[propertyName] || { name: propertyName });
+                    var observableCollectionChangesActions = observableCollectionChanges.actions = (observableCollectionChanges.actions || []);
+
+                    var compareValues = _.zip(oldArray, newArray);
+
+                    _.forEach(compareValues, function (compareValue, index) {
+                        var oldValue = compareValue[0];
+                        var newValue = compareValue[1];
+
+                        if (index < oldArray.length && index < newArray.length) {
+                            // replace
+                            if (oldValue !== newValue) {
+                                observableCollectionChangesActions.push({
+                                    action: 'Replace',
+                                    newStartingIndex: index,
+                                    newItems: [newValue]
+                                });
+                            }
+                        } else if (index < oldArray.length && index >= newArray.length) {
+                            // remove
+                            observableCollectionChangesActions.push({
+                                action: 'Remove',
+                                oldStartingIndex: index
+                            });
+                        } else {
+                            // add
+                            observableCollectionChangesActions.push({
+                                action: 'Add',
+                                newStartingIndex: index,
+                                newItems: [newValue]
+                            });
+                        }
+                    });
+                }
+
+                if (hasObservableCollectionValue)
+                    delete controllerObservableCollectionValue[propertyName];
             });
         }
 
-        function removeArrayWatch(propertyName, $scope) {
-            var controllerArrayWatches = arrayWatches[$scope.$id];
+        function removeArrayWatch(propertyName, $scope, $rootScope) {
+            var controllerArrayWatches = _arrayWatches[$scope.$id];
 
             if (controllerArrayWatches != null) {
                 var arrayWatch = controllerArrayWatches[propertyName];
@@ -148,14 +203,26 @@ var htmlUi = htmlUi || {};
             });
         }
 
+        function shallowCopyCollection(collection) {
+            if (collection == null)
+                return null;
+
+            var newCollection = [];
+            _.forEach(collection, function (value, index) {
+                newCollection[index] = value;
+            });
+
+            return newCollection;
+        }
+
         // sync controller changes and ignore watch values
-        var controllerValues = {};
         function syncControllerChanges(json) {
             var controllerChanges = JSON.parse(json);
 
             _.forEach(controllerChanges, function (controllerChange) {
-                var controller = controllers[controllerChange.Id];
-                var values = controllerValues[controllerChange.Id] = (controllerValues[controllerChange.Id] || {});
+                var controller = _controllers[controllerChange.Id];
+                var controllerPropertyValue = _controllerPropertyValues[controllerChange.Id] = (_controllerPropertyValues[controllerChange.Id] || {});
+                var controllerObservableCollectionValue = _controllerObservableCollectionValues[controllerChange.Id] = (_controllerObservableCollectionValues[controllerChange.Id] || {});
 
                 controller.$apply(function () {
                     // properties
@@ -163,7 +230,7 @@ var htmlUi = htmlUi || {};
                         var propertyName = _.camelCase(propertyName);
 
                         controller[propertyName] = value;
-                        values[propertyName] = value;
+                        controllerPropertyValue[propertyName] = value;
                     });
 
                     // observable collections
@@ -191,6 +258,8 @@ var htmlUi = htmlUi || {};
                                     break;
                             }
                         });
+
+                        controllerObservableCollectionValue[propertyName] = shallowCopyCollection(array);
                     });
                 });
             });

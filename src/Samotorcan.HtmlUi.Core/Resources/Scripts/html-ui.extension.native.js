@@ -9,11 +9,8 @@
     var _$q = null;
     Object.defineProperty(services, '$q', {
         get: function () {
-            if (_$q == null) {
-                var injector = angular.injector(['ng']);
-
-                _$q = injector.get('$q');
-            }
+            if (_$q == null)
+                _$q = angular.injector(['ng']).get('$q');
 
             return _$q;
         }

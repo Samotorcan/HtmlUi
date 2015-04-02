@@ -254,6 +254,9 @@ namespace Samotorcan.HtmlUi.Core
 
                 foreach (var changeProperty in controllerChange.Properties)
                     controller.SetPropertyValue(changeProperty.Key, changeProperty.Value);
+
+                foreach (var observableCollectionChanges in controllerChange.ObservableCollections)
+                    controller.SetObservableCollectionChanges(observableCollectionChanges.Key, observableCollectionChanges.Value);
             }
         }
         #endregion
@@ -405,7 +408,7 @@ namespace Samotorcan.HtmlUi.Core
                     // change reset to property change
                     foreach (var observableCollection in controllerChange.ObservableCollections.Values)
                     {
-                        if (observableCollection.IsReset)
+                        if (observableCollection.IsReset && !controllerChange.Properties.Keys.Contains(observableCollection.Name))
                             controllerChange.Properties.Add(observableCollection.Name, JToken.FromObject(controller.GetPropertyValue(observableCollection.Name)));
                     }
                 }

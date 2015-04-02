@@ -453,6 +453,10 @@ namespace Samotorcan.HtmlUi.Core
             return CallMethod(name, arguments, false, NormalizeType.CamelCase);
         }
         #endregion
+        internal void SetObservableCollectionChanges(string propertyName, ObservableCollectionChanges changes)
+        {
+            // TODO: change the collection
+        }
 
         #endregion
         #region Private
@@ -717,35 +721,43 @@ namespace Samotorcan.HtmlUi.Core
 
             if (!changes.IsReset)
             {
-                var changeAction = new ObservableCollectionChange
-                {
-                    NewItems = e.NewItems,
-                    NewStartingIndex = e.NewStartingIndex,
-                    OldItems = e.OldItems,
-                    OldStartingIndex = e.OldStartingIndex
-                };
-
                 switch (e.Action)
                 {
                     case NotifyCollectionChangedAction.Add:
-                        changeAction.Action = ObservableCollectionChangeAction.Add;
+                        changes.Actions.Add(new ObservableCollectionChange {
+                            NewItems = e.NewItems,
+                            NewStartingIndex = e.NewStartingIndex,
+                            Action = ObservableCollectionChangeAction.Add
+                        });
                         break;
                     case NotifyCollectionChangedAction.Move:
-                        changeAction.Action = ObservableCollectionChangeAction.Move;
+                        changes.Actions.Add(new ObservableCollectionChange
+                        {
+                            OldStartingIndex = e.OldStartingIndex,
+                            NewStartingIndex = e.NewStartingIndex,
+                            Action = ObservableCollectionChangeAction.Move
+                        });
                         break;
                     case NotifyCollectionChangedAction.Remove:
-                        changeAction.Action = ObservableCollectionChangeAction.Remove;
+                        changes.Actions.Add(new ObservableCollectionChange
+                        {
+                            OldStartingIndex = e.OldStartingIndex,
+                            Action = ObservableCollectionChangeAction.Remove
+                        });
                         break;
                     case NotifyCollectionChangedAction.Replace:
-                        changeAction.Action = ObservableCollectionChangeAction.Replace;
+                        changes.Actions.Add(new ObservableCollectionChange
+                        {
+                            NewItems = e.NewItems,
+                            NewStartingIndex = e.NewStartingIndex,
+                            Action = ObservableCollectionChangeAction.Replace
+                        });
                         break;
                     case NotifyCollectionChangedAction.Reset:
                         changes.Actions = new List<ObservableCollectionChange>();
                         changes.IsReset = true;
                         break;
                 }
-
-                changes.Actions.Add(changeAction);
             }
         }
         #endregion
