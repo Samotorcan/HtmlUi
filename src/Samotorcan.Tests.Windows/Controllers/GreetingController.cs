@@ -37,6 +37,8 @@ namespace Samotorcan.Tests.Windows.Controllers
             set { SetField(ref _someList, value); }
         }
 
+        public int[] SomeArray { get; set; }
+
         public GreetingController(int id)
             : base(id)
         {
@@ -51,6 +53,8 @@ namespace Samotorcan.Tests.Windows.Controllers
             SomeList.Remove("test3");
 
             SomeList.Insert(1, "tt");
+
+            SomeArray = new int[10];
         }
 
         public void Sum()

@@ -493,7 +493,9 @@ namespace Samotorcan.HtmlUi.Core
 
             if (collection != null)
             {
-                if (property.IsIList)
+                if (property.IsArray)
+                    SetArrayChanges((Array)collection, property, changes, sync);
+                else if (property.IsIList)
                     SetIListChanges((IList)collection, property, changes, sync);
                 else
                     SetGenericIListChanges(collection, property, changes, sync);
@@ -671,10 +673,14 @@ namespace Samotorcan.HtmlUi.Core
                             IsCollection = IsCollection(property.PropertyType),
                             IsIList = IsIList(property.PropertyType),
                             IsGenericIList = IsGenericIList(property.PropertyType),
+                            IsArray = property.PropertyType.IsArray,
                             GetDelegate = getMethod != null ? ExpressionUtility.CreateMethodDelegate(getMethod) : null,
                             SetDelegate = setMethod != null ? ExpressionUtility.CreateMethodDelegate(setMethod) : null,
                             Access = access.Value
                         };
+
+                        if (controllerProperty.IsArray)
+                            AddArrayInfo(controllerProperty);
 
                         if (controllerProperty.IsGenericIList)
                             AddGenericIListInfo(controllerProperty);
@@ -762,7 +768,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <returns></returns>
         private bool IsIList(Type type)
         {
-            return typeof(IList).IsAssignableFrom(type);
+            return typeof(IList).IsAssignableFrom(type) && !type.IsArray;
         }
         #endregion
         #region IsGenericIList
@@ -773,7 +779,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <returns></returns>
         private bool IsGenericIList(Type type)
         {
-            return type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+            return type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)) && !type.IsArray;
         }
         #endregion
         #region AddGenericIListInfo
@@ -795,6 +801,16 @@ namespace Samotorcan.HtmlUi.Core
             property.GenericIListReplaceDelegate = ExpressionUtility.CreateMethodDelegate(indexMethod);
 
             property.GenericIListType = property.PropertyType.GetGenericArguments()[0];
+        }
+        #endregion
+        #region AddArrayInfo
+        /// <summary>
+        /// Adds the array information.
+        /// </summary>
+        /// <param name="property">The property.</param>
+        private void AddArrayInfo(ControllerProperty property)
+        {
+            property.ArrayType = property.PropertyType.GetElementType();
         }
         #endregion
         #region PadIList
@@ -864,9 +880,9 @@ namespace Samotorcan.HtmlUi.Core
                             PadIList(list, startIndex, itemType);
 
                             if (startIndex >= list.Count)
-                                list.Add(item);
+                                list.Add(Convert.ChangeType(item, itemType));
                             else
-                                list.Insert(startIndex, item);
+                                list.Insert(startIndex, Convert.ChangeType(item, itemType));
 
                             startIndex++;
                         }
@@ -887,9 +903,59 @@ namespace Samotorcan.HtmlUi.Core
                             PadIList(list, startIndex, itemType);
 
                             if (startIndex >= list.Count)
-                                list.Add(item);
+                                list.Add(Convert.ChangeType(item, itemType));
                             else
-                                list[startIndex] = item;
+                                list[startIndex] = Convert.ChangeType(item, itemType);
+
+                            startIndex++;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                SyncChanges = true;
+            }
+        }
+        #endregion
+        #region SetArrayChanges
+        /// <summary>
+        /// Sets the Array changes.
+        /// </summary>
+        /// <param name="array">The array.</param>
+        /// <param name="property">The property.</param>
+        /// <param name="changes">The changes.</param>
+        /// <param name="sync">if set to <c>true</c> synchronize changes.</param>
+        private void SetArrayChanges(Array array, ControllerProperty property, ObservableCollectionChanges changes, bool sync)
+        {
+            // TODO; fix throw exceptions
+
+            try
+            {
+                SyncChanges = sync;
+
+                var itemType = property.IsGenericIList ? property.GenericIListType : typeof(object);
+
+                foreach (var change in changes.Actions)
+                {
+                    if (change.Action == ObservableCollectionChangeAction.Add)
+                    {
+                        throw new PropertyMismatchException(Name, property.Name, string.Format("{0}/{1}", typeof(IList).Name, typeof(IList<>).Name), property.PropertyType.Name);
+                    }
+                    else if (change.Action == ObservableCollectionChangeAction.Remove)
+                    {
+                        throw new PropertyMismatchException(Name, property.Name, string.Format("{0}/{1}", typeof(IList).Name, typeof(IList<>).Name), property.PropertyType.Name);
+                    }
+                    else if (change.Action == ObservableCollectionChangeAction.Replace)
+                    {
+                        var startIndex = change.NewStartingIndex.Value;
+
+                        foreach (var item in change.NewItems)
+                        {
+                            if (startIndex >= array.Length)
+                                throw new PropertyMismatchException(Name, property.Name, string.Format("{0}/{1}", typeof(IList).Name, typeof(IList<>).Name), property.PropertyType.Name);
+
+                            array.SetValue(Convert.ChangeType(item, property.ArrayType), startIndex);
 
                             startIndex++;
                         }

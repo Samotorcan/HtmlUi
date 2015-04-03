@@ -89,6 +89,24 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         public bool IsGenericIList { get; set; }
         #endregion
+        #region IsArray
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is array.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance is array; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsArray { get; set; }
+        #endregion
+        #region ArrayType
+        /// <summary>
+        /// Gets or sets the type of the array.
+        /// </summary>
+        /// <value>
+        /// The type of the array.
+        /// </value>
+        public Type ArrayType { get; set; }
+        #endregion
         #region GenericIListAddDelegate
         /// <summary>
         /// Gets or sets the generic IList add delegate.
