@@ -992,9 +992,9 @@ namespace Samotorcan.HtmlUi.Core
                             PadGenericIList(list, property, startIndex);
 
                             if (startIndex >= property.GenericIListCount(list))
-                                property.GenericIListAdd(list, item);
+                                property.GenericIListAdd(list, Convert.ChangeType(item, property.GenericIListType));
                             else
-                                property.GenericIListInsert(list, startIndex, item);
+                                property.GenericIListInsert(list, startIndex, Convert.ChangeType(item, property.GenericIListType));
 
                             startIndex++;
                         }
@@ -1015,9 +1015,9 @@ namespace Samotorcan.HtmlUi.Core
                             PadGenericIList(list, property, startIndex);
 
                             if (startIndex >= property.GenericIListCount(list))
-                                property.GenericIListAdd(list, item);
+                                property.GenericIListAdd(list, Convert.ChangeType(item, property.GenericIListType));
                             else
-                                property.GenericIListReplace(list, startIndex, item);
+                                property.GenericIListReplace(list, startIndex, Convert.ChangeType(item, property.GenericIListType));
 
                             startIndex++;
                         }
