@@ -73,6 +73,15 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
         #region Private
 
+        #region SyncChanges
+        /// <summary>
+        /// Gets or sets a value indicating whether to synchronize changes.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> to synchronize changes; otherwise, <c>false</c>.
+        /// </value>
+        private bool SyncChanges { get; set; }
+        #endregion
         #region ControllerTypeInfo
         /// <summary>
         /// Gets or sets the controller type information.
@@ -90,15 +99,6 @@ namespace Samotorcan.HtmlUi.Core
         /// The type.
         /// </value>
         private Type Type { get; set; }
-        #endregion
-        #region SyncPropertyValue
-        /// <summary>
-        /// Gets or sets a value indicating whether to synchronize property value.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> to synchronize property value; otherwise, <c>false</c>.
-        /// </value>
-        private bool SyncPropertyValue { get; set; }
         #endregion
 
         #region ControllerTypeInfos
@@ -149,7 +149,7 @@ namespace Samotorcan.HtmlUi.Core
 
             ControllerTypeInfo = ControllerTypeInfos[Type];
 
-            SyncPropertyValue = true;
+            SyncChanges = true;
             PropertyChanged += PropertyChangedHandle;
         }
 
@@ -453,10 +453,63 @@ namespace Samotorcan.HtmlUi.Core
             return CallMethod(name, arguments, false, NormalizeType.CamelCase);
         }
         #endregion
+        #region SetObservableCollectionChanges
+        /// <summary>
+        /// Sets the observable collection changes.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="changes">The changes.</param>
+        /// <param name="sync">if set to <c>true</c> synchronize changes.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// propertyName
+        /// or
+        /// changes
+        /// </exception>
+        /// <exception cref="PropertyNotFoundException"></exception>
+        /// <exception cref="PropertyMismatchException"></exception>
+        /// <exception cref="WriteOnlyPropertyException"></exception>
+        internal void SetObservableCollectionChanges(string propertyName, ObservableCollectionChanges changes, bool sync)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName))
+                throw new ArgumentNullException("propertyName");
+
+            if (changes == null)
+                throw new ArgumentNullException("changes");
+
+            propertyName = StringUtility.Normalize(propertyName, NormalizeType.PascalCase);
+
+            var property = ControllerTypeInfo.Properties.SingleOrDefault(p => p.Name == propertyName);
+
+            if (property == null)
+                throw new PropertyNotFoundException(propertyName, Name);
+
+            if (!property.IsCollection)
+                throw new PropertyMismatchException(Name, property.Name, string.Format("{0}/{1}", typeof(IList).Name, typeof(IList<>).Name), property.PropertyType.Name);
+
+            if (!property.Access.HasFlag(Access.Read))
+                throw new WriteOnlyPropertyException(property.Name, Name);
+
+            var collection = property.GetDelegate.DynamicInvoke(this);
+
+            if (collection != null)
+            {
+                if (property.IsIList)
+                    SetIListChanges((IList)collection, property, changes, sync);
+                else
+                    SetGenericIListChanges(collection, property, changes, sync);
+            }
+        }
+
+        /// <summary>
+        /// Sets the observable collection changes.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="changes">The changes.</param>
         internal void SetObservableCollectionChanges(string propertyName, ObservableCollectionChanges changes)
         {
-            // TODO: change the collection
+            SetObservableCollectionChanges(propertyName, changes, false);
         }
+        #endregion
 
         #endregion
         #region Private
@@ -472,13 +525,13 @@ namespace Samotorcan.HtmlUi.Core
         {
             try
             {
-                SyncPropertyValue = sync;
+                SyncChanges = sync;
 
                 property.SetDelegate.DynamicInvoke(this, value);
             }
             finally
             {
-                SyncPropertyValue = true;
+                SyncChanges = true;
             }
         }
         #endregion
@@ -580,7 +633,6 @@ namespace Samotorcan.HtmlUi.Core
             property.ObservableCollection = null;
         }
         #endregion
-
         #region FindProperties
         /// <summary>
         /// Finds the properties.
@@ -616,10 +668,16 @@ namespace Samotorcan.HtmlUi.Core
                             Name = property.Name,
                             PropertyType = property.PropertyType,
                             IsObservableCollection = IsObservableCollection(property.PropertyType),
+                            IsCollection = IsCollection(property.PropertyType),
+                            IsIList = IsIList(property.PropertyType),
+                            IsGenericIList = IsGenericIList(property.PropertyType),
                             GetDelegate = getMethod != null ? ExpressionUtility.CreateMethodDelegate(getMethod) : null,
                             SetDelegate = setMethod != null ? ExpressionUtility.CreateMethodDelegate(setMethod) : null,
                             Access = access.Value
                         };
+
+                        if (controllerProperty.IsGenericIList)
+                            AddGenericIListInfo(controllerProperty);
 
                         if (controllerProperty.IsObservableCollection)
                             AddObservableCollection(controllerProperty);
@@ -681,9 +739,229 @@ namespace Samotorcan.HtmlUi.Core
         /// <returns></returns>
         private bool IsObservableCollection(Type type)
         {
-            return typeof(INotifyCollectionChanged).IsAssignableFrom(type) &&
-                (type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)) ||
+            return typeof(INotifyCollectionChanged).IsAssignableFrom(type) && IsCollection(type);
+        }
+        #endregion
+        #region IsCollection
+        /// <summary>
+        /// Determines whether the specified type is collection.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns></returns>
+        private bool IsCollection(Type type)
+        {
+            return (type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)) ||
                     typeof(IList).IsAssignableFrom(type));
+        }
+        #endregion
+        #region IsIList
+        /// <summary>
+        /// Determines whether the specified type is IsIList.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns></returns>
+        private bool IsIList(Type type)
+        {
+            return typeof(IList).IsAssignableFrom(type);
+        }
+        #endregion
+        #region IsGenericIList
+        /// <summary>
+        /// Determines whether the specified type is generic IList.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns></returns>
+        private bool IsGenericIList(Type type)
+        {
+            return type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+        }
+        #endregion
+        #region AddGenericIListInfo
+        /// <summary>
+        /// Adds the generic IList info.
+        /// </summary>
+        /// <param name="property">The property.</param>
+        private void AddGenericIListInfo(ControllerProperty property)
+        {
+            property.GenericIListAddDelegate = ExpressionUtility.CreateMethodDelegate(property.PropertyType.GetMethod("Add"));
+            property.GenericIListRemoveAtDelegate = ExpressionUtility.CreateMethodDelegate(property.PropertyType.GetMethod("RemoveAt"));
+            property.GenericIListCountDelegate = ExpressionUtility.CreateMethodDelegate(property.PropertyType.GetProperty("Count").GetGetMethod());
+            property.GenericIListInsertDelegate = ExpressionUtility.CreateMethodDelegate(property.PropertyType.GetMethod("Insert"));
+
+            var indexMethod = property.PropertyType.GetProperties()
+                .Single(p => p.GetIndexParameters().Length == 1 && p.GetIndexParameters()[0].ParameterType == typeof(int))
+                .GetSetMethod(false);
+
+            property.GenericIListReplaceDelegate = ExpressionUtility.CreateMethodDelegate(indexMethod);
+
+            property.GenericIListType = property.PropertyType.GetGenericArguments()[0];
+        }
+        #endregion
+        #region PadIList
+        /// <summary>
+        /// Pads the IList.
+        /// </summary>
+        /// <param name="list">The list.</param>
+        /// <param name="toIndex">To index.</param>
+        /// <param name="itemType">Type of the item.</param>
+        private void PadIList(IList list, int toIndex, Type itemType)
+        {
+            while (list.Count < toIndex)
+                list.Add(null);
+        }
+        #endregion
+        #region PadGenericIList
+        /// <summary>
+        /// Pads the generic IList.
+        /// </summary>
+        /// <param name="list">The list.</param>
+        /// <param name="property">The property.</param>
+        /// <param name="toIndex">To index.</param>
+        private void PadGenericIList(object list, ControllerProperty property, int toIndex)
+        {
+            while (property.GenericIListCount(list) < toIndex)
+                property.GenericIListAdd(list, GetDefaultValue(property.GenericIListType));
+        }
+        #endregion
+        #region GetDefaultValue
+        /// <summary>
+        /// Gets the default value.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns></returns>
+        private object GetDefaultValue(Type type)
+        {
+            if (type.IsValueType)
+                return Activator.CreateInstance(type);
+
+            return null;
+        }
+        #endregion
+        #region SetIListChanges
+        /// <summary>
+        /// Sets the IList changes.
+        /// </summary>
+        /// <param name="list">The list.</param>
+        /// <param name="property">The property.</param>
+        /// <param name="changes">The changes.</param>
+        /// <param name="sync">if set to <c>true</c> synchronize changes.</param>
+        private void SetIListChanges(IList list, ControllerProperty property, ObservableCollectionChanges changes, bool sync)
+        {
+            try
+            {
+                SyncChanges = sync;
+
+                var itemType = property.IsGenericIList ? property.GenericIListType : typeof(object);
+
+                foreach (var change in changes.Actions)
+                {
+                    if (change.Action == ObservableCollectionChangeAction.Add)
+                    {
+                        var startIndex = change.NewStartingIndex.Value;
+
+                        foreach (var item in change.NewItems)
+                        {
+                            PadIList(list, startIndex, itemType);
+
+                            if (startIndex >= list.Count)
+                                list.Add(item);
+                            else
+                                list.Insert(startIndex, item);
+
+                            startIndex++;
+                        }
+                    }
+                    else if (change.Action == ObservableCollectionChangeAction.Remove)
+                    {
+                        var removeIndex = change.OldStartingIndex.Value;
+
+                        if (list.Count > removeIndex)
+                            list.RemoveAt(removeIndex);
+                    }
+                    else if (change.Action == ObservableCollectionChangeAction.Replace)
+                    {
+                        var startIndex = change.NewStartingIndex.Value;
+
+                        foreach (var item in change.NewItems)
+                        {
+                            PadIList(list, startIndex, itemType);
+
+                            if (startIndex >= list.Count)
+                                list.Add(item);
+                            else
+                                list[startIndex] = item;
+
+                            startIndex++;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                SyncChanges = true;
+            }
+        }
+        #endregion
+        #region SetGenericIListChanges
+        /// <summary>
+        /// Sets the generic IList changes.
+        /// </summary>
+        /// <param name="list">The list.</param>
+        /// <param name="property">The property.</param>
+        /// <param name="changes">The changes.</param>
+        /// <param name="sync">if set to <c>true</c> synchronize changes.</param>
+        private void SetGenericIListChanges(object list, ControllerProperty property, ObservableCollectionChanges changes, bool sync)
+        {
+            try
+            {
+                SyncChanges = sync;
+                foreach (var change in changes.Actions)
+                {
+                    if (change.Action == ObservableCollectionChangeAction.Add)
+                    {
+                        var startIndex = change.NewStartingIndex.Value;
+
+                        foreach (var item in change.NewItems)
+                        {
+                            PadGenericIList(list, property, startIndex);
+
+                            if (startIndex >= property.GenericIListCount(list))
+                                property.GenericIListAdd(list, item);
+                            else
+                                property.GenericIListInsert(list, startIndex, item);
+
+                            startIndex++;
+                        }
+                    }
+                    else if (change.Action == ObservableCollectionChangeAction.Remove)
+                    {
+                        var removeIndex = change.OldStartingIndex.Value;
+
+                        if (property.GenericIListCount(list) > removeIndex)
+                            property.GenericIListRemoveAt(list, removeIndex);
+                    }
+                    else if (change.Action == ObservableCollectionChangeAction.Replace)
+                    {
+                        var startIndex = change.NewStartingIndex.Value;
+
+                        foreach (var item in change.NewItems)
+                        {
+                            PadGenericIList(list, property, startIndex);
+
+                            if (startIndex >= property.GenericIListCount(list))
+                                property.GenericIListAdd(list, item);
+                            else
+                                property.GenericIListReplace(list, startIndex, item);
+
+                            startIndex++;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                SyncChanges = true;
+            }
         }
         #endregion
 
@@ -700,7 +978,7 @@ namespace Samotorcan.HtmlUi.Core
             if (property.IsObservableCollection)
                 AddObservableCollection(property);
 
-            if (SyncPropertyValue)
+            if (SyncChanges)
                 PropertyChanges.Add(e.PropertyName);
         }
         #endregion
@@ -714,6 +992,9 @@ namespace Samotorcan.HtmlUi.Core
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "sender", Justification = "I want it to be the same as the event parameters.")]
         private void CollectionChangedHandle(object sender, NotifyCollectionChangedEventArgs e, ControllerProperty property)
         {
+            if (!SyncChanges)
+                return;
+
             if (!ObservableCollectionChanges.ContainsKey(property.Name))
                 ObservableCollectionChanges.Add(property.Name, new ObservableCollectionChanges { Name = property.Name });
 
