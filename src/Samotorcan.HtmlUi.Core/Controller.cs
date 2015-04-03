@@ -880,9 +880,9 @@ namespace Samotorcan.HtmlUi.Core
                             PadIList(list, startIndex, itemType);
 
                             if (startIndex >= list.Count)
-                                list.Add(Convert.ChangeType(item, itemType));
+                                list.Add(item.ToObject(itemType));
                             else
-                                list.Insert(startIndex, Convert.ChangeType(item, itemType));
+                                list.Insert(startIndex, item.ToObject(itemType));
 
                             startIndex++;
                         }
@@ -903,9 +903,9 @@ namespace Samotorcan.HtmlUi.Core
                             PadIList(list, startIndex, itemType);
 
                             if (startIndex >= list.Count)
-                                list.Add(Convert.ChangeType(item, itemType));
+                                list.Add(item.ToObject(itemType));
                             else
-                                list[startIndex] = Convert.ChangeType(item, itemType);
+                                list[startIndex] = item.ToObject(itemType);
 
                             startIndex++;
                         }
@@ -934,8 +934,6 @@ namespace Samotorcan.HtmlUi.Core
             {
                 SyncChanges = sync;
 
-                var itemType = property.IsGenericIList ? property.GenericIListType : typeof(object);
-
                 foreach (var change in changes.Actions)
                 {
                     if (change.Action == ObservableCollectionChangeAction.Add)
@@ -955,7 +953,7 @@ namespace Samotorcan.HtmlUi.Core
                             if (startIndex >= array.Length)
                                 throw new PropertyMismatchException(Name, property.Name, string.Format("{0}/{1}", typeof(IList).Name, typeof(IList<>).Name), property.PropertyType.Name);
 
-                            array.SetValue(Convert.ChangeType(item, property.ArrayType), startIndex);
+                            array.SetValue(item.ToObject(property.ArrayType), startIndex);
 
                             startIndex++;
                         }
@@ -992,9 +990,9 @@ namespace Samotorcan.HtmlUi.Core
                             PadGenericIList(list, property, startIndex);
 
                             if (startIndex >= property.GenericIListCount(list))
-                                property.GenericIListAdd(list, Convert.ChangeType(item, property.GenericIListType));
+                                property.GenericIListAdd(list, item.ToObject(property.GenericIListType));
                             else
-                                property.GenericIListInsert(list, startIndex, Convert.ChangeType(item, property.GenericIListType));
+                                property.GenericIListInsert(list, startIndex, item.ToObject(property.GenericIListType));
 
                             startIndex++;
                         }
@@ -1015,9 +1013,9 @@ namespace Samotorcan.HtmlUi.Core
                             PadGenericIList(list, property, startIndex);
 
                             if (startIndex >= property.GenericIListCount(list))
-                                property.GenericIListAdd(list, Convert.ChangeType(item, property.GenericIListType));
+                                property.GenericIListAdd(list, item.ToObject(property.GenericIListType));
                             else
-                                property.GenericIListReplace(list, startIndex, Convert.ChangeType(item, property.GenericIListType));
+                                property.GenericIListReplace(list, startIndex, item.ToObject(property.GenericIListType));
 
                             startIndex++;
                         }
@@ -1072,7 +1070,7 @@ namespace Samotorcan.HtmlUi.Core
                 {
                     case NotifyCollectionChangedAction.Add:
                         changes.Actions.Add(new ObservableCollectionChange {
-                            NewItems = e.NewItems,
+                            NewItems = new JArray(e.NewItems),
                             NewStartingIndex = e.NewStartingIndex,
                             Action = ObservableCollectionChangeAction.Add
                         });
@@ -1095,7 +1093,7 @@ namespace Samotorcan.HtmlUi.Core
                     case NotifyCollectionChangedAction.Replace:
                         changes.Actions.Add(new ObservableCollectionChange
                         {
-                            NewItems = e.NewItems,
+                            NewItems = new JArray(e.NewItems),
                             NewStartingIndex = e.NewStartingIndex,
                             Action = ObservableCollectionChangeAction.Replace
                         });

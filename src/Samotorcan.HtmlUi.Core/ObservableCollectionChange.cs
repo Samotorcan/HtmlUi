@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -34,7 +35,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The new items.
         /// </value>
-        public IList NewItems { get; set; }
+        public JArray NewItems { get; set; }
         #endregion
         #region NewStartingIndex
         /// <summary>
