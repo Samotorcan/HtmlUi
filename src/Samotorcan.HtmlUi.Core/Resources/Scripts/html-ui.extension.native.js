@@ -76,9 +76,9 @@
         native(name, JSON.stringify(data), function (json) {
             var response = JSON.parse(json);
 
-            if (response.type == 'Value')
+            if (response.type == 'value')
                 deferred.resolve(response.value);
-            else if (response.type == 'Exception')
+            else if (response.type == 'exception')
                 deferred.reject(response.exception);
             else
                 deferred.resolve();
@@ -101,10 +101,10 @@
 
         var response = JSON.parse(xhr.responseText);
 
-        if (response.type == 'Value')
+        if (response.type == 'value')
             return response.value;
 
-        if (response.type == 'Exception')
+        if (response.type == 'exception')
             throw response.exception;
     }
 })();

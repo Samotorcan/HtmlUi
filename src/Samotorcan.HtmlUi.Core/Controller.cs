@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// Controller. TODO: create attributes like controller name, camel case ...
+    /// Controller.
     /// </summary>
     public abstract class Controller : IDisposable, INotifyPropertyChanged
     {
@@ -157,19 +157,18 @@ namespace Samotorcan.HtmlUi.Core
         #region Methods
         #region Internal
 
-        #region GetPropertyDescriptions
+        #region GetProperties
         /// <summary>
-        /// Gets the property descriptions.
+        /// Gets the properties.
         /// </summary>
         /// <param name="access">The access.</param>
-        /// <param name="normalizeType">The normalize type.</param>
         /// <returns></returns>
-        private List<ControllerPropertyDescription> GetPropertyDescriptions(Access? access, NormalizeType normalizeType)
+        internal List<ControllerPropertyDescription> GetProperties(Access access)
         {
-            return ControllerTypeInfo.Properties.Where(p => access == null || p.Access.HasFlag(access.Value))
+            return ControllerTypeInfo.Properties.Values.Where(p => p.Access.HasFlag(access))
                 .Select(p => new ControllerPropertyDescription
                 {
-                    Name = StringUtility.Normalize(p.Name, normalizeType),
+                    Name = p.Name,
                     Value = p.Access.HasFlag(Access.Read) ? p.GetDelegate.DynamicInvoke(this) : null
                 })
                 .ToList();
@@ -178,80 +177,39 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Gets the properties.
         /// </summary>
-        /// <param name="access">The access.</param>
-        /// <param name="normalizeType">The normalize type.</param>
-        /// <returns></returns>
-        internal List<ControllerPropertyDescription> GetProperties(Access access, NormalizeType normalizeType)
-        {
-            return GetPropertyDescriptions((Access?)access, normalizeType);
-        }
-
-        /// <summary>
-        /// Gets the properties.
-        /// </summary>
-        /// <param name="normalizeType">The normalize type.</param>
-        /// <returns></returns>
-        internal List<ControllerPropertyDescription> GetProperties(NormalizeType normalizeType)
-        {
-            return GetPropertyDescriptions(null, normalizeType);
-        }
-
-        /// <summary>
-        /// Gets the properties.
-        /// </summary>
         /// <returns></returns>
         internal List<ControllerPropertyDescription> GetProperties()
         {
-            return GetPropertyDescriptions(null, NormalizeType.CamelCase);
+            return GetProperties(Access.Read | Access.Write);
         }
         #endregion
-        #region GetMethodDescriptions
+        #region GetMethods
         /// <summary>
-        /// Gets the method descriptions.
+        /// Gets the methods.
         /// </summary>
-        /// <param name="normalizeType">The normalize type.</param>
         /// <returns></returns>
-        internal List<ControllerMethodDescription> GetMethodDescriptions(NormalizeType normalizeType)
+        internal List<ControllerMethodDescription> GetMethods()
         {
-            return ControllerTypeInfo.Methods.Select(m => new ControllerMethodDescription
+            return ControllerTypeInfo.Methods.Values.Select(m => new ControllerMethodDescription
             {
-                Name = StringUtility.Normalize(m.Name, normalizeType)
+                Name = m.Name
             })
             .ToList();
-        }
-
-        /// <summary>
-        /// Gets the method descriptions.
-        /// </summary>
-        /// <returns></returns>
-        internal List<ControllerMethodDescription> GetMethodDescriptions()
-        {
-            return GetMethodDescriptions(NormalizeType.CamelCase);
         }
         #endregion
         #region GetDescription
         /// <summary>
         /// Gets the description.
         /// </summary>
-        /// <param name="normalizeType">The normalize type.</param>
         /// <returns></returns>
-        internal ControllerDescription GetDescription(NormalizeType normalizeType)
+        internal ControllerDescription GetDescription()
         {
             return new ControllerDescription
             {
                 Name = Name,
-                Properties = GetProperties(normalizeType),
-                Methods = GetMethodDescriptions(normalizeType)
+                Properties = GetProperties(),
+                Methods = GetMethods()
             };
-        }
-
-        /// <summary>
-        /// Gets the description.
-        /// </summary>
-        /// <returns></returns>
-        internal ControllerDescription GetDescription()
-        {
-            return GetDescription(NormalizeType.CamelCase);
         }
         #endregion
         #region SetPropertyValue
@@ -261,28 +219,29 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="propertyName">Name of the property.</param>
         /// <param name="value">The value.</param>
         /// <param name="sync">if set to <c>true</c> synchronize changes.</param>
-        /// <param name="normalizeType">Type of the normalize.</param>
         /// <exception cref="System.ArgumentNullException">propertyName</exception>
         /// <exception cref="PropertyNotFoundException"></exception>
         /// <exception cref="PropertyMismatchException">
         /// null
         /// or
         /// </exception>
-        internal void SetPropertyValue(string propertyName, JToken value, bool sync, NormalizeType normalizeType)
+        internal void SetPropertyValue(string propertyName, JToken value, bool sync)
         {
             if (string.IsNullOrWhiteSpace(propertyName))
                 throw new ArgumentNullException("propertyName");
 
-            var property = ControllerTypeInfo.Properties.FirstOrDefault(p => p.Access.HasFlag(Access.Write) &&
-                StringUtility.Normalize(p.Name, normalizeType) == propertyName);
+            var property = FindProperty(propertyName);
 
             if (property == null)
                 throw new PropertyNotFoundException(propertyName, Name);
 
+            if (!property.Access.HasFlag(Access.Write))
+                throw new ReadOnlyPropertyException(property.Name, Name);
+
             if (value == null)
             {
                 if (!property.PropertyType.IsValueType || Nullable.GetUnderlyingType(property.PropertyType) != null)
-                    SetPropertyValue(property, value, sync);
+                    SetPropertyValueInternal(property, value, sync);
                 else
                     throw new PropertyMismatchException(Name, property.Name, property.PropertyType.Name, "null");
             }
@@ -290,7 +249,7 @@ namespace Samotorcan.HtmlUi.Core
             {
                 try
                 {
-                    SetPropertyValue(property, value.ToObject(property.PropertyType), sync);
+                    SetPropertyValueInternal(property, value.ToObject(property.PropertyType), sync);
                 }
                 catch (ArgumentException)
                 {
@@ -308,50 +267,12 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <param name="propertyName">Name of the property.</param>
         /// <param name="value">The value.</param>
-        /// <param name="sync">if set to <c>true</c> synchronize changes.</param>
-        internal void SetPropertyValue(string propertyName, JToken value, bool sync)
-        {
-            SetPropertyValue(propertyName, value, sync, NormalizeType.CamelCase);
-        }
-
-        /// <summary>
-        /// Sets the property value.
-        /// </summary>
-        /// <param name="propertyName">Name of the property.</param>
-        /// <param name="value">The value.</param>
         internal void SetPropertyValue(string propertyName, JToken value)
         {
-            SetPropertyValue(propertyName, value, false, NormalizeType.CamelCase);
+            SetPropertyValue(propertyName, value, false);
         }
         #endregion
         #region GetPropertyValue
-        /// <summary>
-        /// Gets the property value.
-        /// </summary>
-        /// <param name="propertyName">Name of the property.</param>
-        /// <param name="normalizeType">The normalize type.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">propertyName</exception>
-        /// <exception cref="PropertyNotFoundException"></exception>
-        /// <exception cref="Samotorcan.HtmlUi.Core.Exceptions.WriteOnlyPropertyException"></exception>
-        internal object GetPropertyValue(string propertyName, NormalizeType normalizeType)
-        {
-            if (string.IsNullOrWhiteSpace(propertyName))
-                throw new ArgumentNullException("propertyName");
-
-            propertyName = StringUtility.Normalize(propertyName, normalizeType);
-
-            var property = ControllerTypeInfo.Properties.SingleOrDefault(p => p.Name == propertyName);
-
-            if (property == null)
-                throw new PropertyNotFoundException(propertyName, Name);
-
-            if (!property.Access.HasFlag(Access.Read))
-                throw new WriteOnlyPropertyException(property.Name, Name);
-
-            return property.GetDelegate.DynamicInvoke(this);
-        }
-
         /// <summary>
         /// Gets the property value.
         /// </summary>
@@ -362,33 +283,43 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="Samotorcan.HtmlUi.Core.Exceptions.WriteOnlyPropertyException"></exception>
         internal object GetPropertyValue(string propertyName)
         {
-            return GetPropertyValue(propertyName, NormalizeType.PascalCase);
+            if (string.IsNullOrWhiteSpace(propertyName))
+                throw new ArgumentNullException("propertyName");
+
+            var property = FindProperty(propertyName);
+
+            if (property == null)
+                throw new PropertyNotFoundException(propertyName, Name);
+
+            if (!property.Access.HasFlag(Access.Read))
+                throw new WriteOnlyPropertyException(property.Name, Name);
+
+            return property.GetDelegate.DynamicInvoke(this);
         }
         #endregion
         #region CallMethod
         /// <summary>
         /// Calls the method.
         /// </summary>
-        /// <param name="name">The name.</param>
+        /// <param name="methodName">The method name.</param>
         /// <param name="arguments">The arguments.</param>
         /// <param name="internalMethod">if set to <c>true</c> [internal method].</param>
-        /// <param name="normalizeType">Type of the normalize.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">name</exception>
         /// <exception cref="MethodNotFoundException"></exception>
         /// <exception cref="ParameterCountMismatchException"></exception>
-        internal object CallMethod(string name, JArray arguments, bool internalMethod, NormalizeType normalizeType)
+        internal object CallMethod(string methodName, JArray arguments, bool internalMethod)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException("name");
+            if (string.IsNullOrWhiteSpace(methodName))
+                throw new ArgumentNullException("methodName");
 
             if (arguments == null)
                 arguments = new JArray();
 
-            var method = (internalMethod ? ControllerTypeInfo.InternalMethods : ControllerTypeInfo.Methods).FirstOrDefault(m => StringUtility.Normalize(m.Name, normalizeType) == name);
+            var method = FindMethod(methodName, internalMethod);
 
             if (method == null)
-                throw new MethodNotFoundException(name, Name);
+                throw new MethodNotFoundException(methodName, Name);
 
             if (method.ParameterTypes.Count != arguments.Count)
                 throw new ParameterCountMismatchException(method.Name, Name);
@@ -427,30 +358,15 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Calls the method.
         /// </summary>
-        /// <param name="name">The name.</param>
-        /// <param name="arguments">The arguments.</param>
-        /// <param name="internalMethod">if set to <c>true</c> [internal method].</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">name</exception>
-        /// <exception cref="MethodNotFoundException"></exception>
-        /// <exception cref="ParameterCountMismatchException"></exception>
-        internal object CallMethod(string name, JArray arguments, bool internalMethod)
-        {
-            return CallMethod(name, arguments, internalMethod, NormalizeType.CamelCase);
-        }
-
-        /// <summary>
-        /// Calls the method.
-        /// </summary>
-        /// <param name="name">The name.</param>
+        /// <param name="methodName">The method name.</param>
         /// <param name="arguments">The arguments.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">name</exception>
         /// <exception cref="MethodNotFoundException"></exception>
         /// <exception cref="ParameterCountMismatchException"></exception>
-        internal object CallMethod(string name, JArray arguments)
+        internal object CallMethod(string methodName, JArray arguments)
         {
-            return CallMethod(name, arguments, false, NormalizeType.CamelCase);
+            return CallMethod(methodName, arguments, false);
         }
         #endregion
         #region SetObservableCollectionChanges
@@ -476,9 +392,7 @@ namespace Samotorcan.HtmlUi.Core
             if (changes == null)
                 throw new ArgumentNullException("changes");
 
-            propertyName = StringUtility.Normalize(propertyName, NormalizeType.PascalCase);
-
-            var property = ControllerTypeInfo.Properties.SingleOrDefault(p => p.Name == propertyName);
+            var property = FindProperty(propertyName);
 
             if (property == null)
                 throw new PropertyNotFoundException(propertyName, Name);
@@ -516,14 +430,14 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
         #region Private
 
-        #region SetPropertyValue
+        #region SetPropertyValueInternal
         /// <summary>
         /// Sets the property value.
         /// </summary>
         /// <param name="property">The property.</param>
         /// <param name="value">The value.</param>
-        /// <param name="sync">if set to <c>true</c> [synchronize].</param>
-        private void SetPropertyValue(ControllerProperty property, object value, bool sync)
+        /// <param name="sync">if set to <c>true</c> synchronize changes.</param>
+        private void SetPropertyValueInternal(ControllerProperty property, object value, bool sync)
         {
             try
             {
@@ -641,9 +555,9 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns></returns>
-        private List<ControllerProperty> FindProperties(Type type)
+        private Dictionary<string, ControllerProperty> FindProperties(Type type)
         {
-            var properties = new List<ControllerProperty>();
+            var properties = new Dictionary<string, ControllerProperty>();
 
             foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
@@ -688,7 +602,7 @@ namespace Samotorcan.HtmlUi.Core
                         if (controllerProperty.IsObservableCollection)
                             AddObservableCollection(controllerProperty);
 
-                        properties.Add(controllerProperty);
+                        properties.Add(controllerProperty.Name, controllerProperty);
                     }
                 }
             }
@@ -702,9 +616,9 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns></returns>
-        private List<ControllerMethod> FindMethods(Type type)
+        private Dictionary<string, ControllerMethod> FindMethods(Type type)
         {
-            var methods = new List<ControllerMethod>();
+            var methods = new Dictionary<string, ControllerMethod>();
 
             while (type != typeof(object))
             {
@@ -715,7 +629,10 @@ namespace Samotorcan.HtmlUi.Core
                 foreach (var methodInfo in methodInfos)
                 {
                     if (IsValidMethod(methodInfo, methodInfos))
-                        methods.Add(MethodInfoToControllerMethod(methodInfo));
+                    {
+                        var controllerMethod = MethodInfoToControllerMethod(methodInfo);
+                        methods.Add(controllerMethod.Name, controllerMethod);
+                    }
                 }
 
                 type = type.BaseType;
@@ -729,12 +646,12 @@ namespace Samotorcan.HtmlUi.Core
         /// Finds the internal methods.
         /// </summary>
         /// <returns></returns>
-        private List<ControllerMethod> FindInternalMethods()
+        private Dictionary<string, ControllerMethod> FindInternalMethods()
         {
             return typeof(Controller).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                 .Where(m => !m.IsSpecialName && m.GetCustomAttribute<InternalMethodAttribute>() != null)
                 .Select(m => MethodInfoToControllerMethod(m))
-                .ToList();
+                .ToDictionary(m => m.Name, m => m);
         }
         #endregion
         #region IsObservableCollection
@@ -1028,6 +945,65 @@ namespace Samotorcan.HtmlUi.Core
             }
         }
         #endregion
+        #region FindProperty
+        /// <summary>
+        /// Finds the property.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <returns></returns>
+        private ControllerProperty FindProperty(string propertyName)
+        {
+            ControllerProperty property = null;
+
+            if (ControllerTypeInfo.Properties.TryGetValue(propertyName, out property))
+                return property;
+
+            if (ControllerTypeInfo.Properties.TryGetValue(StringUtility.PascalCase(propertyName), out property))
+                return property;
+
+            if (ControllerTypeInfo.Properties.TryGetValue(StringUtility.CamelCase(propertyName), out property))
+                return property;
+
+            return null;
+        }
+        #endregion
+        #region FindMethod
+        /// <summary>
+        /// Finds the method.
+        /// </summary>
+        /// <param name="methodName">Name of the method.</param>
+        /// <param name="internalMethod">if set to <c>true</c> [internal method].</param>
+        /// <returns></returns>
+        private ControllerMethod FindMethod(string methodName, bool internalMethod)
+        {
+            var methods = internalMethod
+                ? ControllerTypeInfo.InternalMethods
+                : ControllerTypeInfo.Methods;
+
+            ControllerMethod method = null;
+
+            if (methods.TryGetValue(methodName, out method))
+                return method;
+
+            if (methods.TryGetValue(StringUtility.PascalCase(methodName), out method))
+                return method;
+
+            if (methods.TryGetValue(StringUtility.CamelCase(methodName), out method))
+                return method;
+
+            return null;
+        }
+
+        /// <summary>
+        /// Finds the method.
+        /// </summary>
+        /// <param name="methodName">Name of the method.</param>
+        /// <returns></returns>
+        private ControllerMethod FindMethod(string methodName)
+        {
+            return FindMethod(methodName, false);
+        }
+        #endregion
 
         #region PropertyChangedHandle
         /// <summary>
@@ -1037,7 +1013,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
         private void PropertyChangedHandle(object sender, PropertyChangedEventArgs e)
         {
-            var property = ControllerTypeInfo.Properties.First(p => p.Name == e.PropertyName);
+            var property = FindProperty(e.PropertyName);
 
             if (property.IsObservableCollection)
                 AddObservableCollection(property);
@@ -1129,7 +1105,7 @@ namespace Samotorcan.HtmlUi.Core
                 {
                     PropertyChanged -= PropertyChangedHandle;
 
-                    foreach (var property in ControllerTypeInfo.Properties)
+                    foreach (var property in ControllerTypeInfo.Properties.Values)
                     {
                         if (property.ObservableCollection != null && property.NotifyCollectionChangedEventHandler != null)
                             property.ObservableCollection.CollectionChanged -= property.NotifyCollectionChangedEventHandler;

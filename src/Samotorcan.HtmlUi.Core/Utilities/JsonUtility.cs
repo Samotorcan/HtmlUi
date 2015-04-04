@@ -116,7 +116,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
             return JsonConvert.SerializeObject(value, Formatting.Indented, new JsonSerializerSettings
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                Converters = new List<JsonConverter> { new KeyValuePairConverter() }
+                Converters = new List<JsonConverter> { new KeyValuePairConverter(), new StringEnumConverter { CamelCaseText = true } }
             });
         }
         #endregion

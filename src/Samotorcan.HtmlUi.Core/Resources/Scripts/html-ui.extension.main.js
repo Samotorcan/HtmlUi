@@ -144,7 +144,7 @@ var htmlUi = htmlUi || {};
                             // replace
                             if (oldValue !== newValue) {
                                 observableCollectionChangesActions.push({
-                                    action: 'Replace',
+                                    action: 'replace',
                                     newStartingIndex: index,
                                     newItems: [newValue]
                                 });
@@ -152,13 +152,13 @@ var htmlUi = htmlUi || {};
                         } else if (index < oldArray.length && index >= newArray.length) {
                             // remove
                             observableCollectionChangesActions.push({
-                                action: 'Remove',
+                                action: 'remove',
                                 oldStartingIndex: index
                             });
                         } else {
                             // add
                             observableCollectionChangesActions.push({
-                                action: 'Add',
+                                action: 'add',
                                 newStartingIndex: index,
                                 newItems: [newValue]
                             });
@@ -244,16 +244,16 @@ var htmlUi = htmlUi || {};
 
                         _.forEach(changes.Actions, function (change) {
                             switch (change.Action) {
-                                case 'Add':
+                                case 'add':
                                     ObservableCollectionAddAction(array, change);
                                     break;
-                                case 'Remove':
+                                case 'remove':
                                     ObservableCollectionRemoveAction(array, change);
                                     break;
-                                case 'Replace':
+                                case 'replace':
                                     ObservableCollectionReplaceAction(array, change);
                                     break;
-                                case 'Move':
+                                case 'move':
                                     ObservableCollectionMoveAction(array, change);
                                     break;
                             }

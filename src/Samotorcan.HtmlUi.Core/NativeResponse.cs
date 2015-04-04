@@ -23,7 +23,6 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The type.
         /// </value>
-        [JsonConverter(typeof(StringEnumConverter))]
         public NativeResponseType Type { get; set; }
         #endregion
         #region Exception

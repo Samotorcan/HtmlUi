@@ -21,7 +21,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The properties.
         /// </value>
-        public List<ControllerProperty> Properties { get; set; }
+        public Dictionary<string, ControllerProperty> Properties { get; set; }
         #endregion
         #region Methods
         /// <summary>
@@ -30,7 +30,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The methods.
         /// </value>
-        public List<ControllerMethod> Methods { get; set; }
+        public Dictionary<string, ControllerMethod> Methods { get; set; }
         #endregion
         #region InternalMethods
         /// <summary>
@@ -39,7 +39,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The internal methods.
         /// </value>
-        public List<ControllerMethod> InternalMethods { get; set; }
+        public Dictionary<string, ControllerMethod> InternalMethods { get; set; }
         #endregion
 
         #endregion
@@ -51,9 +51,9 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         public ControllerTypeInfo()
         {
-            Properties = new List<ControllerProperty>();
-            Methods = new List<ControllerMethod>();
-            InternalMethods = new List<ControllerMethod>();
+            Properties = new Dictionary<string, ControllerProperty>();
+            Methods = new Dictionary<string, ControllerMethod>();
+            InternalMethods = new Dictionary<string, ControllerMethod>();
         }
 
         #endregion

@@ -204,8 +204,10 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             try
             {
-                if (NativeFunctions.ContainsKey(Path))
-                    ResponseValue = NativeFunctions[Path](request);
+                var nativeMethod = FindNativeMethod(Path);
+
+                if (nativeMethod != null)
+                    ResponseValue = nativeMethod(request);
                 else
                     Exception = new NativeNotFoundException(Path);
             }
@@ -288,6 +290,13 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 var controller = BaseMainApplication.Current.Window.CreateController(controllerData.Name, controllerData.Id);
 
                 controllerDescription = controller.GetDescription();
+
+                // camel case property and method names
+                foreach (var property in controllerDescription.Properties)
+                    property.Name = StringUtility.CamelCase(property.Name);
+
+                foreach (var method in controllerDescription.Methods)
+                    method.Name = StringUtility.CamelCase(method.Name);
             });
 
             return controllerDescription;
@@ -425,6 +434,28 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             var json = GetPostJson(request);
 
             return JToken.Parse(json);
+        }
+        #endregion
+        #region FindNativeMethod
+        /// <summary>
+        /// Finds the native method.
+        /// </summary>
+        /// <param name="methodName">Name of the method.</param>
+        /// <returns></returns>
+        private Func<CefRequest, object> FindNativeMethod(string methodName)
+        {
+            Func<CefRequest, object> nativeMethod = null;
+
+            if (NativeFunctions.TryGetValue(methodName, out nativeMethod))
+                return nativeMethod;
+
+            if (NativeFunctions.TryGetValue(StringUtility.PascalCase(methodName), out nativeMethod))
+                return nativeMethod;
+
+            if (NativeFunctions.TryGetValue(StringUtility.CamelCase(methodName), out nativeMethod))
+                return nativeMethod;
+
+            return null;
         }
         #endregion
 

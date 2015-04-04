@@ -25,7 +25,6 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The action.
         /// </value>
-        [JsonConverter(typeof(StringEnumConverter))]
         public ObservableCollectionChangeAction Action { get; set; }
         #endregion
         #region NewItems

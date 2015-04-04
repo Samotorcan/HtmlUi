@@ -34,6 +34,28 @@ namespace Samotorcan.HtmlUi.Core.Utilities
             return value;
         }
         #endregion
+        #region CamelCase
+        /// <summary>
+        /// Camel case.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        public static string CamelCase(string value)
+        {
+            return StringUtility.Normalize(value, NormalizeType.CamelCase);
+        }
+        #endregion
+        #region PascalCase
+        /// <summary>
+        /// Pascal case.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        public static string PascalCase(string value)
+        {
+            return StringUtility.Normalize(value, NormalizeType.PascalCase);
+        }
+        #endregion
 
         #endregion
         #endregion
