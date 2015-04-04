@@ -14,16 +14,16 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// The value.
         /// </summary>
-        Value,
+        Value = 1,
 
         /// <summary>
         /// The undefined.
         /// </summary>
-        Undefined,
+        Undefined = 2,
 
         /// <summary>
         /// The exception.
         /// </summary>
-        Exception
+        Exception = 3
     }
 }

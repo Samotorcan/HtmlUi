@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
 using Xilium.CefGlue.Wrapper;
@@ -202,20 +203,32 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 
         #region ProcessExtensionResource
         /// <summary>
-        /// Processes the extension resource.
+        /// Processes the extension resources.
         /// </summary>
-        /// <param name="extensionResource">The extension resource.</param>
+        /// <param name="extensionResources">The extension resources.</param>
         /// <returns></returns>
-        private string ProcessExtensionResource(string extensionResource)
+        private string ProcessExtensionResource(params string[] extensionResources)
         {
             var constants = new string[]
             {
-                CreateStringConstant("nativeRequestUrl", NativeRequestUrl)
+                CreateStringConstant("_nativeRequestUrl", NativeRequestUrl)
             };
 
-            return extensionResource
-                .Replace("// !native ", "native ")
-                .Replace("// !inject-constants", string.Join(Environment.NewLine, constants));
+            var processedExtensionResources = new List<string>();
+
+            foreach (var extensionResource in extensionResources)
+            {
+                var processedExtensionResource = extensionResource
+                    .Replace("// !native ", "native ")
+                    .Replace("// !inject-constants", string.Join(Environment.NewLine, constants));
+
+                processedExtensionResource = Regex.Replace(processedExtensionResource, @"^/// <reference path=.*$", string.Empty, RegexOptions.Multiline);
+                processedExtensionResource = Regex.Replace(processedExtensionResource, @"^//# sourceMappingURL=.*$", string.Empty, RegexOptions.Multiline);
+
+                processedExtensionResources.Add(processedExtensionResource);
+            }
+
+            return string.Join(Environment.NewLine, processedExtensionResources);
         }
         #endregion
         #region CreateConstant
@@ -242,6 +255,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             return string.Format("{0} = '{1}';", name, value);
         }
         #endregion
+        
         #region RegisterHtmlUiAsExtensionIfNeeded
         /// <summary>
         /// Registers the HTML UI as extension if needed.
@@ -249,9 +263,9 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         private void RegisterHtmlUiAsExtensionIfNeeded()
         {
 #if !DEBUG
-            var htmlUiMainScript = ProcessExtensionResource(ResourceUtility.GetResourceAsString("Scripts/html-ui.extension.main.js"));
-
-            CefRuntime.RegisterExtension("html-ui-main", htmlUiMainScript, V8NativeHandler);
+            CefRuntime.RegisterExtension("html-ui.extension.main", GetHtmlUiExtensionScript("main"), V8NativeHandler);
+            CefRuntime.RegisterExtension("html-ui.extension.services", GetHtmlUiExtensionScript("services"), V8NativeHandler);
+            CefRuntime.RegisterExtension("html-ui.extension.settings", GetHtmlUiExtensionScript("settings"), V8NativeHandler);
 #endif
         }
         #endregion
@@ -262,14 +276,38 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         private void RegisterHtmlUiAsScriptIfNeeded(CefV8Context context)
         {
 #if DEBUG
-            var htmlUiScript = ProcessExtensionResource(ResourceUtility.GetResourceAsString("Scripts/html-ui.extension.main.js"));
-
+            EvalHtmlUiExtensionScript("main", context);
+            EvalHtmlUiExtensionScript("services", context);
+            EvalHtmlUiExtensionScript("settings", context);
+#endif
+        }
+        #endregion
+        #region GetHtmlUiExtensionScript
+        /// <summary>
+        /// Gets the HTML UI extension script.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns></returns>
+        private string GetHtmlUiExtensionScript(string name)
+        {
+            return ProcessExtensionResource(ResourceUtility.GetResourceAsString(string.Format("Scripts/html-ui.extension.{0}.js", name))) +
+                Environment.NewLine +
+                string.Format("//# sourceURL=html-ui.extension.{0}.js", name);
+        }
+        #endregion
+        #region EvalHtmlUiExtensionScript
+        /// <summary>
+        /// Evals the HTML UI extension script.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="context">The context.</param>
+        private void EvalHtmlUiExtensionScript(string name, CefV8Context context)
+        {
             CefV8Value returnValue = null;
             CefV8Exception exception = null;
 
-            if (!context.TryEval(htmlUiScript, out returnValue, out exception))
+            if (!context.TryEval(GetHtmlUiExtensionScript(name), out returnValue, out exception))
                 GeneralLog.Error(string.Format("Register html ui script exception: {0}.", JsonConvert.SerializeObject(exception)));
-#endif
         }
         #endregion
 

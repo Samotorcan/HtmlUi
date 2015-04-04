@@ -1,110 +1,99 @@
-﻿var htmlUi = htmlUi || {};
-
-(function () {
-    // !inject-constants
-    nativeRequestUrl = nativeRequestUrl || null;
-
-    var services = {};
-
-    var _$q = null;
-    Object.defineProperty(services, '$q', {
-        get: function () {
-            if (_$q == null)
-                _$q = angular.injector(['ng']).get('$q');
-
-            return _$q;
+/// <reference path="references.ts" />
+var htmlUi;
+(function (htmlUi) {
+    var native;
+    (function (_native) {
+        function syncControllerChanges(controllerChanges) {
+            nativeSynchronous('syncControllerChanges', controllerChanges);
         }
-    });
-
-    htmlUi._native = {
-        syncControllerChanges: function (controllers) {
-            return nativeSynchronous('syncControllerChanges', controllers);
-        },
-        syncControllerChangesAsync: function (controllers) {
-            return native('syncControllerChanges', controllers);
-        },
-
-        getControllerNames: function () {
+        _native.syncControllerChanges = syncControllerChanges;
+        function syncControllerChangesAsync(controllerChanges) {
+            return callNative('syncControllerChanges', controllerChanges);
+        }
+        _native.syncControllerChangesAsync = syncControllerChangesAsync;
+        function getControllerNames() {
             return nativeSynchronous('getControllerNames');
-        },
-        getControllerNamesAsync: function () {
-            return native('getControllerNames', null);
-        },
-
-        createController: function (name, id) {
+        }
+        _native.getControllerNames = getControllerNames;
+        function getControllerNamesAsync() {
+            return callNative('getControllerNames');
+        }
+        _native.getControllerNamesAsync = getControllerNamesAsync;
+        function createController(name, id) {
             return nativeSynchronous('createController', { name: name, id: id });
-        },
-        createControllerAsync: function (name, id) {
-            return native('createController', { name: name, id: id });
-        },
-
-        destroyController: function (id) {
-            return nativeSynchronous('destroyController', id);
-        },
-        destroyControllerAsync: function (id) {
-            return native('destroyController', id);
-        },
-
-        callMethod: function (id, name, args) {
+        }
+        _native.createController = createController;
+        function createControllerAsync(name, id) {
+            return callNative('createController', { name: name, id: id });
+        }
+        _native.createControllerAsync = createControllerAsync;
+        function destroyController(id) {
+            nativeSynchronous('destroyController', id);
+        }
+        _native.destroyController = destroyController;
+        function destroyControllerAsync(id) {
+            return callNative('destroyController', id);
+        }
+        _native.destroyControllerAsync = destroyControllerAsync;
+        function callMethod(id, name, args) {
             return nativeSynchronous('callMethod', { id: id, name: name, args: args });
-        },
-        callMethodAsync: function (id, name, args) {
-            return native('callMethod', { id: id, name: name, args: args });
-        },
-
-        callInternalMethod: function (id, name, args) {
+        }
+        _native.callMethod = callMethod;
+        function callMethodAsync(id, name, args) {
+            return callNative('callMethod', { id: id, name: name, args: args });
+        }
+        _native.callMethodAsync = callMethodAsync;
+        function callInternalMethod(id, name, args) {
             return nativeSynchronous('callMethod', { id: id, name: name, args: args, internalMethod: true });
-        },
-        callInternalMethodAsync: function (id, name, args) {
-            return native('callMethod', { id: id, name: name, args: args, internalMethod: true });
-        },
-
-        registerFunction: function (name, func) {
+        }
+        _native.callInternalMethod = callInternalMethod;
+        function callInternalMethodAsync(id, name, args) {
+            return callNative('callMethod', { id: id, name: name, args: args, internalMethod: true });
+        }
+        _native.callInternalMethodAsync = callInternalMethodAsync;
+        function registerFunction(name, func) {
             // !native function registerFunction();
             registerFunction(name, func);
-        },
-
-        log: function (type, messageType, message) {
-            return nativeSynchronous('log', { type: type, messageType: messageType, message: message });
         }
-    };
-
-    function native(name, data) {
-        var deferred = services.$q.defer();
-
-        // !native function native();
-        native(name, JSON.stringify(data), function (json) {
-            var response = JSON.parse(json);
-
-            if (response.type == 'value')
-                deferred.resolve(response.value);
-            else if (response.type == 'exception')
-                deferred.reject(response.exception);
-            else
-                deferred.resolve();
-        });
-
-        return deferred.promise;
-    };
-
-    function nativeSynchronous(action, data) {
-        var xhr = new XMLHttpRequest();
-        var url = nativeRequestUrl + action;
-
-        if (data != null) {
-            xhr.open('POST', url, false);
-            xhr.send(JSON.stringify(data));
-        } else {
-            xhr.open('GET', url, false);
-            xhr.send();
+        _native.registerFunction = registerFunction;
+        function log(type, messageType, message) {
+            nativeSynchronous('log', { type: type, messageType: messageType, message: message });
         }
-
-        var response = JSON.parse(xhr.responseText);
-
-        if (response.type == 'value')
-            return response.value;
-
-        if (response.type == 'exception')
-            throw response.exception;
-    }
-})();
+        _native.log = log;
+        function callNative(name, data) {
+            var deferred = htmlUi.services.$q.defer();
+            native(name, JSON.stringify(data), function (json) {
+                var response = JSON.parse(json);
+                if (response.type == 1 /* Value */)
+                    deferred.resolve(response.value);
+                else if (response.type == 3 /* Exception */)
+                    deferred.reject(response.exception);
+                else
+                    deferred.resolve();
+            });
+            return deferred.promise;
+        }
+        function native(name, jsonData, callback) {
+            // !native function native();
+            return native(name, jsonData, callback);
+        }
+        function nativeSynchronous(action, data) {
+            var xhr = new XMLHttpRequest();
+            var url = htmlUi.settings.nativeRequestUrl + action;
+            if (data != null) {
+                xhr.open('POST', url, false);
+                xhr.send(JSON.stringify(data));
+            }
+            else {
+                xhr.open('GET', url, false);
+                xhr.send();
+            }
+            var response = JSON.parse(xhr.responseText);
+            if (response.type == 1 /* Value */)
+                return response.value;
+            if (response.type == 3 /* Exception */)
+                throw response.exception;
+        }
+    })(native = htmlUi.native || (htmlUi.native = {}));
+})(htmlUi || (htmlUi = {}));
+//# sourceMappingURL=html-ui.extension.native.js.map

@@ -33,6 +33,15 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// </value>
         private static JsonSerializer Serializer { get; set; }
         #endregion
+        #region JsonSerializerSettings
+        /// <summary>
+        /// Gets or sets the json serializer settings.
+        /// </summary>
+        /// <value>
+        /// The json serializer settings.
+        /// </value>
+        private static JsonSerializerSettings JsonSerializerSettings { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -43,7 +52,12 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// </summary>
         static JsonUtility()
         {
-            Serializer = new JsonSerializer();
+            JsonSerializerSettings = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                Converters = new List<JsonConverter> { new KeyValuePairConverter() }
+            };
+            Serializer = JsonSerializer.Create(JsonSerializerSettings);
         }
 
         #endregion
@@ -113,11 +127,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <returns></returns>
         public static string SerializeToJson(object value)
         {
-            return JsonConvert.SerializeObject(value, Formatting.Indented, new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                Converters = new List<JsonConverter> { new KeyValuePairConverter(), new StringEnumConverter { CamelCaseText = true } }
-            });
+            return JsonConvert.SerializeObject(value, Formatting.Indented, JsonSerializerSettings);
         }
         #endregion
         #region SerializeToByteJson
