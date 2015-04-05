@@ -155,9 +155,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </summary>
         protected override void OnWebKitInitialized()
         {
-            var htmlUiNativeScript = ProcessExtensionResource(ResourceUtility.GetResourceAsString("Scripts/html-ui.extension.native.js"));
-
-            CefRuntime.RegisterExtension("html-ui-native", htmlUiNativeScript, V8NativeHandler);
+            CefRuntime.RegisterExtension("html-ui.extension.native", GetHtmlUiExtensionScript("native", false), V8NativeHandler);
 
             RegisterHtmlUiAsExtensionIfNeeded();
         }
@@ -201,36 +199,6 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         #endregion
         #region Private
 
-        #region ProcessExtensionResource
-        /// <summary>
-        /// Processes the extension resources.
-        /// </summary>
-        /// <param name="extensionResources">The extension resources.</param>
-        /// <returns></returns>
-        private string ProcessExtensionResource(params string[] extensionResources)
-        {
-            var constants = new string[]
-            {
-                CreateStringConstant("_nativeRequestUrl", NativeRequestUrl)
-            };
-
-            var processedExtensionResources = new List<string>();
-
-            foreach (var extensionResource in extensionResources)
-            {
-                var processedExtensionResource = extensionResource
-                    .Replace("// !native ", "native ")
-                    .Replace("// !inject-constants", string.Join(Environment.NewLine, constants));
-
-                processedExtensionResource = Regex.Replace(processedExtensionResource, @"^/// <reference path=.*$", string.Empty, RegexOptions.Multiline);
-                processedExtensionResource = Regex.Replace(processedExtensionResource, @"^//# sourceMappingURL=.*$", string.Empty, RegexOptions.Multiline);
-
-                processedExtensionResources.Add(processedExtensionResource);
-            }
-
-            return string.Join(Environment.NewLine, processedExtensionResources);
-        }
-        #endregion
         #region CreateConstant
         /// <summary>
         /// Creates the constant.
@@ -255,7 +223,6 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             return string.Format("{0} = '{1}';", name, value);
         }
         #endregion
-        
         #region RegisterHtmlUiAsExtensionIfNeeded
         /// <summary>
         /// Registers the HTML UI as extension if needed.
@@ -287,12 +254,57 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// Gets the HTML UI extension script.
         /// </summary>
         /// <param name="name">The name.</param>
+        /// <param name="mapping">if set to <c>true</c> include mapping.</param>
+        /// <returns></returns>
+        private string GetHtmlUiExtensionScript(string name, bool mapping)
+        {
+            var scriptName = string.Format("Scripts/html-ui.extension.{0}.js", name);
+            var typescriptName = string.Format("Scripts/html-ui.extension.{0}.ts", name);
+
+            var script = ResourceUtility.GetResourceAsString(scriptName);
+            var typescript = ResourceUtility.GetResourceAsString(typescriptName);
+
+            var constants = new string[]
+            {
+                CreateStringConstant("_nativeRequestUrl", NativeRequestUrl)
+            };
+
+            var processedExtensionResource = script
+                .Replace("// !native ", "native ")
+                .Replace("// !inject-constants", string.Join(Environment.NewLine, constants));
+
+            processedExtensionResource = Regex.Replace(processedExtensionResource, @"^/// <reference path=.*$", string.Empty, RegexOptions.Multiline);
+
+            if (mapping)
+            {
+                processedExtensionResource = Regex.Replace(processedExtensionResource, @"^(//# sourceMappingURL=.*)$", (match) =>
+                {
+                    var sourceMappingURL = match.Groups[0].Value.Substring("//# sourceMappingURL=".Length);
+
+                    var map = JsonConvert.DeserializeObject<SourceMap>(ResourceUtility.GetResourceAsString(string.Format("Scripts/{0}", sourceMappingURL)));
+                    map.SourcesContent = new List<string> { typescript };
+                    map.File = null;
+                    map.SourceRoot = "/Scripts";
+
+                    return string.Format("//# sourceMappingURL=data:application/json;base64,{0}", Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonUtility.SerializeToJson(map))));
+                }, RegexOptions.Multiline);
+            }
+            else
+            {
+                processedExtensionResource = Regex.Replace(processedExtensionResource, @"^//# sourceMappingURL=.*$", string.Empty, RegexOptions.Multiline);
+            }
+
+            return processedExtensionResource;
+        }
+
+        /// <summary>
+        /// Gets the HTML UI extension script.
+        /// </summary>
+        /// <param name="name">The name.</param>
         /// <returns></returns>
         private string GetHtmlUiExtensionScript(string name)
         {
-            return ProcessExtensionResource(ResourceUtility.GetResourceAsString(string.Format("Scripts/html-ui.extension.{0}.js", name))) +
-                Environment.NewLine +
-                string.Format("//# sourceURL=html-ui.extension.{0}.js", name);
+            return GetHtmlUiExtensionScript(name, true);
         }
         #endregion
         #region EvalHtmlUiExtensionScript
@@ -306,7 +318,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             CefV8Value returnValue = null;
             CefV8Exception exception = null;
 
-            if (!context.TryEval(GetHtmlUiExtensionScript(name), out returnValue, out exception))
+            if (!context.TryEval(GetHtmlUiExtensionScript(name, true), out returnValue, out exception))
                 GeneralLog.Error(string.Format("Register html ui script exception: {0}.", JsonConvert.SerializeObject(exception)));
         }
         #endregion

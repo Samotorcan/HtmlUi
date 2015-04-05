@@ -1,15 +1,15 @@
 ﻿/// <reference path="references.ts" />
 
-module htmlUi.settings {
+module htmlUi {
+    // constants
     declare var _nativeRequestUrl: string;
 
-    var injectConstants = (() => {
+    export var empty = function () { }; // chrome source map bug
+    export var settings = (() => {
         // !inject-constants
 
         return {
             nativeRequestUrl: _nativeRequestUrl
         }
     })();
-
-    export var nativeRequestUrl = injectConstants.nativeRequestUrl;
 } 

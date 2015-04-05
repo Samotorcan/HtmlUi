@@ -740,7 +740,7 @@ namespace Samotorcan.HtmlUi.Core
         private void PadIList(IList list, int toIndex, Type itemType)
         {
             while (list.Count < toIndex)
-                list.Add(null);
+                list.Add(GetDefaultValue(itemType));
         }
         #endregion
         #region PadGenericIList

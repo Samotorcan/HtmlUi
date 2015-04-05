@@ -18,7 +18,7 @@ module htmlUi {
 
         // inject controller creation
         htmlUi.app.controller = inject(htmlUi.app.controller, function (name) {
-
+            
         });
 
         // sync controller changes
