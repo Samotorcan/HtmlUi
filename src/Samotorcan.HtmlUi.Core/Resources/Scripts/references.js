@@ -4,5 +4,6 @@
 /// <reference path="html-ui.extension.settings.ts" />
 /// <reference path="html-ui.extension.services.ts" />
 /// <reference path="html-ui.extension.native.ts" />
-/// <reference path="html-ui.extension.main.ts" /> 
+/// <reference path="html-ui.extension.main.ts" />
+/// <reference path="html-ui.extension.utility.ts" /> 
 //# sourceMappingURL=references.js.map

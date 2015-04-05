@@ -1,72 +1,98 @@
 ﻿module htmlUi {
-    export interface IControllerChanges {
-        changes: IControllerChange[];
-        hasChanges: boolean;
-        getChange(id: number): IControllerChange;
-        clear(): void;
-    }
-
-    export class ControllerChanges implements IControllerChanges {
-        changes: IControllerChange[];
-
-        get hasChanges(): boolean {
-            return _.any(this.changes,(change) => { return change.hasChanges; });
-        }
-
-        constructor() {
-            this.changes = [];
-        }
-
-        getChange(id: number): IControllerChange {
-            var change = _.find(this.changes,(change) => { change.id == id; });
-
-            if (change == null) {
-                change = new ControllerChange(id);
-                this.changes.push(change);
-            }
-
-            return change;
-        }
-
-        clear(): void {
-            this.changes = [];
-        }
-    }
-
-    export interface IControllerChange {
+    export class ControllerChange {
         id: number;
         properties: { [name: string]: Object };
-        observableCollections: { [name: string]: IObservableCollectionChanges };
-        hasChanges: boolean;
-    }
-
-    export class ControllerChange implements IControllerChange {
-        id: number;
-        properties: { [name: string]: Object };
-        observableCollections: { [name: string]: IObservableCollectionChanges };
+        observableCollections: { [name: string]: ObservableCollectionChanges };
 
         get hasChanges(): boolean {
             return _.keys(this.properties).length != 0 ||
-                (_.keys(this.observableCollections).length != 0 && _.all(this.observableCollections, (changes) => { return changes.actions.length > 0; }));
+                (_.keys(this.observableCollections).length != 0 && _.any(this.observableCollections,(changes) => { return changes.hasChanges; }));
         }
 
-        constructor(id: number) {
-            this.id = id;
+        constructor(controllerId: number) {
+            this.id = controllerId;
+            this.properties = {};
+            this.observableCollections = {};
+        }
+
+        getObservableCollection(propertyName: string): ObservableCollectionChanges {
+            var observableCollections = _.find(this.observableCollections,(observableCollection) => { observableCollection.name == propertyName; });
+
+            if (observableCollections == null) {
+                observableCollections = new ObservableCollectionChanges();
+                this.observableCollections[propertyName] = observableCollections;
+            }
+
+            return observableCollections;
+        }
+
+        setProperty( propertyName: string, value: any): void {
+            this.properties[propertyName] = value;
+        }
+
+        getProperty(propertyName: string): any {
+            return this.properties[propertyName];
+        }
+
+        hasProperty(propertyName: string): boolean {
+            return _.has(this.properties, propertyName);
+        }
+
+        removeProperty(propertyName: string): void {
+            if (this.hasProperty(propertyName))
+                delete this.properties[propertyName];
+        }
+
+        addObservableCollectionChange(propertyName: string,
+            action: ObservableCollectionChangeAction, newItem: Object, newStartingIndex: number, oldStartingIndex: number): void {
+
+            this.getObservableCollection(propertyName).actions
+                .push(new ObservableCollectionChange(action, newItem, newStartingIndex, oldStartingIndex));
+        }
+
+        hasObservableCollection(propertyName: string): boolean {
+            return _.has(this.observableCollections, propertyName);
+        }
+
+        removeObservableCollection(propertyName: string): void {
+            if (this.hasObservableCollection(propertyName))
+                delete this.observableCollections[propertyName];
+        }
+
+        clear(): void {
             this.properties = {};
             this.observableCollections = {};
         }
     }
 
-    export interface IObservableCollectionChanges {
+    export class ObservableCollectionChanges {
         name: string;
-        actions: IObservableCollectionChange[];
+        actions: ObservableCollectionChange[];
+
+        constructor() {
+            this.actions = [];
+        }
+
+        get hasChanges(): boolean {
+            return _.keys(this.actions).length != 0;
+        }
     }
 
-    export interface IObservableCollectionChange {
+    export class ObservableCollectionChange {
         action: ObservableCollectionChangeAction;
-        newItems?: Object[];
-        newStartingIndex?: number;
-        oldStartingIndex?: number;
+        newItems: Object[];
+        newStartingIndex: number;
+        oldStartingIndex: number;
+
+        constructor(action: ObservableCollectionChangeAction, newItem: Object, newStartingIndex: number, oldStartingIndex: number) {
+            this.action = action;
+            this.newItems = [newItem];
+            this.newStartingIndex = newStartingIndex;
+            this.oldStartingIndex = oldStartingIndex;
+
+            if (this.newItems == null)
+                this.newItems = [];
+        }
     }
 
     export enum ObservableCollectionChangeAction {
@@ -74,6 +100,110 @@
         Remove = 2,
         Replace = 3,
         Move = 4
+    }
+
+    export class ControllerDataContainer {
+        data: { [id: number]: ControllerData };
+        controllerChanges: ControllerChange[];
+
+        get hasControllerChanges(): boolean {
+            return _.any(this.controllerChanges, (controllerChange) => { return controllerChange.hasChanges; });
+        }
+
+        constructor() {
+            this.data = {};
+            this.controllerChanges = [];
+        }
+
+        getControllerData(controllerId: number): ControllerData {
+            var controllerData = this.data[controllerId];
+
+            if (controllerData == null) {
+                this.data[controllerId] = controllerData = new ControllerData(controllerId);
+                this.controllerChanges.push(controllerData.change);
+            }
+
+            return controllerData;
+        }
+
+        clearControllerChanges(): void {
+            _.forEach(this.controllerChanges, (controllerChange) => {
+                controllerChange.clear();
+            });
+        }
+    }
+
+    export class ControllerData {
+        id: number;
+        name: string;
+        $scope: ng.IScope;
+        propertyValues: { [name: string]: Object };
+        observableCollectionValues: { [name: string]: Object[] };
+        watches: { [name: string]: Function };
+        change: ControllerChange;
+
+        constructor(controllerId: number) {
+            this.id = controllerId;
+            this.propertyValues = {};
+            this.observableCollectionValues = {};
+            this.watches = {};
+            this.change = new ControllerChange(controllerId);
+        }
+
+        hasProperty(propertyName: string): boolean {
+            return _.has(this.propertyValues, propertyName)
+        }
+
+        hasPropertyValue(propertyName: string, propertyValue: any): boolean {
+            return this.hasProperty(propertyName) && this.propertyValues[propertyName] === propertyValue;
+        }
+
+        setPropertyValue(propertyName: string, propertyValue: any): void {
+            this.propertyValues[propertyName] = propertyValue;
+        }
+
+        removePropertyValue(propertyName: string): void {
+            if (this.hasProperty(propertyName))
+                delete this.propertyValues[propertyName];
+        }
+
+        hasObservableCollection(propertyName: string): boolean {
+            return _.has(this.observableCollectionValues, propertyName)
+        }
+
+        hasObservableCollectionValue(propertyName: string, observableCollectionValue: Object[]): boolean {
+            return this.hasObservableCollection(propertyName) && utility.isArrayShallowEqual(this.observableCollectionValues[propertyName], observableCollectionValue);
+        }
+
+        setObservableCollectionValue(propertyName: string, observableCollectionValue: Object[]): void {
+            this.observableCollectionValues[propertyName] = observableCollectionValue;
+        }
+
+        removeObservableCollectionValue(propertyName: string): void {
+            if (this.hasObservableCollection(propertyName))
+                delete this.observableCollectionValues[propertyName];
+        }
+
+        setControllerPropertyValue(propertyName: string, propertyValue: any): void {
+            this.$scope[propertyName] = propertyValue;
+        }
+
+        hasWatch(propertyName: string): boolean {
+            return _.has(this.watches, propertyName);
+        }
+
+        removeWatch(propertyName: string): void {
+            if (this.hasWatch(propertyName)) {
+                this.watches[propertyName]();
+
+                delete this.watches[propertyName];
+            }
+        }
+
+        addWatch(propertyName: string, watch: Function): void {
+            this.removeWatch(propertyName);
+            this.watches[propertyName] = watch;
+        }
     }
 
     export interface INativeResponse {

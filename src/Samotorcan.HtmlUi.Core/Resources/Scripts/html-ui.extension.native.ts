@@ -1,11 +1,11 @@
 ﻿/// <reference path="references.ts" />
 
 module htmlUi.native {
-    export function syncControllerChanges(controllerChanges: IControllerChange[]): void {
+    export function syncControllerChanges(controllerChanges: ControllerChange[]): void {
         nativeSynchronous('syncControllerChanges', controllerChanges);
     }
 
-    export function syncControllerChangesAsync(controllerChanges: IControllerChange[]): angular.IPromise<Object> {
+    export function syncControllerChangesAsync(controllerChanges: ControllerChange[]): angular.IPromise<Object> {
         return callNative('syncControllerChanges', controllerChanges);
     }
 
