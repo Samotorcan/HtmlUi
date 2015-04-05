@@ -1,8 +1,60 @@
 ﻿module htmlUi {
+    export interface IControllerChanges {
+        changes: IControllerChange[];
+        hasChanges: boolean;
+        getChange(id: number): IControllerChange;
+        clear(): void;
+    }
+
+    export class ControllerChanges implements IControllerChanges {
+        changes: IControllerChange[];
+
+        get hasChanges(): boolean {
+            return _.any(this.changes,(change) => { return change.hasChanges; });
+        }
+
+        constructor() {
+            this.changes = [];
+        }
+
+        getChange(id: number): IControllerChange {
+            var change = _.find(this.changes,(change) => { change.id == id; });
+
+            if (change == null) {
+                change = new ControllerChange(id);
+                this.changes.push(change);
+            }
+
+            return change;
+        }
+
+        clear(): void {
+            this.changes = [];
+        }
+    }
+
     export interface IControllerChange {
         id: number;
         properties: { [name: string]: Object };
         observableCollections: { [name: string]: IObservableCollectionChanges };
+        hasChanges: boolean;
+    }
+
+    export class ControllerChange implements IControllerChange {
+        id: number;
+        properties: { [name: string]: Object };
+        observableCollections: { [name: string]: IObservableCollectionChanges };
+
+        get hasChanges(): boolean {
+            return _.keys(this.properties).length != 0 ||
+                (_.keys(this.observableCollections).length != 0 && _.all(this.observableCollections, (changes) => { return changes.actions.length > 0; }));
+        }
+
+        constructor(id: number) {
+            this.id = id;
+            this.properties = {};
+            this.observableCollections = {};
+        }
     }
 
     export interface IObservableCollectionChanges {

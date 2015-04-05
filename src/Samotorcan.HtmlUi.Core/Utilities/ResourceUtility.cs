@@ -88,6 +88,21 @@ namespace Samotorcan.HtmlUi.Core.Utilities
             }
         }
         #endregion
+        #region GetResourceNames
+        /// <summary>
+        /// Gets the resource names.
+        /// </summary>
+        /// <returns></returns>
+        public static List<string> GetResourceNames()
+        {
+            var assembly = typeof(ResourceUtility).Assembly;
+
+            return assembly.GetManifestResourceNames()
+                .Where(r => r.StartsWith("Samotorcan.HtmlUi.Core.Resources."))
+                .Select(r => r.Substring("Samotorcan.HtmlUi.Core.Resources.".Length))
+                .ToList();
+        }
+        #endregion
 
         #endregion
         #region Private

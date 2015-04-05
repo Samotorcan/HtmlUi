@@ -59,19 +59,14 @@ namespace Samotorcan.Tests.Windows.Controllers
 
         public void Sum()
         {
-            SecondNumber += 10;
             Result = FirstNumber + SecondNumber;
-
-            SomeList.Clear();
-            SomeList.Add("tt");
-            SomeList.Add("123");
         }
 
         public void Sum1()
         {
             var random = new Random();
 
-            SomeList[random.Next(5)] = "55" + random.Next();
+            SomeList[2] = "55" + random.Next();
         }
     }
 }

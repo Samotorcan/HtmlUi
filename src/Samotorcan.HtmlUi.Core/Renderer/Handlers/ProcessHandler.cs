@@ -59,6 +59,15 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </value>
         private V8NativeHandler V8NativeHandler { get; set; }
         #endregion
+        #region HtmlUiExtensions
+        /// <summary>
+        /// Gets or sets the HTML UI extensions.
+        /// </summary>
+        /// <value>
+        /// The HTML UI extensions.
+        /// </value>
+        private List<string> HtmlUiExtensions { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -71,6 +80,8 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         {
             MessageRouter = new CefMessageRouterRendererSide(new CefMessageRouterConfig());
             V8NativeHandler = new V8NativeHandler();
+
+            HtmlUiExtensions = GetHtmlUiExtensions();
         }
 
         #endregion
@@ -230,9 +241,8 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         private void RegisterHtmlUiAsExtensionIfNeeded()
         {
 #if !DEBUG
-            CefRuntime.RegisterExtension("html-ui.extension.main", GetHtmlUiExtensionScript("main"), V8NativeHandler);
-            CefRuntime.RegisterExtension("html-ui.extension.services", GetHtmlUiExtensionScript("services"), V8NativeHandler);
-            CefRuntime.RegisterExtension("html-ui.extension.settings", GetHtmlUiExtensionScript("settings"), V8NativeHandler);
+            foreach (var htmlUiExtension in HtmlUiExtensions)
+                CefRuntime.RegisterExtension("html-ui.extension." + htmlUiExtension, GetHtmlUiExtensionScript(htmlUiExtension), V8NativeHandler);
 #endif
         }
         #endregion
@@ -240,12 +250,12 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// <summary>
         /// Registers the HTML UI as script if needed.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "context", Justification = "Debug only.")]
         private void RegisterHtmlUiAsScriptIfNeeded(CefV8Context context)
         {
 #if DEBUG
-            EvalHtmlUiExtensionScript("main", context);
-            EvalHtmlUiExtensionScript("services", context);
-            EvalHtmlUiExtensionScript("settings", context);
+            foreach (var htmlUiExtension in HtmlUiExtensions)
+                EvalHtmlUiExtensionScript(htmlUiExtension, context);
 #endif
         }
         #endregion
@@ -259,10 +269,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         private string GetHtmlUiExtensionScript(string name, bool mapping)
         {
             var scriptName = string.Format("Scripts/html-ui.extension.{0}.js", name);
-            var typescriptName = string.Format("Scripts/html-ui.extension.{0}.ts", name);
-
             var script = ResourceUtility.GetResourceAsString(scriptName);
-            var typescript = ResourceUtility.GetResourceAsString(typescriptName);
 
             var constants = new string[]
             {
@@ -277,7 +284,10 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 
             if (mapping)
             {
-                processedExtensionResource = Regex.Replace(processedExtensionResource, @"^(//# sourceMappingURL=.*)$", (match) =>
+                var typescriptName = string.Format("Scripts/html-ui.extension.{0}.ts", name);
+                var typescript = ResourceUtility.GetResourceAsString(typescriptName);
+
+                processedExtensionResource = Regex.Replace(processedExtensionResource, @"^//# sourceMappingURL=.*$", (match) =>
                 {
                     var sourceMappingURL = match.Groups[0].Value.Substring("//# sourceMappingURL=".Length);
 
@@ -286,7 +296,8 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
                     map.File = null;
                     map.SourceRoot = "/Scripts";
 
-                    return string.Format("//# sourceMappingURL=data:application/json;base64,{0}", Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonUtility.SerializeToJson(map))));
+                    return string.Format("//# sourceMappingURL=data:application/octet-stream;base64,{0}",
+                        Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonUtility.SerializeToJson(map))));
                 }, RegexOptions.Multiline);
             }
             else
@@ -320,6 +331,27 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 
             if (!context.TryEval(GetHtmlUiExtensionScript(name, true), out returnValue, out exception))
                 GeneralLog.Error(string.Format("Register html ui script exception: {0}.", JsonConvert.SerializeObject(exception)));
+        }
+        #endregion
+        #region GetHtmlUiExtensions
+        /// <summary>
+        /// Gets the HTML UI extensions.
+        /// </summary>
+        /// <returns></returns>
+        private List<string> GetHtmlUiExtensions()
+        {
+            var htmlUiExtensions = new List<string>();
+
+            foreach (var resourceName in ResourceUtility.GetResourceNames())
+            {
+                var match = Regex.Match(resourceName, @"^Scripts\.html-ui\.extension\.([a-zA-Z0-9\-_]*)\.ts$");
+                var htmlUiExtension = match.Groups[1].Value;
+
+                if (match.Success && htmlUiExtension != "native")
+                    htmlUiExtensions.Add(htmlUiExtension);
+            }
+
+            return htmlUiExtensions;
         }
         #endregion
 

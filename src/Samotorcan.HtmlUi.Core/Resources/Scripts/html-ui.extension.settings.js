@@ -1,8 +1,6 @@
 /// <reference path="references.ts" />
 var htmlUi;
 (function (htmlUi) {
-    htmlUi.empty = function () {
-    }; // chrome source map bug
     htmlUi.settings = (function () {
         // !inject-constants
         return {

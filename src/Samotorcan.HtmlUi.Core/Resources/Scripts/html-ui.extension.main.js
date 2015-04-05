@@ -1,44 +1,38 @@
 /// <reference path="references.ts" />
 var htmlUi;
 (function (htmlUi) {
+    var _controllerChanges = null;
+    var _controllerNames = null;
+    var _controllerPropertyValues = {};
+    var _controllerObservableCollectionValues = {};
+    var _controllers = {};
+    var _arrayWatches = {};
+    function addHtmlUiControllerChangesWatch($rootScope) {
+        $rootScope.$watch('htmlUiControllerChanges', function (controllerChanges) {
+            if (!controllerChanges.hasChanges)
+                return;
+            try {
+                htmlUi.native.syncControllerChanges(controllerChanges.changes);
+            }
+            finally {
+                _controllerChanges.clear();
+            }
+        }, true);
+    }
     htmlUi.app = null;
     function init() {
-        var _controllerNames = htmlUi.native.getControllerNames();
-        var _controllerPropertyValues = {};
-        var _controllerObservableCollectionValues = {};
-        var _controllers = {};
-        var _arrayWatches = {};
+        _controllerNames = htmlUi.native.getControllerNames();
         // register functions
         htmlUi.native.registerFunction('syncControllerChanges', syncControllerChanges);
         // create module
         htmlUi.app = angular.module('htmlUiApp', []);
-        // inject controller creation
-        htmlUi.app.controller = inject(htmlUi.app.controller, function (name) {
-        });
-        // sync controller changes
         htmlUi.app.run(['$rootScope', function ($rootScope) {
-            $rootScope.htmlUiControllerChanges = [];
-            // controller changes
-            $rootScope.$watch('htmlUiControllerChanges', function (controllerChanges) {
-                if (controllerChanges == null || controllerChanges.length == 0 || _.all(controllerChanges, function (controllerChange) {
-                    return _.keys(controllerChange.properties).length == 0 && _.keys(controllerChange.observableCollections).length == 0;
-                })) {
-                    return;
-                }
-                // call sync controller changes
-                if (controllerChanges.length > 0) {
-                    try {
-                        htmlUi.native.syncControllerChanges(controllerChanges);
-                    }
-                    finally {
-                        $rootScope.htmlUiControllerChanges = [];
-                    }
-                }
-            }, true);
+            _controllerChanges = $rootScope['htmlUiControllerChanges'] = new htmlUi.ControllerChanges();
+            addHtmlUiControllerChangesWatch($rootScope);
         }]);
         // create controllers
         _.forEach(_controllerNames, function (controllerName) {
-            htmlUi.app.controller(controllerName, ['$scope', '$rootScope', function ($scope, $rootScope) {
+            htmlUi.app.controller(controllerName, ['$scope', function ($scope) {
                 // save controller
                 _controllers[$scope.$id] = $scope;
                 // create controller
@@ -49,19 +43,19 @@ var htmlUi;
                     $scope[propertyName] = property.value;
                     // add array watch
                     if (_.isArray(property.value))
-                        addArrayWatch(propertyName, $scope, $rootScope);
+                        addArrayWatch(propertyName, $scope);
                     // watch property
                     $scope.$watch(propertyName, function (newValue, oldValue) {
                         var controllerPropertyValue = _controllerPropertyValues[$scope.$id] || {};
                         var hasPropertyValue = _.has(controllerPropertyValue, propertyName);
                         // ignore sync if the value is already set in the server controller
                         if (newValue !== oldValue && (!hasPropertyValue || controllerPropertyValue[propertyName] !== newValue)) {
-                            var controllerChanges = getControllerChanges($scope.$id, $rootScope);
+                            var controllerChanges = _controllerChanges.getChange($scope.$id);
                             controllerChanges.properties[propertyName] = newValue;
                             if (_.isArray(oldValue))
-                                removeArrayWatch(propertyName, $scope, $rootScope);
+                                removeArrayWatch(propertyName, $scope);
                             if (_.isArray(newValue))
-                                addArrayWatch(propertyName, $scope, $rootScope);
+                                addArrayWatch(propertyName, $scope);
                             if (_.has(controllerChanges.observableCollections, propertyName))
                                 delete controllerChanges.observableCollections[propertyName];
                         }
@@ -84,25 +78,17 @@ var htmlUi;
                 });
             }]);
         });
-        function getControllerChanges(id, $rootScope) {
-            var controllerChanges = _.find($rootScope.htmlUiControllerChanges, function (c) {
-                return c.id == id;
-            });
-            if (controllerChanges == null)
-                $rootScope.htmlUiControllerChanges.push(controllerChanges = { id: id, properties: {}, observableCollections: {} });
-            return controllerChanges;
-        }
-        function addArrayWatch(propertyName, $scope, $rootScope) {
+        function addArrayWatch(propertyName, $scope) {
             var controllerArrayWatches = _arrayWatches[$scope.$id] = (_arrayWatches[$scope.$id] || {});
             // watch collection
             controllerArrayWatches[propertyName] = $scope.$watchCollection(propertyName, function (newArray, oldArray) {
-                var controllerChanges = getControllerChanges($scope.$id, $rootScope);
+                var controllerChanges = _controllerChanges.getChange($scope.$id);
                 var controllerObservableCollectionValue = _controllerObservableCollectionValues[$scope.$id] || {};
                 var hasObservableCollectionValue = _.has(controllerObservableCollectionValue, propertyName);
                 if (newArray !== oldArray && !isArrayShallowEqual(newArray, oldArray) && (!hasObservableCollectionValue || !isArrayShallowEqual(newArray, controllerObservableCollectionValue[propertyName])) && !_.has(controllerChanges.properties, propertyName)) {
                     var controllerObservableCollectionChanges = controllerChanges.observableCollections;
-                    var observableCollectionChanges = controllerObservableCollectionChanges[propertyName] = (controllerObservableCollectionChanges[propertyName] || { name: propertyName });
-                    var observableCollectionChangesActions = observableCollectionChanges.actions = (observableCollectionChanges.actions || []);
+                    var observableCollectionChanges = controllerObservableCollectionChanges[propertyName] = (controllerObservableCollectionChanges[propertyName] || { name: propertyName, actions: [] });
+                    var observableCollectionChangesActions = observableCollectionChanges.actions;
                     var compareValues = _.zip(oldArray, newArray);
                     _.forEach(compareValues, function (compareValue, index) {
                         var oldValue = compareValue[0];
@@ -138,7 +124,7 @@ var htmlUi;
                     delete controllerObservableCollectionValue[propertyName];
             });
         }
-        function removeArrayWatch(propertyName, $scope, $rootScope) {
+        function removeArrayWatch(propertyName, $scope) {
             var controllerArrayWatches = _arrayWatches[$scope.$id];
             if (controllerArrayWatches != null) {
                 var arrayWatch = controllerArrayWatches[propertyName];
@@ -193,16 +179,16 @@ var htmlUi;
                         _.forEach(changes.actions, function (change) {
                             switch (change.action) {
                                 case 1 /* Add */:
-                                    ObservableCollectionAddAction(array, change);
+                                    observableCollectionAddAction(array, change);
                                     break;
                                 case 2 /* Remove */:
-                                    ObservableCollectionRemoveAction(array, change);
+                                    observableCollectionRemoveAction(array, change);
                                     break;
                                 case 3 /* Replace */:
-                                    ObservableCollectionReplaceAction(array, change);
+                                    observableCollectionReplaceAction(array, change);
                                     break;
                                 case 4 /* Move */:
-                                    ObservableCollectionMoveAction(array, change);
+                                    observableCollectionMoveAction(array, change);
                                     break;
                             }
                         });
@@ -211,29 +197,29 @@ var htmlUi;
                 });
             });
         }
-        function ObservableCollectionAddAction(array, change) {
-            var insertIndex = change.NewStartingIndex;
-            var insertItems = change.NewItems;
+        function observableCollectionAddAction(array, change) {
+            var insertIndex = change.newStartingIndex;
+            var insertItems = change.newItems;
             _.forEach(insertItems, function (insertItem) {
                 array.splice(insertIndex, 0, insertItem);
                 insertIndex++;
             });
         }
-        function ObservableCollectionRemoveAction(array, change) {
-            var removeIndex = change.OldStartingIndex;
+        function observableCollectionRemoveAction(array, change) {
+            var removeIndex = change.oldStartingIndex;
             array.splice(removeIndex, 1);
         }
-        function ObservableCollectionReplaceAction(array, change) {
-            var replaceIndex = change.NewStartingIndex;
-            var replaceItems = change.NewItems;
+        function observableCollectionReplaceAction(array, change) {
+            var replaceIndex = change.newStartingIndex;
+            var replaceItems = change.newItems;
             _.forEach(replaceItems, function (replaceItem) {
                 array[replaceIndex] = replaceItem;
                 replaceIndex++;
             });
         }
-        function ObservableCollectionMoveAction(array, change) {
-            var fromIndex = change.OldStartingIndex;
-            var toIndex = change.NewStartingIndex;
+        function observableCollectionMoveAction(array, change) {
+            var fromIndex = change.oldStartingIndex;
+            var toIndex = change.newStartingIndex;
             if (fromIndex == toIndex)
                 return;
             var removedItems = array.splice(fromIndex, 1);
@@ -242,7 +228,6 @@ var htmlUi;
                 array.splice(toIndex, 0, removedItem);
             }
         }
-        // inject code before method call
         function inject(func, inject) {
             return function () {
                 inject.apply(this, arguments);
