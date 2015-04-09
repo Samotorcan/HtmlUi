@@ -24,6 +24,12 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         internal const string LogsDirectory = "Logs";
         #endregion
+        #region CacheDirectory
+        /// <summary>
+        /// The cache directory.
+        /// </summary>
+        internal const string CacheDirectory = "Cache";
+        #endregion
 
         #endregion
         #region Properties
@@ -75,6 +81,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         internal string LogsDirectoryPath { get; set; }
         #endregion
+        #region CacheDirectoryPath
+        /// <summary>
+        /// Gets or sets the cache directory path.
+        /// </summary>
+        /// <value>
+        /// The cache directory path.
+        /// </value>
+        internal string CacheDirectoryPath { get; set; }
+        #endregion
 
         #endregion
         #region Private
@@ -107,6 +122,9 @@ namespace Samotorcan.HtmlUi.Core
             LogsDirectoryPath = PathUtility.NormalizedWorkingDirectory + "/" + LogsDirectory;
             EnsureLogsDirectory();
             log4net.GlobalContext.Properties["pid"] = Process.GetCurrentProcess().Id;
+
+            CacheDirectoryPath = PathUtility.NormalizedWorkingDirectory + "/" + CacheDirectory;
+            EnsureCacheDirectory();
 
             ThreadId = Thread.CurrentThread.ManagedThreadId;
             Current = this;
@@ -180,6 +198,16 @@ namespace Samotorcan.HtmlUi.Core
         {
             if (!Directory.Exists(LogsDirectoryPath))
                 Directory.CreateDirectory(LogsDirectoryPath);
+        }
+        #endregion
+        #region EnsureCacheDirectory
+        /// <summary>
+        /// Ensures the cache directory.
+        /// </summary>
+        private void EnsureCacheDirectory()
+        {
+            if (!Directory.Exists(CacheDirectoryPath))
+                Directory.CreateDirectory(CacheDirectoryPath);
         }
         #endregion
         #region CurrentDomain_UnhandledException

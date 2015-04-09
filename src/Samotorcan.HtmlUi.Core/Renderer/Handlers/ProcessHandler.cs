@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
+using Samotorcan.HtmlUi.Core.Events;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
@@ -68,6 +69,15 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </value>
         private List<string> HtmlUiExtensions { get; set; }
         #endregion
+        #region LoadHandler
+        /// <summary>
+        /// Gets or sets the load handler.
+        /// </summary>
+        /// <value>
+        /// The load handler.
+        /// </value>
+        private LoadHandler LoadHandler { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -80,6 +90,9 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         {
             MessageRouter = new CefMessageRouterRendererSide(new CefMessageRouterConfig());
             V8NativeHandler = new V8NativeHandler();
+
+            LoadHandler = new LoadHandler();
+            LoadHandler.OnLoadEndEvent += OnLoadEnd;
 
             HtmlUiExtensions = GetHtmlUiExtensions();
         }
@@ -99,11 +112,6 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         {
             if (frame == null)
                 throw new ArgumentNullException("frame");
-
-            if (frame.IsMain && V8NativeHandler != null)
-                V8NativeHandler.Reset();
-
-            RegisterHtmlUiAsScriptIfNeeded(context);
 
             MessageRouter.OnContextCreated(browser, frame, context);
         }
@@ -186,7 +194,37 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             GeneralLog.Info("Render process thread created.");
         }
         #endregion
+        #region OnLoadEnd
+        /// <summary>
+        /// Called when load end.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="OnLoadEndEventArgs"/> instance containing the event data.</param>
+        protected void OnLoadEnd(object sender, OnLoadEndEventArgs e)
+        {
+            var frame = e.Frame;
+            var context = e.Frame.V8Context;
+            var browser = e.Browser;
 
+            if (frame.IsMain && V8NativeHandler != null)
+                V8NativeHandler.Reset();
+
+            RegisterAngularDeferredBootstrap(context);
+            RegisterHtmlUiAsScriptIfNeeded(context);
+            RegisterHtmlUiInit(context);
+        }
+        #endregion
+
+        #region GetLoadHandler
+        /// <summary>
+        /// Return the handler for browser load status events.
+        /// </summary>
+        /// <returns></returns>
+        protected override CefLoadHandler GetLoadHandler()
+        {
+            return LoadHandler;
+        }
+        #endregion
         #region OnUncaughtException
         /// <summary>
         /// Called for global uncaught exceptions in a frame. Execution of this
@@ -352,6 +390,38 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             }
 
             return htmlUiExtensions;
+        }
+        #endregion
+        #region RegisterAngularDeferredBootstrap
+        /// <summary>
+        /// Registers the angular deferred bootstrap.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        private void RegisterAngularDeferredBootstrap(CefV8Context context)
+        {
+            CefV8Value returnValue = null;
+            CefV8Exception exception = null;
+
+            var code = "window.name = 'NG_DEFER_BOOTSTRAP!'";
+
+            if (!context.TryEval(code, out returnValue, out exception))
+                GeneralLog.Error(string.Format("Register angular deferred bootstrap exception: {0}.", JsonConvert.SerializeObject(exception)));
+        }
+        #endregion
+        #region RegisterHtmlUiInit
+        /// <summary>
+        /// Registers the HTML UI initialize.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        private void RegisterHtmlUiInit(CefV8Context context)
+        {
+            CefV8Value returnValue = null;
+            CefV8Exception exception = null;
+
+            var code = "htmlUi.init()";
+
+            if (!context.TryEval(code, out returnValue, out exception))
+                GeneralLog.Error(string.Format("Register html ui init exception: {0}.", JsonConvert.SerializeObject(exception)));
         }
         #endregion
 

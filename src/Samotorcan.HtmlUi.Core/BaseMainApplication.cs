@@ -562,6 +562,7 @@ namespace Samotorcan.HtmlUi.Core
                 SingleProcess = false,
                 LogSeverity = CefLogSeverity.Warning,
                 LogFile = LogsDirectoryPath + "/cef.log",
+                CachePath = CacheDirectoryPath,
                 ResourcesDirPath = PathUtility.WorkingDirectory,
                 RemoteDebuggingPort = 20480,
                 NoSandbox = true,

@@ -2,52 +2,103 @@
 var htmlUi;
 (function (htmlUi) {
     var _controllerDataContainer = new htmlUi.ControllerDataContainer();
+    var _initialized = false;
     function init() {
-        var controllerNames = htmlUi.native.getControllerNames();
-        // register functions
-        htmlUi.native.registerFunction('syncControllerChanges', syncControllerChanges);
-        // create module
-        var app = angular.module('htmlUiApp', []);
-        app.run(['$rootScope', function ($rootScope) {
-            $rootScope['htmlUiControllerChanges'] = _controllerDataContainer.controllerChanges;
-            addHtmlUiControllerChangesWatch($rootScope);
-        }]);
-        // create controllers
-        _.forEach(controllerNames, function (controllerName) {
-            app.controller(controllerName, ['$scope', function ($scope) {
-                var controllerId = $scope.$id;
-                var controllerData = _controllerDataContainer.getControllerData(controllerId);
-                controllerData.name = controllerName;
-                controllerData.$scope = $scope;
-                // create controller
-                var controller = htmlUi.native.createController(controllerName, $scope.$id);
-                // properties
-                _.forEach(controller.properties, function (property) {
-                    var propertyName = property.name;
-                    $scope[propertyName] = property.value;
-                    // watch observable collection
-                    if (_.isArray(property.value))
-                        addCollectionWatch(propertyName, $scope);
-                    // watch property
-                    addPropertyWatch(propertyName, $scope);
-                });
-                // methods
-                _.forEach(controller.methods, function (method) {
-                    $scope[method.name] = function () {
-                        return htmlUi.native.callMethod($scope.$id, method.name, htmlUi.utility.argumentsToArray(arguments));
-                    };
-                });
-                // destroy controller
-                $scope.$on('$destroy', function () {
-                    htmlUi.native.destroyController($scope.$id);
-                });
-                // warm up native calls
-                htmlUi.native.callInternalMethodAsync($scope.$id, 'warmUp', ['warmUp']).then(function () {
-                });
+        domAndScriptsReady(function () {
+            if (_initialized)
+                return;
+            _initialized = true;
+            var controllerNames = htmlUi.native.getControllerNames();
+            // register functions
+            htmlUi.native.registerFunction('syncControllerChanges', syncControllerChanges);
+            // create module
+            var app = angular.module('htmlUiApp', []);
+            app.run(['$rootScope', function ($rootScope) {
+                $rootScope['htmlUiControllerChanges'] = _controllerDataContainer.controllerChanges;
+                addHtmlUiControllerChangesWatch($rootScope);
             }]);
+            // create controllers
+            _.forEach(controllerNames, function (controllerName) {
+                app.controller(controllerName, ['$scope', function ($scope) {
+                    var controllerId = $scope.$id;
+                    var controllerData = _controllerDataContainer.getControllerData(controllerId);
+                    controllerData.name = controllerName;
+                    controllerData.$scope = $scope;
+                    // create controller
+                    var controller = htmlUi.native.createController(controllerName, $scope.$id);
+                    // properties
+                    _.forEach(controller.properties, function (property) {
+                        var propertyName = property.name;
+                        $scope[propertyName] = property.value;
+                        // watch observable collection
+                        if (_.isArray(property.value))
+                            addCollectionWatch(propertyName, $scope);
+                        // watch property
+                        addPropertyWatch(propertyName, $scope);
+                    });
+                    // methods
+                    _.forEach(controller.methods, function (method) {
+                        $scope[method.name] = function () {
+                            return htmlUi.native.callMethod($scope.$id, method.name, htmlUi.utility.argumentsToArray(arguments));
+                        };
+                    });
+                    // destroy controller
+                    $scope.$on('$destroy', function () {
+                        htmlUi.native.destroyController($scope.$id);
+                    });
+                    // warm up native calls
+                    htmlUi.native.callInternalMethodAsync($scope.$id, 'warmUp', ['warmUp']).then(function () {
+                    });
+                }]);
+            });
+            // angular resume bootstrap
+            if (angular['resumeBootstrap'] == null) {
+                angular['resumeDeferredBootstrap'] = function () {
+                    angular['resumeBootstrap']();
+                };
+            }
+            else {
+                angular['resumeBootstrap']();
+            }
         });
     }
     htmlUi.init = init;
+    function domAndScriptsReady(func) {
+        domReady(function () {
+            ensureScripts(func);
+        });
+    }
+    function domReady(func) {
+        if (document.readyState === 'complete')
+            func();
+        else
+            document.addEventListener("DOMContentLoaded", func);
+    }
+    function ensureScripts(onload) {
+        var onloadFunctions = {};
+        var loadScriptInternal = function (scriptName) {
+            var onloadInternal = function () {
+                delete onloadFunctions[scriptName];
+                if (Object.keys(onloadFunctions).length == 0 && onload != null)
+                    onload();
+            };
+            onloadFunctions[scriptName] = onloadInternal;
+            loadScript(scriptName, onloadInternal);
+        };
+        if (window['angular'] == null)
+            loadScriptInternal('/Scripts/angular.js');
+        if (window['_'] == null)
+            loadScriptInternal('/Scripts/lodash.js');
+        if (Object.keys(onloadFunctions).length == 0 && onload != null)
+            onload();
+    }
+    function loadScript(scriptName, onload) {
+        var scriptElement = document.createElement('script');
+        document.body.appendChild(scriptElement);
+        if (onload != null)
+            scriptElement.onload = onload;
+        scriptElement.src = scriptName;
+    }
     function addHtmlUiControllerChangesWatch($rootScope) {
         $rootScope.$watch('htmlUiControllerChanges', function () {
             if (!_controllerDataContainer.hasControllerChanges)
@@ -87,16 +138,16 @@ var htmlUi;
                     if (index < oldArray.length && index < newArray.length) {
                         // replace
                         if (oldValue !== newValue) {
-                            controllerData.change.addObservableCollectionChange(propertyName, 3 /* Replace */, newValue, index, null);
+                            controllerData.change.addObservableCollectionChange(propertyName, htmlUi.ObservableCollectionChangeAction.Replace, newValue, index, null);
                         }
                     }
                     else if (index < oldArray.length && index >= newArray.length) {
                         // remove
-                        controllerData.change.addObservableCollectionChange(propertyName, 2 /* Remove */, null, null, index);
+                        controllerData.change.addObservableCollectionChange(propertyName, htmlUi.ObservableCollectionChangeAction.Remove, null, null, index);
                     }
                     else {
                         // add
-                        controllerData.change.addObservableCollectionChange(propertyName, 1 /* Add */, newValue, index, null);
+                        controllerData.change.addObservableCollectionChange(propertyName, htmlUi.ObservableCollectionChangeAction.Add, newValue, index, null);
                     }
                 });
             }
@@ -129,16 +180,16 @@ var htmlUi;
                     var collection = controller[propertyName];
                     _.forEach(changes.actions, function (change) {
                         switch (change.action) {
-                            case 1 /* Add */:
+                            case htmlUi.ObservableCollectionChangeAction.Add:
                                 observableCollectionAddAction(collection, change);
                                 break;
-                            case 2 /* Remove */:
+                            case htmlUi.ObservableCollectionChangeAction.Remove:
                                 observableCollectionRemoveAction(collection, change);
                                 break;
-                            case 3 /* Replace */:
+                            case htmlUi.ObservableCollectionChangeAction.Replace:
                                 observableCollectionReplaceAction(collection, change);
                                 break;
-                            case 4 /* Move */:
+                            case htmlUi.ObservableCollectionChangeAction.Move:
                                 observableCollectionMoveAction(collection, change);
                                 break;
                         }

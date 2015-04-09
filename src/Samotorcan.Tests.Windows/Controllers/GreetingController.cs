@@ -42,6 +42,8 @@ namespace Samotorcan.Tests.Windows.Controllers
         public GreetingController(int id)
             : base(id)
         {
+            FirstNumber = 123;
+
             SomeList = new ObservableCollection<string>(new List<string> { "123", "234", "345" });
             SomeList.Add("test");
             SomeList.Add("test2");

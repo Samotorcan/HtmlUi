@@ -2,63 +2,128 @@
 
 module htmlUi {
     var _controllerDataContainer = new ControllerDataContainer();
+    var _initialized = false;
 
     export function init() {
-        var controllerNames = htmlUi.native.getControllerNames();
+        domAndScriptsReady(() => {
+            if (_initialized)
+                return;
 
-        // register functions
-        htmlUi.native.registerFunction('syncControllerChanges', syncControllerChanges);
+            _initialized = true;
 
-        // create module
-        var app = angular.module('htmlUiApp', []);
+            var controllerNames = htmlUi.native.getControllerNames();
 
-        app.run(['$rootScope', ($rootScope: ng.IRootScopeService) => {
-            $rootScope['htmlUiControllerChanges'] = _controllerDataContainer.controllerChanges;
+            // register functions
+            htmlUi.native.registerFunction('syncControllerChanges', syncControllerChanges);
 
-            addHtmlUiControllerChangesWatch($rootScope);
-        }]);
+            // create module
+            var app = angular.module('htmlUiApp', []);
 
-        // create controllers
-        _.forEach(controllerNames, (controllerName) => {
-            app.controller(controllerName, ['$scope', ($scope: ng.IScope) => {
-                var controllerId = $scope.$id;
-                var controllerData = _controllerDataContainer.getControllerData(controllerId);
+            app.run(['$rootScope', ($rootScope: ng.IRootScopeService) => {
+                $rootScope['htmlUiControllerChanges'] = _controllerDataContainer.controllerChanges;
 
-                controllerData.name = controllerName;
-                controllerData.$scope = $scope;
-
-                // create controller
-                var controller = htmlUi.native.createController(controllerName, $scope.$id);
-
-                // properties
-                _.forEach(controller.properties, (property) => {
-                    var propertyName = property.name;
-                    $scope[propertyName] = property.value;
-
-                    // watch observable collection
-                    if (_.isArray(property.value))
-                        addCollectionWatch(propertyName, $scope);
-
-                    // watch property
-                    addPropertyWatch(propertyName, $scope);
-                });
-
-                // methods
-                _.forEach(controller.methods, (method) => {
-                    $scope[method.name] = () => {
-                        return htmlUi.native.callMethod($scope.$id, method.name, utility.argumentsToArray(arguments));
-                    };
-                });
-
-                // destroy controller
-                $scope.$on('$destroy', () => {
-                    htmlUi.native.destroyController($scope.$id);
-                });
-
-                // warm up native calls
-                htmlUi.native.callInternalMethodAsync($scope.$id, 'warmUp', ['warmUp']).then(() => { });
+                addHtmlUiControllerChangesWatch($rootScope);
             }]);
+
+            // create controllers
+            _.forEach(controllerNames,(controllerName) => {
+                app.controller(controllerName, ['$scope', ($scope: ng.IScope) => {
+                    var controllerId = $scope.$id;
+                    var controllerData = _controllerDataContainer.getControllerData(controllerId);
+
+                    controllerData.name = controllerName;
+                    controllerData.$scope = $scope;
+
+                    // create controller
+                    var controller = htmlUi.native.createController(controllerName, $scope.$id);
+
+                    // properties
+                    _.forEach(controller.properties,(property) => {
+                        var propertyName = property.name;
+                        $scope[propertyName] = property.value;
+
+                        // watch observable collection
+                        if (_.isArray(property.value))
+                            addCollectionWatch(propertyName, $scope);
+
+                        // watch property
+                        addPropertyWatch(propertyName, $scope);
+                    });
+
+                    // methods
+                    _.forEach(controller.methods,(method) => {
+                        $scope[method.name] = () => {
+                            return htmlUi.native.callMethod($scope.$id, method.name, utility.argumentsToArray(arguments));
+                        };
+                    });
+
+                    // destroy controller
+                    $scope.$on('$destroy',() => {
+                        htmlUi.native.destroyController($scope.$id);
+                    });
+
+                    // warm up native calls
+                    htmlUi.native.callInternalMethodAsync($scope.$id, 'warmUp', ['warmUp']).then(() => { });
+                }]);
+            });
+
+            // angular resume bootstrap
+            if (angular['resumeBootstrap'] == null) {
+                angular['resumeDeferredBootstrap'] = function () {
+                    angular['resumeBootstrap']();
+                };
+            } else {
+                angular['resumeBootstrap']();
+            }
         });
+    }
+
+    function domAndScriptsReady(func: () => void): void {
+        domReady(() => {
+            ensureScripts(func);
+        });
+    }
+
+    function domReady(func: () => void): void {
+        if (document.readyState === 'complete')
+            func();
+        else
+            document.addEventListener("DOMContentLoaded", func);
+    }
+
+    function ensureScripts(onload?: () => void): void {
+        var onloadFunctions: { [scriptName: string]: Function } = {};
+
+        var loadScriptInternal = (scriptName: string): void => {
+            var onloadInternal = () => {
+                delete onloadFunctions[scriptName];
+
+                if (Object.keys(onloadFunctions).length == 0 && onload != null)
+                    onload();
+            };
+
+            onloadFunctions[scriptName] = onloadInternal;
+            loadScript(scriptName, onloadInternal);
+        };
+
+        if (window['angular'] == null)
+            loadScriptInternal('/Scripts/angular.js');
+
+        if (window['_'] == null)
+            loadScriptInternal('/Scripts/lodash.js');
+
+        if (Object.keys(onloadFunctions).length == 0 && onload != null)
+            onload();
+    }
+
+    function loadScript(scriptName: string, onload?: (ev: Event) => any) {
+        var scriptElement = document.createElement('script');
+        document.body.appendChild(scriptElement);
+
+        if (onload != null)
+            scriptElement.onload = onload;
+
+        scriptElement.src = scriptName;
     }
 
     function addHtmlUiControllerChangesWatch($rootScope: ng.IRootScopeService): void {

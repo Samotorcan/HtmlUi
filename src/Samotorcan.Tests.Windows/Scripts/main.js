@@ -1,3 +1,5 @@
-﻿//htmlUi.app.controller('GreetingController', ['$scope', function ($scope) {
+﻿//var app = angular.module('htmlUiApp', []);
+
+//app.controller('GreetingController', ['$scope', function ($scope) {
 //    $scope.greeting = 'Hola!';
 //}]);

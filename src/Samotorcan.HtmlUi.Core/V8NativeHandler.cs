@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Samotorcan.HtmlUi.Core.Diagnostics;
 using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
@@ -182,6 +183,8 @@ namespace Samotorcan.HtmlUi.Core
                     Functions.Add(functionName, new JavascriptFunction(function, CefV8Context.GetCurrentContext()));
                 else
                     GeneralLog.Error(string.Format("Register function - function {0} is already registered.", functionName));
+
+                return true;
             }
 
             return false;
