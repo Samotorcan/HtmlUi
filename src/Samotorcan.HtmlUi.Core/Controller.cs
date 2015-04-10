@@ -155,6 +155,20 @@ namespace Samotorcan.HtmlUi.Core
 
         #endregion
         #region Methods
+        #region Properties
+
+        #region ClearChanges
+        /// <summary>
+        /// Clears the changes.
+        /// </summary>
+        public void ClearChanges()
+        {
+            PropertyChanges.Clear();
+            ObservableCollectionChanges.Clear();
+        }
+        #endregion
+
+        #endregion
         #region Internal
 
         #region GetProperties

@@ -4,30 +4,29 @@ module htmlUi {
     var _controllerDataContainer = new ControllerDataContainer();
     var _initialized = false;
 
-    export function init() {
+    export function init(): void {
         domAndScriptsReady(() => {
             if (_initialized)
                 return;
 
             _initialized = true;
 
-            var controllerNames = htmlUi.native.getControllerNames();
-
             // register functions
             htmlUi.native.registerFunction('syncControllerChanges', syncControllerChanges);
 
-            // create module
-            var app = angular.module('htmlUiApp', []);
+            // module
+            var htmlUiModule = angular.module('htmlUi', []);
 
-            app.run(['$rootScope', ($rootScope: ng.IRootScopeService) => {
+            // run
+            htmlUiModule.run(['$rootScope', ($rootScope: ng.IRootScopeService) => {
                 $rootScope['htmlUiControllerChanges'] = _controllerDataContainer.controllerChanges;
 
                 addHtmlUiControllerChangesWatch($rootScope);
             }]);
 
-            // create controllers
-            _.forEach(controllerNames,(controllerName) => {
-                app.controller(controllerName, ['$scope', ($scope: ng.IScope) => {
+            // controller
+            htmlUiModule.factory('htmlUi.controller', [() => {
+                var initialize = (controllerName: string, $scope: ng.IScope): void => {
                     var controllerId = $scope.$id;
                     var controllerData = _controllerDataContainer.getControllerData(controllerId);
 
@@ -64,16 +63,20 @@ module htmlUi {
 
                     // warm up native calls
                     htmlUi.native.callInternalMethodAsync($scope.$id, 'warmUp', ['warmUp']).then(() => { });
-                }]);
-            });
+                };
 
-            // angular resume bootstrap
+                return {
+                    initialize: initialize
+                };
+            }]);
+
+            // inject htmlUi module
             if (angular['resumeBootstrap'] == null) {
                 angular['resumeDeferredBootstrap'] = function () {
-                    angular['resumeBootstrap']();
+                    angular['resumeBootstrap']([htmlUiModule.name]);
                 };
             } else {
-                angular['resumeBootstrap']();
+                angular['resumeBootstrap']([htmlUiModule.name]);
             }
         });
     }
@@ -139,11 +142,11 @@ module htmlUi {
         }, true);
     }
 
-    function addPropertyWatch(propertyName: string, $scope: ng.IScope) {
+    function addPropertyWatch(propertyName: string, $scope: ng.IScope): void {
         var controllerId = $scope.$id;
         var controllerData = _controllerDataContainer.getControllerData(controllerId);
 
-        $scope.$watch(propertyName, (newValue, oldValue) => {
+        $scope.$watch(propertyName,(newValue, oldValue) => {
             if (newValue !== oldValue && !controllerData.hasPropertyValue(propertyName, newValue)) {
                 controllerData.change.setProperty(propertyName, newValue);
 
@@ -160,28 +163,28 @@ module htmlUi {
         });
     }
 
-    function addCollectionWatch(propertyName: string, $scope: ng.IScope) {
+    function addCollectionWatch(propertyName: string, $scope: ng.IScope): void {
         var controllerId = $scope.$id;
         var controllerData = _controllerDataContainer.getControllerData(controllerId);
 
-        controllerData.addWatch(propertyName, $scope.$watchCollection(propertyName,(newArray, oldArray) => {
-            if (newArray !== oldArray && !utility.isArrayShallowEqual(newArray, oldArray) &&
-                !controllerData.hasObservableCollectionValue(propertyName, newArray) &&
+        controllerData.addWatch(propertyName, $scope.$watchCollection(propertyName,(newCollection: any[], oldCollection: any[]) => {
+            if (newCollection !== oldCollection && !utility.isArrayShallowEqual(newCollection, oldCollection) &&
+                !controllerData.hasObservableCollectionValue(propertyName, newCollection) &&
                 !controllerData.change.hasProperty(propertyName)) {
 
-                var compareValues = _.zip(oldArray, newArray);
+                var compareValues = _.zip(oldCollection, newCollection);
 
-                _.forEach(compareValues,(compareValue, index) => {
+                _.forEach(compareValues, (compareValue, index) => {
                     var oldValue = compareValue[0];
                     var newValue = compareValue[1];
 
-                    if (index < oldArray.length && index < newArray.length) {
+                    if (index < oldCollection.length && index < newCollection.length) {
                         // replace
                         if (oldValue !== newValue) {
                             controllerData.change.addObservableCollectionChange(propertyName,
                                 ObservableCollectionChangeAction.Replace, newValue, index, null);
                         }
-                    } else if (index < oldArray.length && index >= newArray.length) {
+                    } else if (index < oldCollection.length && index >= newCollection.length) {
                         // remove
                         controllerData.change.addObservableCollectionChange(propertyName,
                             ObservableCollectionChangeAction.Remove, null, null, index);
@@ -197,14 +200,14 @@ module htmlUi {
         }));
     }
 
-    function removeCollectionWatch(propertyName, $scope) {
+    function removeCollectionWatch(propertyName: string, $scope: ng.IScope): void {
         var controllerId = $scope.$id;
         var controllerData = _controllerDataContainer.getControllerData(controllerId);
 
         controllerData.removeWatch(propertyName);
     }
 
-    function syncControllerChanges(json) {
+    function syncControllerChanges(json: string): void {
         var controllerChanges = <ControllerChange[]>JSON.parse(json);
 
         _.forEach(controllerChanges, (controllerChange) => {
@@ -253,45 +256,45 @@ module htmlUi {
         });
     }
 
-    function observableCollectionAddAction(array: any[], change: ObservableCollectionChange) {
+    function observableCollectionAddAction(collection: any[], change: ObservableCollectionChange): void {
         var insertIndex = change.newStartingIndex;
         var insertItems = change.newItems;
 
         _.forEach(insertItems, (insertItem) => {
-            array.splice(insertIndex, 0, insertItem);
+            collection.splice(insertIndex, 0, insertItem);
             insertIndex++;
         });
     }
 
-    function observableCollectionRemoveAction(array: any[], change: ObservableCollectionChange) {
+    function observableCollectionRemoveAction(collection: any[], change: ObservableCollectionChange): void {
         var removeIndex = change.oldStartingIndex;
 
-        array.splice(removeIndex, 1);
+        collection.splice(removeIndex, 1);
     }
 
-    function observableCollectionReplaceAction(array: any[], change: ObservableCollectionChange) {
+    function observableCollectionReplaceAction(collection: any[], change: ObservableCollectionChange): void {
         var replaceIndex = change.newStartingIndex;
         var replaceItems = change.newItems;
 
         _.forEach(replaceItems, (replaceItem) => {
-            array[replaceIndex] = replaceItem;
+            collection[replaceIndex] = replaceItem;
             replaceIndex++;
         });
     }
 
-    function observableCollectionMoveAction(array: any[], change: ObservableCollectionChange) {
+    function observableCollectionMoveAction(collection: any[], change: ObservableCollectionChange): void {
         var fromIndex = change.oldStartingIndex;
         var toIndex = change.newStartingIndex;
 
         if (fromIndex == toIndex)
             return;
 
-        var removedItems = array.splice(fromIndex, 1);
+        var removedItems = collection.splice(fromIndex, 1);
 
         if (removedItems.length == 1) {
             var removedItem = removedItems[0];
 
-            array.splice(toIndex, 0, removedItem);
+            collection.splice(toIndex, 0, removedItem);
         }
     }
 } 

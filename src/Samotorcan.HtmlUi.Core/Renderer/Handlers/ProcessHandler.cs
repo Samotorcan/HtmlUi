@@ -51,6 +51,24 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </value>
         private string NativeRequestUrl { get; set; }
         #endregion
+        #region RequestHostname
+        /// <summary>
+        /// Gets or sets the request hostname.
+        /// </summary>
+        /// <value>
+        /// The request hostname.
+        /// </value>
+        public string RequestHostname { get; set; }
+        #endregion
+        #region NativeRequestPort
+        /// <summary>
+        /// Gets or sets the native request port.
+        /// </summary>
+        /// <value>
+        /// The native request port.
+        /// </value>
+        public int NativeRequestPort { get; set; }
+        #endregion
         #region V8NativeHandler
         /// <summary>
         /// Gets or sets the v8 native handler.
@@ -92,7 +110,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             V8NativeHandler = new V8NativeHandler();
 
             LoadHandler = new LoadHandler();
-            LoadHandler.OnLoadEndEvent += OnLoadEnd;
+            LoadHandler.OnLoadStartEvent += OnLoadStart;
 
             HtmlUiExtensions = GetHtmlUiExtensions();
         }
@@ -190,28 +208,33 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
                 throw new ArgumentNullException("extraInfo");
 
             NativeRequestUrl = extraInfo.GetString(0);
+            RequestHostname = extraInfo.GetString(1);
+            NativeRequestPort = extraInfo.GetInt(2);
 
             GeneralLog.Info("Render process thread created.");
         }
         #endregion
-        #region OnLoadEnd
+        #region OnLoadStart
         /// <summary>
-        /// Called when load end.
+        /// Called when load start.
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="e">The <see cref="OnLoadEndEventArgs"/> instance containing the event data.</param>
-        protected void OnLoadEnd(object sender, OnLoadEndEventArgs e)
+        /// <param name="e">The <see cref="OnLoadStartEventArgs"/> instance containing the event data.</param>
+        protected void OnLoadStart(object sender, OnLoadStartEventArgs e)
         {
             var frame = e.Frame;
             var context = e.Frame.V8Context;
             var browser = e.Browser;
 
-            if (frame.IsMain && V8NativeHandler != null)
-                V8NativeHandler.Reset();
+            if (frame.IsMain && IsLocalUrl(frame.Url))
+            {
+                if (V8NativeHandler != null)
+                    V8NativeHandler.Reset();
 
-            RegisterAngularDeferredBootstrap(context);
-            RegisterHtmlUiAsScriptIfNeeded(context);
-            RegisterHtmlUiInit(context);
+                RegisterAngularDeferredBootstrap(context);
+                RegisterHtmlUiAsScriptIfNeeded(context);
+                RegisterHtmlUiInit(context);
+            }
         }
         #endregion
 
@@ -422,6 +445,21 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 
             if (!context.TryEval(code, out returnValue, out exception))
                 GeneralLog.Error(string.Format("Register html ui init exception: {0}.", JsonConvert.SerializeObject(exception)));
+        }
+        #endregion
+        #region IsLocalUrl
+        /// <summary>
+        /// Determines whether the specified URL is local.
+        /// </summary>
+        /// <param name="url">The URL.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">url</exception>
+        internal bool IsLocalUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentNullException("url");
+
+            return UrlUtility.IsLocalUrl(RequestHostname, NativeRequestPort, url);
         }
         #endregion
 

@@ -62,6 +62,8 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 throw new ArgumentNullException("extraInfo");
 
             extraInfo.SetString(0, BaseMainApplication.Current.NativeRequestUrl);
+            extraInfo.SetString(1, BaseMainApplication.Current.RequestHostname);
+            extraInfo.SetInt(2, BaseMainApplication.Current.NativeRequestPort);
         }
         #endregion
 

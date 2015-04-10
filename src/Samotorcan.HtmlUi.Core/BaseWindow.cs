@@ -195,6 +195,8 @@ namespace Samotorcan.HtmlUi.Core
 
             // create
             var controller = controllerProvider.CreateController(name, id);
+            controller.ClearChanges();
+
             Controllers.Add(id, controller);
 
             return controller;
@@ -243,7 +245,7 @@ namespace Samotorcan.HtmlUi.Core
         {
             BaseMainApplication.Current.EnsureMainThread();
 
-            GeneralLog.Debug(string.Format("Sync controller changes: {0}", JsonConvert.SerializeObject(controllerChanges)));
+            GeneralLog.Debug(string.Format("Sync controller changes to server: {0}", JsonConvert.SerializeObject(controllerChanges)));
 
             foreach (var controllerChange in controllerChanges)
             {
@@ -270,12 +272,14 @@ namespace Samotorcan.HtmlUi.Core
 
             application.EnsureMainThread();
 
-            GeneralLog.Debug("Sync controller changes to client.");
-
             var controllerChanges = GetControllerChanges();
 
             if (controllerChanges.Any())
+            {
+                GeneralLog.Debug("Sync controller changes to client.");
+
                 CallFunction("syncControllerChanges", controllerChanges);
+            }
         }
         #endregion
         #region CallMethod

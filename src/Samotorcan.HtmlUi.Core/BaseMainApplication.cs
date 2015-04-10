@@ -437,10 +437,7 @@ namespace Samotorcan.HtmlUi.Core
             if (string.IsNullOrWhiteSpace(url))
                 throw new ArgumentNullException("url");
 
-            return Regex.IsMatch(url, string.Format("^(http://)?{0}((:80)?|:{1})(/.*)?$",
-                    Regex.Escape(RequestHostname),
-                    NativeRequestPort),
-                RegexOptions.IgnoreCase);
+            return UrlUtility.IsLocalUrl(RequestHostname, NativeRequestPort, url);
         }
         #endregion
         #region IsNativeRequestUrl
@@ -455,10 +452,7 @@ namespace Samotorcan.HtmlUi.Core
             if (string.IsNullOrWhiteSpace(url))
                 throw new ArgumentNullException("url");
 
-            return Regex.IsMatch(url, string.Format("^(http://)?{0}:{1}(/.*)?$",
-                    Regex.Escape(RequestHostname),
-                    NativeRequestPort),
-                RegexOptions.IgnoreCase);
+            return UrlUtility.IsNativeRequestUrl(RequestHostname, NativeRequestPort, url);
         }
         #endregion
         #region GetNativeRequestPath

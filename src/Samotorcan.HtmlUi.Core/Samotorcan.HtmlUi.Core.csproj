@@ -90,6 +90,7 @@
     <Compile Include="ControllerPropertyBase.cs" />
     <Compile Include="ControllerTypeInfo.cs" />
     <Compile Include="Diagnostics\Stopwatch.cs" />
+    <Compile Include="Events\OnLoadStartEventArgs.cs" />
     <Compile Include="Events\OnLoadEndEventArgs.cs" />
     <Compile Include="Exceptions\SyncMaxDepthException.cs" />
     <Compile Include="Exceptions\FunctionNotFoundException.cs" />
@@ -125,6 +126,7 @@
     <Compile Include="Undefined.cs" />
     <Compile Include="Utilities\ExceptionUtility.cs" />
     <Compile Include="Utilities\ExpressionUtility.cs" />
+    <Compile Include="Utilities\UrlUtility.cs" />
     <Compile Include="V8NativeBrowserHandler.cs" />
     <Compile Include="V8NativeHandler.cs" />
     <Compile Include="V8ActionHandler.cs" />
