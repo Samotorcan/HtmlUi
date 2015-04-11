@@ -1,5 +1,11 @@
 ﻿module htmlUi {
-    export class ControllerChange {
+    export interface IControllerChange {
+        id: number;
+        properties: { [name: string]: Object };
+        observableCollections: { [name: string]: ObservableCollectionChanges };
+    }
+
+    export class ControllerChange implements IControllerChange {
         id: number;
         properties: { [name: string]: Object };
         observableCollections: { [name: string]: ObservableCollectionChanges };
@@ -26,7 +32,7 @@
             return observableCollections;
         }
 
-        setProperty( propertyName: string, value: any): void {
+        setProperty(propertyName: string, value: any): void {
             this.properties[propertyName] = value;
         }
 
@@ -103,7 +109,7 @@
     }
 
     export class ControllerDataContainer {
-        data: { [id: number]: ControllerData };
+        data: { [controllerId: number]: ControllerData };
         controllerChanges: ControllerChange[];
 
         get hasControllerChanges(): boolean {
@@ -115,15 +121,23 @@
             this.controllerChanges = [];
         }
 
-        getControllerData(controllerId: number): ControllerData {
-            var controllerData = this.data[controllerId];
+        addControllerData(controllerId: number): ControllerData {
+            var controllerData: ControllerData = null;
 
-            if (controllerData == null) {
-                this.data[controllerId] = controllerData = new ControllerData(controllerId);
-                this.controllerChanges.push(controllerData.change);
-            }
+            this.data[controllerId] = controllerData = new ControllerData(controllerId);
+            this.controllerChanges.push(controllerData.change);
 
             return controllerData;
+        }
+
+        getControllerData(controllerId: number): ControllerData {
+            return this.data[controllerId];
+        }
+
+        getControllerDataByScopeId(scopeId: number): ControllerData {
+            return _.find(<_.Dictionary<ControllerData>>this.data, (controllerData) => {
+                return controllerData.scopeId == scopeId;
+            });
         }
 
         clearControllerChanges(): void {
@@ -134,7 +148,8 @@
     }
 
     export class ControllerData {
-        id: number;
+        scopeId: number;
+        controllerId: number;
         name: string;
         $scope: ng.IScope;
         propertyValues: { [name: string]: Object };
@@ -143,7 +158,7 @@
         change: ControllerChange;
 
         constructor(controllerId: number) {
-            this.id = controllerId;
+            this.controllerId = controllerId;
             this.propertyValues = {};
             this.observableCollectionValues = {};
             this.watches = {};
@@ -226,9 +241,13 @@
     }
 
     export interface IControllerDescription {
+        id: number;
         name: string;
-        properties: IControllerPropertyDescription[];
         methods: IControllerMethodDescription[];
+    }
+
+    export interface IObservableControllerDescription extends IControllerDescription {
+        properties: IControllerPropertyDescription[];
     }
 
     export interface IControllerPropertyDescription extends IControllerPropertyBase {

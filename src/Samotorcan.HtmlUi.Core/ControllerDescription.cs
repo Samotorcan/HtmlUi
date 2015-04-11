@@ -14,6 +14,15 @@ namespace Samotorcan.HtmlUi.Core
         #region Properties
         #region Public
 
+        #region Id
+        /// <summary>
+        /// Gets or sets the identifier.
+        /// </summary>
+        /// <value>
+        /// The identifier.
+        /// </value>
+        public int Id { get; set; }
+        #endregion
         #region Name
         /// <summary>
         /// Gets or sets the name.
@@ -22,15 +31,6 @@ namespace Samotorcan.HtmlUi.Core
         /// The name.
         /// </value>
         public string Name { get; set; }
-        #endregion
-        #region Properties
-        /// <summary>
-        /// Gets or sets the properties.
-        /// </summary>
-        /// <value>
-        /// The properties.
-        /// </value>
-        public List<ControllerPropertyDescription> Properties { get; set; }
         #endregion
         #region Methods
         /// <summary>
@@ -51,7 +51,6 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         public ControllerDescription()
         {
-            Properties = new List<ControllerPropertyDescription>();
             Methods = new List<ControllerMethodDescription>();
         }
 

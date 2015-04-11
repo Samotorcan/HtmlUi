@@ -14,15 +14,6 @@ namespace Samotorcan.HtmlUi.Core
         #region Properties
         #region Public
 
-        #region Properties
-        /// <summary>
-        /// Gets or sets the properties.
-        /// </summary>
-        /// <value>
-        /// The properties.
-        /// </value>
-        public Dictionary<string, ControllerProperty> Properties { get; set; }
-        #endregion
         #region Methods
         /// <summary>
         /// Gets or sets the methods.
@@ -51,7 +42,6 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         public ControllerTypeInfo()
         {
-            Properties = new Dictionary<string, ControllerProperty>();
             Methods = new Dictionary<string, ControllerMethod>();
             InternalMethods = new Dictionary<string, ControllerMethod>();
         }

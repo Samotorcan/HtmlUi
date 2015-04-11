@@ -17,12 +17,20 @@ module htmlUi.native {
         return callNative('getControllerNames');
     }
 
-    export function createController(name: string, id: number): IControllerDescription {
-        return <IControllerDescription>nativeSynchronous('createController', { name: name, id: id });
+    export function createController(name: string): IControllerDescription {
+        return <IControllerDescription>nativeSynchronous('createController', { name: name });
     }
 
-    export function createControllerAsync(name: string, id: number): angular.IPromise<IControllerDescription> {
-        return callNative('createController', { name: name, id: id });
+    export function createControllerAsync(name: string): angular.IPromise<IControllerDescription> {
+        return callNative('createController', { name: name });
+    }
+
+    export function createObservableController(name: string): IObservableControllerDescription {
+        return <IObservableControllerDescription>nativeSynchronous('createObservableController', { name: name });
+    }
+
+    export function createObservableControllerAsync(name: string): angular.IPromise<IObservableControllerDescription> {
+        return callNative('createObservableController', { name: name });
     }
 
     export function destroyController(id: number): void {

@@ -26,18 +26,19 @@ module htmlUi {
 
             // controller
             htmlUiModule.factory('htmlUi.controller', [() => {
-                var initialize = (controllerName: string, $scope: ng.IScope): void => {
-                    var controllerId = $scope.$id;
-                    var controllerData = _controllerDataContainer.getControllerData(controllerId);
-
-                    controllerData.name = controllerName;
-                    controllerData.$scope = $scope;
+                var createObservableController = (controllerName: string, $scope: ng.IScope): ng.IScope => {
+                    var scopeId = $scope.$id;
 
                     // create controller
-                    var controller = htmlUi.native.createController(controllerName, $scope.$id);
+                    var observableController = htmlUi.native.createObservableController(controllerName);
+
+                    var controllerData = _controllerDataContainer.addControllerData(observableController.id);
+                    controllerData.name = controllerName;
+                    controllerData.$scope = $scope;
+                    controllerData.scopeId = $scope.$id;
 
                     // properties
-                    _.forEach(controller.properties,(property) => {
+                    _.forEach(observableController.properties,(property) => {
                         var propertyName = property.name;
                         $scope[propertyName] = property.value;
 
@@ -50,7 +51,7 @@ module htmlUi {
                     });
 
                     // methods
-                    _.forEach(controller.methods,(method) => {
+                    _.forEach(observableController.methods,(method) => {
                         $scope[method.name] = () => {
                             return htmlUi.native.callMethod($scope.$id, method.name, utility.argumentsToArray(arguments));
                         };
@@ -63,10 +64,12 @@ module htmlUi {
 
                     // warm up native calls
                     htmlUi.native.callInternalMethodAsync($scope.$id, 'warmUp', ['warmUp']).then(() => { });
+
+                    return $scope;
                 };
 
                 return {
-                    initialize: initialize
+                    createObservableController: createObservableController
                 };
             }]);
 
@@ -143,8 +146,8 @@ module htmlUi {
     }
 
     function addPropertyWatch(propertyName: string, $scope: ng.IScope): void {
-        var controllerId = $scope.$id;
-        var controllerData = _controllerDataContainer.getControllerData(controllerId);
+        var scopeId = $scope.$id;
+        var controllerData = _controllerDataContainer.getControllerDataByScopeId(scopeId);
 
         $scope.$watch(propertyName,(newValue, oldValue) => {
             if (newValue !== oldValue && !controllerData.hasPropertyValue(propertyName, newValue)) {
@@ -164,8 +167,8 @@ module htmlUi {
     }
 
     function addCollectionWatch(propertyName: string, $scope: ng.IScope): void {
-        var controllerId = $scope.$id;
-        var controllerData = _controllerDataContainer.getControllerData(controllerId);
+        var scopeId = $scope.$id;
+        var controllerData = _controllerDataContainer.getControllerDataByScopeId(scopeId);
 
         controllerData.addWatch(propertyName, $scope.$watchCollection(propertyName,(newCollection: any[], oldCollection: any[]) => {
             if (newCollection !== oldCollection && !utility.isArrayShallowEqual(newCollection, oldCollection) &&
@@ -201,8 +204,8 @@ module htmlUi {
     }
 
     function removeCollectionWatch(propertyName: string, $scope: ng.IScope): void {
-        var controllerId = $scope.$id;
-        var controllerData = _controllerDataContainer.getControllerData(controllerId);
+        var scopeId = $scope.$id;
+        var controllerData = _controllerDataContainer.getControllerDataByScopeId(scopeId);
 
         controllerData.removeWatch(propertyName);
     }

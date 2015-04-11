@@ -111,6 +111,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         internal Dictionary<int, Controller> Controllers { get; set; }
         #endregion
+        #region ObservableController
+        /// <summary>
+        /// Gets or sets the observable controllers.
+        /// </summary>
+        /// <value>
+        /// The observable controllers.
+        /// </value>
+        internal Dictionary<int, ObservableController> ObservableControllers { get; set; }
+        #endregion
 
         #endregion
         #region Protected
@@ -136,6 +145,7 @@ namespace Samotorcan.HtmlUi.Core
         {
             View = "/Views/Index.html";
             Controllers = new Dictionary<int, Controller>();
+            ObservableControllers = new Dictionary<int, ObservableController>();
         }
 
         #endregion
@@ -184,22 +194,37 @@ namespace Samotorcan.HtmlUi.Core
 
         #region CreateController
         /// <summary>
-        /// Creates the controllers.
+        /// Creates the controller.
         /// </summary>
-        internal Controller CreateController(string name, int id)
+        internal Controller CreateController(string name)
         {
-            if (Controllers.ContainsKey(id))
-                throw new ArgumentException("Controller with this id already exists.", "id");
-
             var controllerProvider = BaseMainApplication.Current.ControllerProvider;
+            var id = FindNextFreeControllerId();
 
             // create
             var controller = controllerProvider.CreateController(name, id);
-            controller.ClearChanges();
 
             Controllers.Add(id, controller);
 
             return controller;
+        }
+        #endregion
+        #region CreateObservableController
+        /// <summary>
+        /// Creates the observable controller.
+        /// </summary>
+        internal ObservableController CreateObservableController(string name)
+        {
+            var controllerProvider = BaseMainApplication.Current.ControllerProvider;
+            var id = FindNextFreeControllerId();
+
+            // create
+            var observableController = controllerProvider.CreateObservableController(name, id);
+            observableController.ClearChanges();
+
+            ObservableControllers.Add(id, observableController);
+
+            return observableController;
         }
         #endregion
         #region DestroyController
@@ -220,6 +245,16 @@ namespace Samotorcan.HtmlUi.Core
                 return true;
             }
 
+            if (ObservableControllers.ContainsKey(id))
+            {
+                var observableController = ObservableControllers[id];
+
+                observableController.Dispose();
+                ObservableControllers.Remove(id);
+
+                return true;
+            }
+
             return false;
         }
         #endregion
@@ -233,6 +268,11 @@ namespace Samotorcan.HtmlUi.Core
                 controller.Dispose();
 
             Controllers.Clear();
+
+            foreach (var observableController in ObservableControllers.Values)
+                observableController.Dispose();
+
+            ObservableControllers.Clear();
         }
         #endregion
         #region SyncControllerChangesToServer
@@ -249,16 +289,16 @@ namespace Samotorcan.HtmlUi.Core
 
             foreach (var controllerChange in controllerChanges)
             {
-                if (!Controllers.ContainsKey(controllerChange.Id))
+                if (!ObservableControllers.ContainsKey(controllerChange.Id))
                     throw new ControllerNotFoundException();
 
-                var controller = Controllers[controllerChange.Id];
+                var observableController = ObservableControllers[controllerChange.Id];
 
                 foreach (var changeProperty in controllerChange.Properties)
-                    controller.SetPropertyValue(changeProperty.Key, changeProperty.Value);
+                    observableController.SetPropertyValue(changeProperty.Key, changeProperty.Value);
 
                 foreach (var observableCollectionChanges in controllerChange.ObservableCollections)
-                    controller.SetObservableCollectionChanges(observableCollectionChanges.Key, observableCollectionChanges.Value);
+                    observableController.SetObservableCollectionChanges(observableCollectionChanges.Key, observableCollectionChanges.Value);
             }
         }
         #endregion
@@ -298,10 +338,13 @@ namespace Samotorcan.HtmlUi.Core
             if (string.IsNullOrWhiteSpace(methodName))
                 throw new ArgumentNullException("methodName");
 
-            if (!Controllers.ContainsKey(controllerId))
-                throw new ControllerNotFoundException();
+            if (Controllers.ContainsKey(controllerId))
+                return Controllers[controllerId].CallMethod(methodName, arguments, internalMethod);
 
-            return Controllers[controllerId].CallMethod(methodName, arguments, internalMethod);
+            if (ObservableControllers.ContainsKey(controllerId))
+                return ObservableControllers[controllerId].CallMethod(methodName, arguments, internalMethod);
+
+            throw new ControllerNotFoundException();
         }
 
         /// <summary>
@@ -382,45 +425,45 @@ namespace Samotorcan.HtmlUi.Core
             var controllerChanges = new Dictionary<int, ControllerChange>();
 
             // controller changes
-            foreach (var controller in Controllers.Values)
+            foreach (var observableController in ObservableControllers.Values)
             {
                 // property changes
-                if (controller.PropertyChanges.Any())
+                if (observableController.PropertyChanges.Any())
                 {
-                    var propertyChanges = new HashSet<string>(controller.PropertyChanges);
-                    controller.PropertyChanges = new HashSet<string>();
+                    var propertyChanges = new HashSet<string>(observableController.PropertyChanges);
+                    observableController.PropertyChanges = new HashSet<string>();
 
-                    controllerChanges.Add(controller.Id, new ControllerChange
+                    controllerChanges.Add(observableController.Id, new ControllerChange
                     {
-                        Id = controller.Id,
+                        Id = observableController.Id,
                         Properties = propertyChanges
-                            .ToDictionary(p => p, p => JToken.FromObject(controller.GetPropertyValue(p)))
+                            .ToDictionary(p => p, p => JToken.FromObject(observableController.GetPropertyValue(p)))
                     });
                 }
 
                 // observable collection changes
-                if (controller.ObservableCollectionChanges.Any())
+                if (observableController.ObservableCollectionChanges.Any())
                 {
-                    if (!controllerChanges.ContainsKey(controller.Id))
-                        controllerChanges.Add(controller.Id, new ControllerChange { Id = controller.Id });
+                    if (!controllerChanges.ContainsKey(observableController.Id))
+                        controllerChanges.Add(observableController.Id, new ControllerChange { Id = observableController.Id });
 
-                    var controllerChange = controllerChanges[controller.Id];
+                    var controllerChange = controllerChanges[observableController.Id];
 
-                    controllerChange.ObservableCollections = new Dictionary<string, ObservableCollectionChanges>(controller.ObservableCollectionChanges);
-                    controller.ObservableCollectionChanges = new Dictionary<string, ObservableCollectionChanges>();
+                    controllerChange.ObservableCollections = new Dictionary<string, ObservableCollectionChanges>(observableController.ObservableCollectionChanges);
+                    observableController.ObservableCollectionChanges = new Dictionary<string, ObservableCollectionChanges>();
 
                     // change reset to property change
                     foreach (var observableCollection in controllerChange.ObservableCollections.Values)
                     {
                         if (observableCollection.IsReset && !controllerChange.Properties.Keys.Contains(observableCollection.Name))
-                            controllerChange.Properties.Add(observableCollection.Name, JToken.FromObject(controller.GetPropertyValue(observableCollection.Name)));
+                            controllerChange.Properties.Add(observableCollection.Name, JToken.FromObject(observableController.GetPropertyValue(observableCollection.Name)));
                     }
                 }
 
                 // remove observable collection changes if not needed
-                if (controllerChanges.ContainsKey(controller.Id))
+                if (controllerChanges.ContainsKey(observableController.Id))
                 {
-                    var controllerChange = controllerChanges[controller.Id];
+                    var controllerChange = controllerChanges[observableController.Id];
 
                     var removeObservableCollectionKeys = controllerChange.ObservableCollections
                         .Where(o => controllerChange.Properties.ContainsKey(o.Value.Name) || o.Value.IsReset)
@@ -455,6 +498,16 @@ namespace Samotorcan.HtmlUi.Core
             }
 
             return controllerChanges;
+        }
+        #endregion
+        #region FindNextFreeControllerId
+        /// <summary>
+        /// Finds the next free controller identifier.
+        /// </summary>
+        /// <returns></returns>
+        private int FindNextFreeControllerId()
+        {
+            return Math.Max(Controllers.Keys.DefaultIfEmpty().Max(), ObservableControllers.Keys.DefaultIfEmpty().Max()) + 1;
         }
         #endregion
 
@@ -494,11 +547,7 @@ namespace Samotorcan.HtmlUi.Core
                         CefBrowser.Dispose();
                     }
 
-                    // controllers
-                    foreach (var controller in Controllers.Values)
-                        controller.Dispose();
-
-                    Controllers.Clear();
+                    DestroyControllers();
                 }
 
                 _disposed = true;

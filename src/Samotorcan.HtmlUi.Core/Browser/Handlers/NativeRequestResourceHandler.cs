@@ -287,19 +287,45 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             BaseMainApplication.Current.InvokeOnMain(() =>
             {
-                var controller = BaseMainApplication.Current.Window.CreateController(controllerData.Name, controllerData.Id);
+                var controller = BaseMainApplication.Current.Window.CreateController(controllerData.Name);
 
-                controllerDescription = controller.GetDescription();
+                controllerDescription = controller.GetControllerDescription();
 
-                // camel case property and method names
-                foreach (var property in controllerDescription.Properties)
-                    property.Name = StringUtility.CamelCase(property.Name);
-
+                // camel case method names
                 foreach (var method in controllerDescription.Methods)
                     method.Name = StringUtility.CamelCase(method.Name);
             });
 
             return controllerDescription;
+        }
+        #endregion
+        #region CreateObservableController
+        /// <summary>
+        /// Creates the observable controller.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        [NativeFunction]
+        private object CreateObservableController(CefRequest request)
+        {
+            var controllerData = GetPostData<CreateController>(request);
+            ObservableControllerDescription observableControllerDescription = null;
+
+            BaseMainApplication.Current.InvokeOnMain(() =>
+            {
+                var observableController = BaseMainApplication.Current.Window.CreateObservableController(controllerData.Name);
+
+                observableControllerDescription = observableController.GetObservableControllerDescription();
+
+                // camel case property and method names
+                foreach (var property in observableControllerDescription.Properties)
+                    property.Name = StringUtility.CamelCase(property.Name);
+
+                foreach (var method in observableControllerDescription.Methods)
+                    method.Name = StringUtility.CamelCase(method.Name);
+            });
+
+            return observableControllerDescription;
         }
         #endregion
         #region DestroyController

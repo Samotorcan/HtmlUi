@@ -92,6 +92,22 @@ namespace Samotorcan.HtmlUi.Core
             return (Controller)Activator.CreateInstance(GetControllerType(name), id);
         }
         #endregion
+        #region CreateObservableController
+        /// <summary>
+        /// Creates the observable controller.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="id">The identifier.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">name</exception>
+        public ObservableController CreateObservableController(string name, int id)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentNullException("name");
+
+            return (ObservableController)Activator.CreateInstance(GetObservableControllerType(name), id);
+        }
+        #endregion
         #region IsUniqueControllerName
         /// <summary>
         /// Determines whether the specified controller name is unique.
@@ -152,6 +168,28 @@ namespace Samotorcan.HtmlUi.Core
             return false;
         }
         #endregion
+        #region IsObservableControllerType
+        /// <summary>
+        /// Determines whether [is observable controller type] [the specified type].
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns></returns>
+        private bool IsObservableControllerType(Type type)
+        {
+            // can't create an abstract type
+            if (type.IsAbstract)
+                return false;
+
+            // is extended from Controller
+            while ((type = type.BaseType) != null)
+            {
+                if (type == typeof(ObservableController))
+                    return true;
+            }
+
+            return false;
+        }
+        #endregion
         #region GetControllerType
         /// <summary>
         /// Gets the controller type.
@@ -174,6 +212,35 @@ namespace Samotorcan.HtmlUi.Core
                 throw new ControllerNotFoundException(name);
 
             return controllerTypes.FirstOrDefault();
+        }
+        #endregion
+        #region GetObservableControllerType
+        /// <summary>
+        /// Gets the controller type.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentException">
+        /// Found more than one controller with the same name.;path
+        /// or
+        /// Controller was not found.;path
+        /// </exception>
+        private Type GetObservableControllerType(string name)
+        {
+            var controllerTypes = ControllerTypesInternal.Where(c => c.Name == name).ToList();
+
+            if (controllerTypes.Count > 1)
+                throw new MoreThanOneControllerFoundException(name);
+
+            if (!controllerTypes.Any())
+                throw new ControllerNotFoundException(name);
+
+            var controllerType = controllerTypes.First();
+
+            if (!IsObservableControllerType(controllerType))
+                throw new ControllerNotFoundException(name);
+
+            return controllerType;
         }
         #endregion
 

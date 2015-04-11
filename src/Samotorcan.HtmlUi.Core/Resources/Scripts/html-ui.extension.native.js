@@ -19,14 +19,22 @@ var htmlUi;
             return callNative('getControllerNames');
         }
         _native.getControllerNamesAsync = getControllerNamesAsync;
-        function createController(name, id) {
-            return nativeSynchronous('createController', { name: name, id: id });
+        function createController(name) {
+            return nativeSynchronous('createController', { name: name });
         }
         _native.createController = createController;
-        function createControllerAsync(name, id) {
-            return callNative('createController', { name: name, id: id });
+        function createControllerAsync(name) {
+            return callNative('createController', { name: name });
         }
         _native.createControllerAsync = createControllerAsync;
+        function createObservableController(name) {
+            return nativeSynchronous('createObservableController', { name: name });
+        }
+        _native.createObservableController = createObservableController;
+        function createObservableControllerAsync(name) {
+            return callNative('createObservableController', { name: name });
+        }
+        _native.createObservableControllerAsync = createObservableControllerAsync;
         function destroyController(id) {
             nativeSynchronous('destroyController', id);
         }

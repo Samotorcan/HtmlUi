@@ -118,6 +118,9 @@
     <Compile Include="ObservableCollectionChange.cs" />
     <Compile Include="ObservableCollectionChangeAction.cs" />
     <Compile Include="ObservableCollectionChanges.cs" />
+    <Compile Include="ObservableController.cs" />
+    <Compile Include="ObservableControllerDescription.cs" />
+    <Compile Include="ObservableControllerTypeInfo.cs" />
     <Compile Include="Renderer\App.cs" />
     <Compile Include="HtmlUiRuntime.cs" />
     <Compile Include="Message.cs" />

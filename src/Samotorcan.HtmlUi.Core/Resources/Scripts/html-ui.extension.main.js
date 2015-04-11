@@ -19,15 +19,16 @@ var htmlUi;
             }]);
             // controller
             htmlUiModule.factory('htmlUi.controller', [function () {
-                var initialize = function (controllerName, $scope) {
-                    var controllerId = $scope.$id;
-                    var controllerData = _controllerDataContainer.getControllerData(controllerId);
+                var createObservableController = function (controllerName, $scope) {
+                    var scopeId = $scope.$id;
+                    // create controller
+                    var observableController = htmlUi.native.createObservableController(controllerName);
+                    var controllerData = _controllerDataContainer.addControllerData(observableController.id);
                     controllerData.name = controllerName;
                     controllerData.$scope = $scope;
-                    // create controller
-                    var controller = htmlUi.native.createController(controllerName, $scope.$id);
+                    controllerData.scopeId = $scope.$id;
                     // properties
-                    _.forEach(controller.properties, function (property) {
+                    _.forEach(observableController.properties, function (property) {
                         var propertyName = property.name;
                         $scope[propertyName] = property.value;
                         // watch observable collection
@@ -37,7 +38,7 @@ var htmlUi;
                         addPropertyWatch(propertyName, $scope);
                     });
                     // methods
-                    _.forEach(controller.methods, function (method) {
+                    _.forEach(observableController.methods, function (method) {
                         $scope[method.name] = function () {
                             return htmlUi.native.callMethod($scope.$id, method.name, htmlUi.utility.argumentsToArray(arguments));
                         };
@@ -49,9 +50,10 @@ var htmlUi;
                     // warm up native calls
                     htmlUi.native.callInternalMethodAsync($scope.$id, 'warmUp', ['warmUp']).then(function () {
                     });
+                    return $scope;
                 };
                 return {
-                    initialize: initialize
+                    createObservableController: createObservableController
                 };
             }]);
             // inject htmlUi module
@@ -115,8 +117,8 @@ var htmlUi;
         }, true);
     }
     function addPropertyWatch(propertyName, $scope) {
-        var controllerId = $scope.$id;
-        var controllerData = _controllerDataContainer.getControllerData(controllerId);
+        var scopeId = $scope.$id;
+        var controllerData = _controllerDataContainer.getControllerDataByScopeId(scopeId);
         $scope.$watch(propertyName, function (newValue, oldValue) {
             if (newValue !== oldValue && !controllerData.hasPropertyValue(propertyName, newValue)) {
                 controllerData.change.setProperty(propertyName, newValue);
@@ -130,8 +132,8 @@ var htmlUi;
         });
     }
     function addCollectionWatch(propertyName, $scope) {
-        var controllerId = $scope.$id;
-        var controllerData = _controllerDataContainer.getControllerData(controllerId);
+        var scopeId = $scope.$id;
+        var controllerData = _controllerDataContainer.getControllerDataByScopeId(scopeId);
         controllerData.addWatch(propertyName, $scope.$watchCollection(propertyName, function (newCollection, oldCollection) {
             if (newCollection !== oldCollection && !htmlUi.utility.isArrayShallowEqual(newCollection, oldCollection) && !controllerData.hasObservableCollectionValue(propertyName, newCollection) && !controllerData.change.hasProperty(propertyName)) {
                 var compareValues = _.zip(oldCollection, newCollection);
@@ -158,8 +160,8 @@ var htmlUi;
         }));
     }
     function removeCollectionWatch(propertyName, $scope) {
-        var controllerId = $scope.$id;
-        var controllerData = _controllerDataContainer.getControllerData(controllerId);
+        var scopeId = $scope.$id;
+        var controllerData = _controllerDataContainer.getControllerDataByScopeId(scopeId);
         controllerData.removeWatch(propertyName);
     }
     function syncControllerChanges(json) {

@@ -11,7 +11,7 @@ namespace Samotorcan.Tests.Windows.Controllers
     /// <summary>
     /// Greeting controller.
     /// </summary>
-    public class GreetingController : Controller
+    public class GreetingController : ObservableController
     {
         public int FirstNumber { get; set; }
 

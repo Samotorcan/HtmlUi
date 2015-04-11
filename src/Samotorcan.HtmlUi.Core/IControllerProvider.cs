@@ -26,6 +26,14 @@ namespace Samotorcan.HtmlUi.Core
         Controller CreateController(string name, int id);
 
         /// <summary>
+        /// Creates the observable controller.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="id">The identifier.</param>
+        /// <returns></returns>
+        ObservableController CreateObservableController(string name, int id);
+
+        /// <summary>
         /// Controller exists.
         /// </summary>
         /// <param name="name">The name.</param>

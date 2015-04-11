@@ -102,13 +102,19 @@ var htmlUi;
             enumerable: true,
             configurable: true
         });
-        ControllerDataContainer.prototype.getControllerData = function (controllerId) {
-            var controllerData = this.data[controllerId];
-            if (controllerData == null) {
-                this.data[controllerId] = controllerData = new ControllerData(controllerId);
-                this.controllerChanges.push(controllerData.change);
-            }
+        ControllerDataContainer.prototype.addControllerData = function (controllerId) {
+            var controllerData = null;
+            this.data[controllerId] = controllerData = new ControllerData(controllerId);
+            this.controllerChanges.push(controllerData.change);
             return controllerData;
+        };
+        ControllerDataContainer.prototype.getControllerData = function (controllerId) {
+            return this.data[controllerId];
+        };
+        ControllerDataContainer.prototype.getControllerDataByScopeId = function (scopeId) {
+            return _.find(this.data, function (controllerData) {
+                return controllerData.scopeId == scopeId;
+            });
         };
         ControllerDataContainer.prototype.clearControllerChanges = function () {
             _.forEach(this.controllerChanges, function (controllerChange) {
@@ -120,7 +126,7 @@ var htmlUi;
     htmlUi.ControllerDataContainer = ControllerDataContainer;
     var ControllerData = (function () {
         function ControllerData(controllerId) {
-            this.id = controllerId;
+            this.controllerId = controllerId;
             this.propertyValues = {};
             this.observableCollectionValues = {};
             this.watches = {};

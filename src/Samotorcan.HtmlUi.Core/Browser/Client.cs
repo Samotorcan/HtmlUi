@@ -233,9 +233,24 @@ namespace Samotorcan.HtmlUi.Core.Browser
         private object CreateController(string json)
         {
             var createController = JsonConvert.DeserializeObject<CreateController>(json);
-            var controller = BaseMainApplication.Current.Window.CreateController(createController.Name, createController.Id);
+            var controller = BaseMainApplication.Current.Window.CreateController(createController.Name);
 
-            return controller.GetDescription();
+            return controller.GetControllerDescription();
+        }
+        #endregion
+        #region CreateObservableController
+        /// <summary>
+        /// Creates the observable controller.
+        /// </summary>
+        /// <param name="json">The json.</param>
+        /// <returns></returns>
+        [NativeFunction]
+        private object CreateObservableController(string json)
+        {
+            var createController = JsonConvert.DeserializeObject<CreateController>(json);
+            var observableController = BaseMainApplication.Current.Window.CreateObservableController(createController.Name);
+
+            return observableController.GetObservableControllerDescription();
         }
         #endregion
         #region DestroyController
