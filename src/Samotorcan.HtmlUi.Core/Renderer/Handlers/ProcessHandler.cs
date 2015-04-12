@@ -78,15 +78,6 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </value>
         private V8NativeHandler V8NativeHandler { get; set; }
         #endregion
-        #region HtmlUiExtensions
-        /// <summary>
-        /// Gets or sets the HTML UI extensions.
-        /// </summary>
-        /// <value>
-        /// The HTML UI extensions.
-        /// </value>
-        private List<string> HtmlUiExtensions { get; set; }
-        #endregion
         #region LoadHandler
         /// <summary>
         /// Gets or sets the load handler.
@@ -111,8 +102,6 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 
             LoadHandler = new LoadHandler();
             LoadHandler.OnLoadStartEvent += OnLoadStart;
-
-            HtmlUiExtensions = GetHtmlUiExtensions();
         }
 
         #endregion
@@ -192,7 +181,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </summary>
         protected override void OnWebKitInitialized()
         {
-            CefRuntime.RegisterExtension("html-ui.extension.native", GetHtmlUiExtensionScript("native", false), V8NativeHandler);
+            CefRuntime.RegisterExtension("htmlUi.native", GetHtmlUiScript("native", false), V8NativeHandler);
 
             RegisterHtmlUiAsExtensionIfNeeded();
         }
@@ -231,9 +220,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
                 if (V8NativeHandler != null)
                     V8NativeHandler.Reset();
 
-                RegisterAngularDeferredBootstrap(context);
                 RegisterHtmlUiAsScriptIfNeeded(context);
-                RegisterHtmlUiInit(context);
             }
         }
         #endregion
@@ -302,8 +289,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         private void RegisterHtmlUiAsExtensionIfNeeded()
         {
 #if !DEBUG
-            foreach (var htmlUiExtension in HtmlUiExtensions)
-                CefRuntime.RegisterExtension("html-ui.extension." + htmlUiExtension, GetHtmlUiExtensionScript(htmlUiExtension), V8NativeHandler);
+            CefRuntime.RegisterExtension("htmlUi.main", GetHtmlUiScript("main"), V8NativeHandler);
 #endif
         }
         #endregion
@@ -315,21 +301,20 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         private void RegisterHtmlUiAsScriptIfNeeded(CefV8Context context)
         {
 #if DEBUG
-            foreach (var htmlUiExtension in HtmlUiExtensions)
-                EvalHtmlUiExtensionScript(htmlUiExtension, context);
+            EvalHtmlUiScript("main", context);
 #endif
         }
         #endregion
-        #region GetHtmlUiExtensionScript
+        #region GetHtmlUiScript
         /// <summary>
-        /// Gets the HTML UI extension script.
+        /// Gets the HTML UI script.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="mapping">if set to <c>true</c> include mapping.</param>
         /// <returns></returns>
-        private string GetHtmlUiExtensionScript(string name, bool mapping)
+        private string GetHtmlUiScript(string name, bool mapping)
         {
-            var scriptName = string.Format("Scripts/html-ui.extension.{0}.js", name);
+            var scriptName = string.Format("Scripts/htmlUi.{0}.js", name);
             var script = ResourceUtility.GetResourceAsString(scriptName);
 
             var constants = new string[]
@@ -345,7 +330,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 
             if (mapping)
             {
-                var typescriptName = string.Format("Scripts/html-ui.extension.{0}.ts", name);
+                var typescriptName = string.Format("Scripts/htmlUi.{0}.ts", name);
                 var typescript = ResourceUtility.GetResourceAsString(typescriptName);
 
                 processedExtensionResource = Regex.Replace(processedExtensionResource, @"^//# sourceMappingURL=.*$", (match) =>
@@ -370,81 +355,28 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         }
 
         /// <summary>
-        /// Gets the HTML UI extension script.
+        /// Gets the HTML UI script.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <returns></returns>
-        private string GetHtmlUiExtensionScript(string name)
+        private string GetHtmlUiScript(string name)
         {
-            return GetHtmlUiExtensionScript(name, true);
+            return GetHtmlUiScript(name, true);
         }
         #endregion
-        #region EvalHtmlUiExtensionScript
+        #region EvalHtmlUiScript
         /// <summary>
-        /// Evals the HTML UI extension script.
+        /// Evals the HTML UI script.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="context">The context.</param>
-        private void EvalHtmlUiExtensionScript(string name, CefV8Context context)
+        private void EvalHtmlUiScript(string name, CefV8Context context)
         {
             CefV8Value returnValue = null;
             CefV8Exception exception = null;
 
-            if (!context.TryEval(GetHtmlUiExtensionScript(name, true), out returnValue, out exception))
+            if (!context.TryEval(GetHtmlUiScript(name, true), out returnValue, out exception))
                 GeneralLog.Error(string.Format("Register html ui script exception: {0}.", JsonConvert.SerializeObject(exception)));
-        }
-        #endregion
-        #region GetHtmlUiExtensions
-        /// <summary>
-        /// Gets the HTML UI extensions.
-        /// </summary>
-        /// <returns></returns>
-        private List<string> GetHtmlUiExtensions()
-        {
-            var htmlUiExtensions = new List<string>();
-
-            foreach (var resourceName in ResourceUtility.GetResourceNames())
-            {
-                var match = Regex.Match(resourceName, @"^Scripts\.html-ui\.extension\.([a-zA-Z0-9\-_]*)\.ts$");
-                var htmlUiExtension = match.Groups[1].Value;
-
-                if (match.Success && htmlUiExtension != "native")
-                    htmlUiExtensions.Add(htmlUiExtension);
-            }
-
-            return htmlUiExtensions;
-        }
-        #endregion
-        #region RegisterAngularDeferredBootstrap
-        /// <summary>
-        /// Registers the angular deferred bootstrap.
-        /// </summary>
-        /// <param name="context">The context.</param>
-        private void RegisterAngularDeferredBootstrap(CefV8Context context)
-        {
-            CefV8Value returnValue = null;
-            CefV8Exception exception = null;
-
-            var code = "window.name = 'NG_DEFER_BOOTSTRAP!'";
-
-            if (!context.TryEval(code, out returnValue, out exception))
-                GeneralLog.Error(string.Format("Register angular deferred bootstrap exception: {0}.", JsonConvert.SerializeObject(exception)));
-        }
-        #endregion
-        #region RegisterHtmlUiInit
-        /// <summary>
-        /// Registers the HTML UI initialize.
-        /// </summary>
-        /// <param name="context">The context.</param>
-        private void RegisterHtmlUiInit(CefV8Context context)
-        {
-            CefV8Value returnValue = null;
-            CefV8Exception exception = null;
-
-            var code = "htmlUi.init()";
-
-            if (!context.TryEval(code, out returnValue, out exception))
-                GeneralLog.Error(string.Format("Register html ui init exception: {0}.", JsonConvert.SerializeObject(exception)));
         }
         #endregion
         #region IsLocalUrl

@@ -120,6 +120,12 @@
   <ItemGroup>
     <EmbeddedResource Include="Scripts\main.js" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\angular.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\lodash.js" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>(robocopy "$(ProjectDir)Cef" "$(TargetDir)." * /e /xc /xn /xo) ^&amp; IF %25ERRORLEVEL%25 LEQ 1 exit 0</PostBuildEvent>

@@ -22,6 +22,7 @@ namespace Samotorcan.HtmlUi.Core
     /// <summary>
     /// Controller.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1012:AbstractTypesShouldNotHaveConstructors", Justification = "All classes that extend Controller must have this exact constructor.")]
     public abstract class Controller : IDisposable
     {
         #region Properties
@@ -73,14 +74,14 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
         #region Protected
 
-        #region Type
+        #region ControllerType
         /// <summary>
-        /// Gets or sets the type.
+        /// Gets or sets the type of the controller.
         /// </summary>
         /// <value>
-        /// The type.
+        /// The type of the controller.
         /// </value>
-        protected Type Type { get; set; }
+        protected Type ControllerType { get; set; }
         #endregion
 
         #endregion
@@ -103,11 +104,11 @@ namespace Samotorcan.HtmlUi.Core
         {
             Id = id;
 
-            Type = GetType();
-            Name = Type.Name;
+            ControllerType = GetType();
+            Name = ControllerType.Name;
 
             LoadControllerTypeInfoIfNeeded();
-            ControllerTypeInfo = ControllerTypeInfos[Type];
+            ControllerTypeInfo = ControllerTypeInfos[ControllerType];
         }
 
         #endregion
@@ -372,11 +373,11 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         private void LoadControllerTypeInfoIfNeeded()
         {
-            if (!ControllerTypeInfos.ContainsKey(Type))
+            if (!ControllerTypeInfos.ContainsKey(ControllerType))
             {
-                ControllerTypeInfos.Add(Type, new ControllerTypeInfo
+                ControllerTypeInfos.Add(ControllerType, new ControllerTypeInfo
                 {
-                    Methods = FindMethods(Type),
+                    Methods = FindMethods(ControllerType),
                     InternalMethods = FindInternalMethods()
                 });
             }

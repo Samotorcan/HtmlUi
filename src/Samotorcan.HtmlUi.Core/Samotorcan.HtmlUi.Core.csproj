@@ -180,24 +180,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <EmbeddedResource Include="Resources\Scripts\angular.min.js.map" />
     <EmbeddedResource Include="Resources\MimeTypes.json" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.main.js.map" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.native.js.map" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.services.js.map" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.settings.js.map" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.definitions.js.map" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.utility.js.map" />
+    <EmbeddedResource Include="Resources\Scripts\htmlUi.main.js.map" />
+    <EmbeddedResource Include="Resources\Scripts\htmlUi.native.js.map" />
+    <EmbeddedResource Include="Resources\Scripts\htmlUi.angular.js.map" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Views\ContentRequestException.html" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\Scripts\angular.js" />
-    <EmbeddedResource Include="Resources\Scripts\angular.min.js" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\Scripts\html-ui.js" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Views\ContentNotFound.html" />
@@ -209,34 +198,19 @@
     <EmbeddedResource Include="Resources\Views\NativeRequestException.html" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Scripts\lodash.js" />
-    <EmbeddedResource Include="Resources\Scripts\lodash.min.js" />
-  </ItemGroup>
-  <ItemGroup>
     <TypeScriptCompile Include="Resources\Scripts\angular.d.ts" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.definitions.ts" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.main.ts" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.settings.ts" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.utility.ts" />
+    <EmbeddedResource Include="Resources\Scripts\htmlUi.main.ts" />
+    <EmbeddedResource Include="Resources\Scripts\htmlUi.angular.ts" />
     <TypeScriptCompile Include="Resources\Scripts\jquery.d.ts" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.native.ts" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.services.ts" />
+    <EmbeddedResource Include="Resources\Scripts\htmlUi.native.ts" />
     <TypeScriptCompile Include="Resources\Scripts\lodash.d.ts" />
-    <TypeScriptCompile Include="Resources\Scripts\references.ts" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.main.js" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.native.js" />
+    <EmbeddedResource Include="Resources\Scripts\htmlUi.main.js" />
+    <EmbeddedResource Include="Resources\Scripts\htmlUi.native.js" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.services.js" />
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.settings.js" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.definitions.js" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\Scripts\html-ui.extension.utility.js" />
+    <EmbeddedResource Include="Resources\Scripts\htmlUi.angular.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />

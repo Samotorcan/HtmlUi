@@ -18,6 +18,7 @@ namespace Samotorcan.HtmlUi.Core
     /// <summary>
     /// Observable controller.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1012:AbstractTypesShouldNotHaveConstructors", Justification = "All classes that extend ObservableController must have this exact constructor.")]
     public abstract class ObservableController : Controller, INotifyPropertyChanged
     {
         #region Properties
@@ -96,7 +97,7 @@ namespace Samotorcan.HtmlUi.Core
             ObservableCollectionChanges = new Dictionary<string, ObservableCollectionChanges>();
 
             LoadObservableControllerTypeInfoIfNeeded();
-            ObservableControllerTypeInfo = ObservableControllerTypeInfos[Type];
+            ObservableControllerTypeInfo = ObservableControllerTypeInfos[ControllerType];
 
             SyncChanges = true;
             PropertyChanged += PropertyChangedHandle;
@@ -310,11 +311,11 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         private void LoadObservableControllerTypeInfoIfNeeded()
         {
-            if (!ObservableControllerTypeInfos.ContainsKey(Type))
+            if (!ObservableControllerTypeInfos.ContainsKey(ControllerType))
             {
-                ObservableControllerTypeInfos.Add(Type, new ObservableControllerTypeInfo
+                ObservableControllerTypeInfos.Add(ControllerType, new ObservableControllerTypeInfo
                 {
-                    Properties = FindProperties(Type)
+                    Properties = FindProperties(ControllerType)
                 });
             }
         }
