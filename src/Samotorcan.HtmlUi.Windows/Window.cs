@@ -100,6 +100,15 @@ namespace Samotorcan.HtmlUi.Windows
         /// </value>
         private NativeMethods.HookProc Browser_MouseEventDelegate { get; set; }
         #endregion
+        #region IgnoreNextRefreshKeyPress
+        /// <summary>
+        /// Gets or sets a value indicating whether to ignore next refresh key press.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> to ignore next refresh key press; otherwise, <c>false</c>.
+        /// </value>
+        private bool IgnoreNextRefreshKeyPress { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -269,6 +278,8 @@ namespace Samotorcan.HtmlUi.Windows
         {
             if (e.NativeKeyCode == (int)Keys.F12)
                 OpenDeveloperTools();
+            else if (e.NativeKeyCode == (int)Keys.F5)
+                RefreshView(e.Modifiers == CefEventFlags.ControlDown);
         }
         #endregion
         #region Browser_MouseEvent
@@ -354,6 +365,42 @@ namespace Samotorcan.HtmlUi.Windows
 
                 CefBrowser.GetHost().ShowDevTools(windowInfo, new DeveloperToolsClient(), new CefBrowserSettings(), new CefPoint(0, 0));
             });
+        }
+        #endregion
+        #region RefreshView
+        /// <summary>
+        /// Refreshes the view.
+        /// </summary>
+        /// <param name="ignoreCache">if set to <c>true</c> ignore cache.</param>
+        private void RefreshView(bool ignoreCache)
+        {
+            if (CefBrowser != null)
+            {
+                MainApplication.Current.InvokeOnMain(() =>
+                {
+                    if (!IgnoreNextRefreshKeyPress)
+                    {
+                        IgnoreNextRefreshKeyPress = true;
+
+                        if (ignoreCache)
+                            CefBrowser.ReloadIgnoreCache();
+                        else
+                            CefBrowser.Reload();
+                    }
+                    else
+                    {
+                        IgnoreNextRefreshKeyPress = false;
+                    }
+                });
+            }
+        }
+
+        /// <summary>
+        /// Refreshes the view.
+        /// </summary>
+        private void RefreshView()
+        {
+            RefreshView(false);
         }
         #endregion
 

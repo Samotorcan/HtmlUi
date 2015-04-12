@@ -213,7 +213,6 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         {
             var frame = e.Frame;
             var context = e.Frame.V8Context;
-            var browser = e.Browser;
 
             if (frame.IsMain && IsLocalUrl(frame.Url))
             {

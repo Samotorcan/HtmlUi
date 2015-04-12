@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Events
 {
     /// <summary>
     /// Key press event arguments.
     /// </summary>
+    [CLSCompliant(false)]
     public class KeyPressEventArgs : EventArgs
     {
         #region Properties
@@ -23,6 +25,15 @@ namespace Samotorcan.HtmlUi.Core.Events
         /// </value>
         public int NativeKeyCode { get; private set; }
         #endregion
+        #region Modifiers
+        /// <summary>
+        /// Gets or sets the modifiers.
+        /// </summary>
+        /// <value>
+        /// The modifiers.
+        /// </value>
+        public CefEventFlags Modifiers { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -32,9 +43,11 @@ namespace Samotorcan.HtmlUi.Core.Events
         /// Initializes a new instance of the <see cref="KeyPressEventArgs"/> class.
         /// </summary>
         /// <param name="nativeKeyCode">The native key code.</param>
-        public KeyPressEventArgs(int nativeKeyCode)
+        /// <param name="modifiers">The modifiers.</param>
+        public KeyPressEventArgs(int nativeKeyCode, CefEventFlags modifiers)
         {
             NativeKeyCode = nativeKeyCode;
+            Modifiers = modifiers;
         }
 
         #endregion

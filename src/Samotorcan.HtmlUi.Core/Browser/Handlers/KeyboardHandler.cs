@@ -35,7 +35,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             isKeyboardShortcut = false;
 
-            BaseMainApplication.Current.Window.TriggerKeyPress(keyEvent.WindowsKeyCode);
+            BaseMainApplication.Current.Window.TriggerKeyPress(keyEvent.WindowsKeyCode, keyEvent.Modifiers);
 
             return false;
         }

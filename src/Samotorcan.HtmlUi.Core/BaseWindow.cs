@@ -157,10 +157,11 @@ namespace Samotorcan.HtmlUi.Core
         /// Triggers the key press.
         /// </summary>
         /// <param name="nativeKeyCode">The native key code.</param>
-        internal void TriggerKeyPress(int nativeKeyCode)
+        /// <param name="modifiers">The modifiers.</param>
+        internal void TriggerKeyPress(int nativeKeyCode, CefEventFlags modifiers)
         {
             if (KeyPress != null)
-                KeyPress(this, new KeyPressEventArgs(nativeKeyCode));
+                KeyPress(this, new KeyPressEventArgs(nativeKeyCode, modifiers));
         }
         #endregion
         #region CallFunction
