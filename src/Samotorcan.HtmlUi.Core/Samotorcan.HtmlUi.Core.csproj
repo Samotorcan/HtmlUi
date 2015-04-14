@@ -204,6 +204,7 @@
     <TypeScriptCompile Include="Resources\Scripts\jquery.d.ts" />
     <EmbeddedResource Include="Resources\Scripts\htmlUi.native.ts" />
     <TypeScriptCompile Include="Resources\Scripts\lodash.d.ts" />
+    <TypeScriptCompile Include="Resources\Scripts\references.ts" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Scripts\htmlUi.main.js" />
@@ -211,6 +212,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Scripts\htmlUi.angular.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Scripts\lodash.min.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />

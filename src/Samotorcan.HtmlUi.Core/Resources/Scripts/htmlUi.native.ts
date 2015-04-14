@@ -1,4 +1,4 @@
-﻿/// <reference path="htmlUi.main.ts" />
+﻿/// <reference path="references.ts" />
 
 module htmlUi.native {
     export function syncControllerChanges(controllerChanges: IControllerChange[]): void {
@@ -64,6 +64,11 @@ module htmlUi.native {
 
     export function log(type: string, messageType: string, message: string): void {
         callNativeSync('log', { type: type, messageType: messageType, message: message });
+    }
+
+    export function loadInternalScript(scriptName: string): void {
+        // !native function loadInternalScript();
+        loadInternalScript(scriptName);
     }
 
     export function callNativeAsync<TValue>(name: string, data: Object, callback?: (nativeResponse: NativeResponse<TValue>) => void): void {

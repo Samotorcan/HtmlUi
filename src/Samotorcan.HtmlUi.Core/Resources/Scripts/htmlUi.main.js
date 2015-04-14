@@ -1,4 +1,10 @@
-/// <reference path="lodash.d.ts" />
+/// <reference path="references.ts" />
+// run
+var htmlUi;
+(function (htmlUi) {
+    htmlUi.native.loadInternalScript('lodash.min.js');
+    htmlUi._ = window['_'].noConflict();
+})(htmlUi || (htmlUi = {}));
 // definitions
 var htmlUi;
 (function (htmlUi) {
@@ -23,7 +29,7 @@ var htmlUi;
     (function (utility) {
         function argumentsToArray(args) {
             var argsArray = [];
-            _.forEach(args, function (arg) {
+            htmlUi._.forEach(args, function (arg) {
                 argsArray.push(arg);
             });
             return argsArray;
@@ -41,7 +47,7 @@ var htmlUi;
             if (collection == null)
                 return null;
             var newCollection = [];
-            _.forEach(collection, function (value, index) {
+            htmlUi._.forEach(collection, function (value, index) {
                 newCollection[index] = value;
             });
             return newCollection;
@@ -54,7 +60,7 @@ var htmlUi;
                 return false;
             if (firstArray.length != secondArray.length)
                 return false;
-            return !_.any(firstArray, function (value, index) {
+            return !htmlUi._.any(firstArray, function (value, index) {
                 return value !== secondArray[index];
             });
         }
@@ -85,13 +91,13 @@ var htmlUi;
             document.addEventListener("DOMContentLoaded", func);
     }
     htmlUi.domReady = domReady;
-    function loadScript(scriptName, onload) {
+    function includeScript(scriptName, onload) {
         var scriptElement = document.createElement('script');
         document.body.appendChild(scriptElement);
         if (onload != null)
             scriptElement.onload = onload;
         scriptElement.src = scriptName;
     }
-    htmlUi.loadScript = loadScript;
+    htmlUi.includeScript = includeScript;
 })(htmlUi || (htmlUi = {}));
 //# sourceMappingURL=htmlUi.main.js.map

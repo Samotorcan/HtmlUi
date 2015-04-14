@@ -182,7 +182,38 @@ namespace Samotorcan.HtmlUi.Core
                 if (!Functions.ContainsKey(functionName))
                     Functions.Add(functionName, new JavascriptFunction(function, CefV8Context.GetCurrentContext()));
                 else
-                    GeneralLog.Error(string.Format("Register function - function {0} is already registered.", functionName));
+                    exception = string.Format("Function '{0}' is already registered.", functionName);
+
+                return true;
+            }
+
+            // load internal script
+            else if (name == "loadInternalScript")
+            {
+                if (arguments.Length > 0 && arguments[0].IsString)
+                {
+                    var scriptName = "Scripts/" + arguments[0].GetStringValue();
+
+                    if (ResourceUtility.ResourceExists(scriptName))
+                    {
+                        CefV8Value evalReturnValue = null;
+                        CefV8Exception evalException = null;
+
+                        string script = ResourceUtility.GetResourceAsString(scriptName);
+                        var context = CefV8Context.GetCurrentContext();
+
+                        if (!context.TryEval(script, out evalReturnValue, out evalException))
+                            exception = string.Format("Exception: {0}.", JsonConvert.SerializeObject(exception));
+                    }
+                    else
+                    {
+                        exception = "Script not found.";
+                    }
+                }
+                else
+                {
+                    exception = "Missing script name.";
+                }
 
                 return true;
             }

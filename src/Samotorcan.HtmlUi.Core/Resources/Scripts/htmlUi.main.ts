@@ -1,4 +1,11 @@
-﻿/// <reference path="lodash.d.ts" />
+﻿/// <reference path="references.ts" />
+
+// run
+module htmlUi {
+    native.loadInternalScript('lodash.min.js');
+
+    export var _: _.LoDashStatic = window['_'].noConflict();
+}
 
 // definitions
 module htmlUi {
@@ -145,7 +152,7 @@ module htmlUi {
             document.addEventListener("DOMContentLoaded", func);
     }
 
-    export function loadScript(scriptName: string, onload?: (ev: Event) => any) {
+    export function includeScript(scriptName: string, onload?: (ev: Event) => any): void {
         var scriptElement = document.createElement('script');
         document.body.appendChild(scriptElement);
 

@@ -1,4 +1,4 @@
-/// <reference path="htmlUi.main.ts" />
+/// <reference path="references.ts" />
 var htmlUi;
 (function (htmlUi) {
     var native;
@@ -68,6 +68,11 @@ var htmlUi;
             callNativeSync('log', { type: type, messageType: messageType, message: message });
         }
         _native.log = log;
+        function loadInternalScript(scriptName) {
+            // !native function loadInternalScript();
+            loadInternalScript(scriptName);
+        }
+        _native.loadInternalScript = loadInternalScript;
         function callNativeAsync(name, data, callback) {
             var jsonData = JSON.stringify(data);
             var internalCallback = function (jsonResponse) {

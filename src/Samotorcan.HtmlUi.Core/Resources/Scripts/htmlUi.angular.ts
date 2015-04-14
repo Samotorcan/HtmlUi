@@ -1,7 +1,4 @@
-﻿/// <reference path="angular.d.ts" />
-/// <reference path="lodash.d.ts" />
-/// <reference path="htmlUi.main.ts" />
-/// <reference path="htmlUi.native.ts" />
+﻿/// <reference path="references.ts" />
 
 // definitions
 module htmlUi.angular {
