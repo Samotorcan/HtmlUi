@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samotorcan.HtmlUi.Core", "S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samotorcan.Tests.Windowsx64", "Samotorcan.Tests.Windowsx64\Samotorcan.Tests.Windowsx64.csproj", "{559F124B-E6C2-4E1F-B15B-484D5A86983B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samotorcan.Examples.TodoList", "Samotorcan.Examples.TodoList\Samotorcan.Examples.TodoList.csproj", "{651A9458-A6BF-4C15-99F9-6206D2E79683}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +44,12 @@ Global
 		{559F124B-E6C2-4E1F-B15B-484D5A86983B}.NoCA|Any CPU.Build.0 = Debug|Any CPU
 		{559F124B-E6C2-4E1F-B15B-484D5A86983B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{559F124B-E6C2-4E1F-B15B-484D5A86983B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{651A9458-A6BF-4C15-99F9-6206D2E79683}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{651A9458-A6BF-4C15-99F9-6206D2E79683}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{651A9458-A6BF-4C15-99F9-6206D2E79683}.NoCA|Any CPU.ActiveCfg = Debug|Any CPU
+		{651A9458-A6BF-4C15-99F9-6206D2E79683}.NoCA|Any CPU.Build.0 = Debug|Any CPU
+		{651A9458-A6BF-4C15-99F9-6206D2E79683}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{651A9458-A6BF-4C15-99F9-6206D2E79683}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

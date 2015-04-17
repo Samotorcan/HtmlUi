@@ -1,0 +1,12 @@
+﻿[ng\:cloak], [ng-cloak], [data-ng-cloak], .ng-cloak {
+    display: none !important;
+}
+
+.todo-list .todo {
+    display: table;
+}
+
+.todo-list .todo .todo-container {
+    display: table-cell;
+    vertical-align: middle;
+}

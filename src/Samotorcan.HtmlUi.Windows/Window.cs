@@ -100,15 +100,6 @@ namespace Samotorcan.HtmlUi.Windows
         /// </value>
         private NativeMethods.HookProc Browser_MouseEventDelegate { get; set; }
         #endregion
-        #region IgnoreNextRefreshKeyPress
-        /// <summary>
-        /// Gets or sets a value indicating whether to ignore next refresh key press.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> to ignore next refresh key press; otherwise, <c>false</c>.
-        /// </value>
-        private bool IgnoreNextRefreshKeyPress { get; set; }
-        #endregion
 
         #endregion
         #endregion
@@ -276,10 +267,13 @@ namespace Samotorcan.HtmlUi.Windows
         /// <param name="e">The <see cref="Core.Events.KeyPressEventArgs"/> instance containing the event data.</param>
         private void Window_KeyPress(object sender, Core.Events.KeyPressEventArgs e)
         {
-            if (e.NativeKeyCode == (int)Keys.F12)
-                OpenDeveloperTools();
-            else if (e.NativeKeyCode == (int)Keys.F5)
-                RefreshView(e.Modifiers == CefEventFlags.ControlDown);
+            if (e.KeyEventType == CefKeyEventType.RawKeyDown)
+            {
+                if (e.NativeKeyCode == (int)Keys.F12)
+                    OpenDeveloperTools();
+                else if (e.NativeKeyCode == (int)Keys.F5)
+                    RefreshView(e.Modifiers == CefEventFlags.ControlDown);
+            }
         }
         #endregion
         #region Browser_MouseEvent
@@ -378,19 +372,10 @@ namespace Samotorcan.HtmlUi.Windows
             {
                 MainApplication.Current.InvokeOnMain(() =>
                 {
-                    if (!IgnoreNextRefreshKeyPress)
-                    {
-                        IgnoreNextRefreshKeyPress = true;
-
-                        if (ignoreCache)
-                            CefBrowser.ReloadIgnoreCache();
-                        else
-                            CefBrowser.Reload();
-                    }
+                    if (ignoreCache)
+                        CefBrowser.ReloadIgnoreCache();
                     else
-                    {
-                        IgnoreNextRefreshKeyPress = false;
-                    }
+                        CefBrowser.Reload();
                 });
             }
         }

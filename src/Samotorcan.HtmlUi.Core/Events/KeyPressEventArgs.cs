@@ -34,6 +34,15 @@ namespace Samotorcan.HtmlUi.Core.Events
         /// </value>
         public CefEventFlags Modifiers { get; set; }
         #endregion
+        #region KeyEventType
+        /// <summary>
+        /// Gets or sets the type of the key event.
+        /// </summary>
+        /// <value>
+        /// The type of the key event.
+        /// </value>
+        public CefKeyEventType KeyEventType { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -44,10 +53,12 @@ namespace Samotorcan.HtmlUi.Core.Events
         /// </summary>
         /// <param name="nativeKeyCode">The native key code.</param>
         /// <param name="modifiers">The modifiers.</param>
-        public KeyPressEventArgs(int nativeKeyCode, CefEventFlags modifiers)
+        /// <param name="keyEventType">Type of the key event.</param>
+        public KeyPressEventArgs(int nativeKeyCode, CefEventFlags modifiers, CefKeyEventType keyEventType)
         {
             NativeKeyCode = nativeKeyCode;
             Modifiers = modifiers;
+            KeyEventType = keyEventType;
         }
 
         #endregion
