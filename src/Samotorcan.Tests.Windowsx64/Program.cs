@@ -1,4 +1,5 @@
-﻿using Samotorcan.HtmlUi.Windows;
+﻿using Samotorcan.HtmlUi.Core;
+using Samotorcan.HtmlUi.Windows;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,11 +12,24 @@ namespace Samotorcan.Tests.Windowsx64
     {
         static void Main(string[] args)
         {
+            if (HtmlUiRuntime.ApplicationType == ApplicationType.MainApplication)
+                RunMainApplication();
+            else
+                RunChildApplication();
+        }
+
+        private static void RunMainApplication()
+        {
             using (var application = new MainApplication())
             {
-                application.Window.View = "/Views/Index.html";
-                application.Window.Borderless = false;
+                application.Run();
+            }
+        }
 
+        private static void RunChildApplication()
+        {
+            using (var application = new ChildApplication())
+            {
                 application.Run();
             }
         }
