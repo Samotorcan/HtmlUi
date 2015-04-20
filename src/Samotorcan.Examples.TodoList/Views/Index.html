@@ -10,20 +10,37 @@
     <link rel="stylesheet" href="/Styles/todo-list.css" />
 </head>
 <body class="todo-list" ng-controller="todoListController" ng-cloak>
-    <h1>Todo example app</h1>
-
-    <input class="add" type="text" ng-model="todo" ng-keypress="$event.keyCode == 13 && addEditTodo()" focus-on="input" />
-
-    <div class="todos">
-        <div class="todo" ng-repeat="todo in todos">
-            <div class="text todo-container">{{todo.text}}</div>
-            <div class="edit todo-container">
-                <button class="edit-button" type="button" ng-click="editTodo($index)">edit</button>
-            </div>
-            <div class="remove todo-container">
-                <button class="remove-button" type="button" ng-click="removeTodo($index)">remove</button>
+    <div class="main-container container-fluid">
+        <h1 class="text-center">Todo example app</h1>
+        
+        <div class="form-group">
+            <div class="input-group main-input-group">
+                <input class="form-control main-input" type="text" placeholder="Todo text" maxlength="1024" ng-model="todo" ng-keypress="$event.keyCode == 13 && addEditTodo()" focus-on="input" />
+                <div class="input-group-btn">
+                    <button class="edit-button btn btn-default add-edit-button" type="button" ng-click="addEditTodo()">{{buttonText}}</button>
+                </div>
             </div>
         </div>
+
+        <table class="table table-striped" ng-show="todos.length > 0">
+            <caption>Todos</caption>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th class="width-100">Text</th>
+                    <th>Edit</th>
+                    <th>Remove</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="todo in todos">
+                    <td>{{$index + 1}}</td>
+                    <td>{{todo.text}}</td>
+                    <td><button class="edit-button btn btn-default btn-sm" type="button" ng-click="editTodo($index)">edit</button></td>
+                    <td><button class="remove-button btn btn-danger btn-sm" type="button" ng-click="removeTodo($index)">remove</button></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
     <script src="/Scripts/jquery-2.1.3.min.js"></script>

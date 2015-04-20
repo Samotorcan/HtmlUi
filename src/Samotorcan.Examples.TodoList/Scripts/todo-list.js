@@ -1,11 +1,12 @@
 ﻿var app = angular.module('todoListApp', ['ui.bootstrap', 'htmlUi']);
 
-app.controller('todoListController', ['$scope', 'focus', function ($scope, focus) {
-    $scope.todos = [];
+app.controller('todoListController', ['$scope', 'htmlUi.controller', 'focus', function ($scope, htmlUiController, focus) {
+    htmlUiController.createObservableController('TodoListController', $scope);
+
     $scope.todo = '';
+    $scope.buttonText = 'Add';
 
     var editIndex = null;
-    var editWatch = null;
 
     $scope.addEditTodo = function () {
         if (editIndex == null) {
@@ -13,14 +14,14 @@ app.controller('todoListController', ['$scope', 'focus', function ($scope, focus
                 $scope.todos.push({ text: $scope.todo });
         } else {
             if ($scope.todo != '')
-                $scope.todos[editIndex].text = $scope.todo;
+                $scope.todos[editIndex] = { text: $scope.todo };
             else
                 $scope.removeTodo(editIndex);
 
             editIndex = null;
-            editWatch();
         }
 
+        $scope.buttonText = 'Add';
         $scope.todo = '';
     };
 
@@ -32,11 +33,9 @@ app.controller('todoListController', ['$scope', 'focus', function ($scope, focus
         $scope.todo = $scope.todos[index].text;
         editIndex = index;
 
-        editWatch = $scope.$watch('todo', function () {
-            $scope.todos[index].text = $scope.todo;
-        });
-
         focus('input');
+
+        $scope.buttonText = 'Edit';
     };
 }]);
 
