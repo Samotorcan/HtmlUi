@@ -180,3 +180,7 @@ FakesAssemblies/
 GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
+
+Samotorcan.HtmlUi.sln.GhostDoc.xml
+Samotorcan.HtmlUi.Core/Resources/Scripts/references.js
+Samotorcan.HtmlUi.Core/Resources/Scripts/references.js.map
