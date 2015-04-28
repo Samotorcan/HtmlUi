@@ -82,7 +82,19 @@ The framework currently supports only one main window. To add the view for the m
 
 From here on now you can start the application and you should get an empty white window. To edit the UI simply add all your html in the Index.html and rerun the application. If you selected that Index.html is Copy always you can edit the file and refresh (F5) the window without restarting the application. The Developer Tools can be accessed by pressing F12 or clicking the top left corner of the application and selecting Developer Tools.
 
-How to connect a C# controller with the AngularJS controller can be seen in the TodoList example application.
+To connect a C# controller with the AngularJS controller create an angular module and include the `htmlUi` module. Next in the AngularJS controller request a service `htmlUi.controller` and create the C# controller with `htmlUiController.createObservableController('controllerName', $scope);`. Now the `$scope` will contain all the properties and methods that are defined in the C# controller.
+
+```JavaScript
+var app = angular.module('myApp', ['htmlUi']);
+
+app.controller('exampleController', ['$scope', 'htmlUi.controller', function ($scope, htmlUiController) {
+    htmlUiController.createObservableController('exampleController', $scope);
+    
+    // controller code ...
+});
+```
 
 ## Examples
-The sources contain one example application TodoList.
+The sources contain one example application [TodoList](src/Samotorcan.Examples.TodoList).
+
+![new console application](docs/TodoList.jpg)
