@@ -94,7 +94,7 @@ app.controller('exampleController', ['$scope', 'htmlUi.controller', function ($s
 });
 ```
 
-To create a C# controller simply create a class that extends either Controller or ObservableController. The controllers that are extended from Controller will only have methods linked to the AngularJS controller and properties will be ignored. Controllers created this way are used where the AngularJS scope is not created like services.
+To create a C# controller simply create a class that extends either [Controller](src/Samotorcan.HtmlUi.Core/Controller.cs) or [ObservableController](src/Samotorcan.HtmlUi.Core/ObservableController.cs). The controllers that are extended from Controller will only have methods linked to the AngularJS controller and properties will be ignored. Controllers created this way are used where the AngularJS scope is not created like services.
 
 ```C#
 public class ExampleController : Controller
