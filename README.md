@@ -17,7 +17,7 @@ To create a new application first create a new Console Application in Visual Stu
 
 ![new console application](docs/NewConsoleApplication.jpg)
 
-To debug the application with CEF 'Enable the Visual Studio hosting process' must be unchecked in the project properties. If this is enabled you will only get a white screen when running the application in debug mode.
+To debug the application with CEF `Enable the Visual Studio hosting process` must be unchecked in the project properties. If this is enabled you will only get a white screen when running the application in debug mode.
 
 ![new console application](docs/HostingProcess.jpg)
 
