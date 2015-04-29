@@ -94,7 +94,35 @@ app.controller('exampleController', ['$scope', 'htmlUi.controller', function ($s
 });
 ```
 
+To create a C# controller simply create a class that extends either Controller or ObservableController. The controllers that are extended from Controller will only have methods linked to the AngularJS controller and properties will be ignored. Controllers created this way are used where the AngularJS scope is not created like services.
+
+```C#
+public class ExampleController : Controller
+{
+    public void DoSomething()
+    {
+        // this method can be called from JavaScript
+    }
+}
+```
+
+Controllers that extend ObservableController are used where the AngularJS scope is created like the AngularJS controller. The scope will contain all the methods and the properties that are defined in the C# controller. The properties are also linked and every property changed in scope or C# controller will be sync back. In AngularJS the framework adds watches to all the controller properties to watch for changes and sync them back to C# controller. In C# controller the framework must be notified of property changes by calling the `INotifyPropertyChanged.PropertyChanged` event or `SetField` in Controller.
+
+```C#
+public class ExampleController : Controller
+{
+    public string SomeProperty { get; set; }    // only changes from JavaScript to C# are synced
+    
+    private string _someOtherProperty;
+    public string SomeOtherProperty             // changes are synced both ways
+    {
+        get { return _someOtherProperty; }
+        set { SetField(ref _someOtherProperty, value); }
+    }
+}
+```
+
 ## Examples
-The sources contain one example application [TodoList](src/Samotorcan.Examples.TodoList).
+The sources contain one example application [TodoList](src/Samotorcan.Examples.TodoList). The application shows how to use the HtmlUi framework to sync todo items from UI to C# and load and save todo items in a JSON file.
 
 ![new console application](docs/TodoList.jpg)
