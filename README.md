@@ -109,7 +109,7 @@ public class ExampleController : Controller
 Controllers that extend ObservableController are used where the AngularJS scope is created like the AngularJS controller. The scope will contain all the methods and the properties that are defined in the C# controller. The properties are also linked and every property changed in scope or C# controller will be sync back. In AngularJS the framework adds watches to all the controller properties to watch for changes and sync them back to C# controller. In C# controller the framework must be notified of property changes by calling the [INotifyPropertyChanged.PropertyChanged](https://msdn.microsoft.com/en-us/library/system.componentmodel.inotifypropertychanged) event or `SetField` in controller.
 
 ```C#
-public class ExampleController : Controller
+public class ExampleController : ObservableController
 {
     public string SomeProperty { get; set; }    // only changes from JavaScript to C# are synced
     
