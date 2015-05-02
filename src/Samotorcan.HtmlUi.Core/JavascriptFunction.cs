@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
@@ -81,27 +82,89 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Executes the function.
         /// </summary>
-        public void Execute()
+        public JToken Execute()
         {
-            CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[0]);
+            return ParseCefV8Value(CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[0]));
         }
 
         /// <summary>
         /// Executes the function with data.
         /// </summary>
         /// <param name="data">The data.</param>
-        public void Execute(object data)
+        public JToken Execute(object data)
         {
-            CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[] { CefV8Value.CreateString(JsonUtility.SerializeToJson(data)) });
+            return ParseCefV8Value(CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[] { CefV8Value.CreateString(JsonUtility.SerializeToJson(data)) }));
         }
 
         /// <summary>
         /// Executes the function with json.
         /// </summary>
         /// <param name="json">The json.</param>
-        public void Execute(string json)
+        public JToken Execute(string json)
         {
-            CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[] { CefV8Value.CreateString(json) });
+            return ParseCefV8Value(CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[] { CefV8Value.CreateString(json) }));
+        }
+        #endregion
+
+        #endregion
+        #region Private
+
+        #region ParseCefV8Value
+        /// <summary>
+        /// Parses the cef v8 value.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
+        private JToken ParseCefV8Value(CefV8Value value)
+        {
+            if (value == null)
+                return null;
+
+            return CefUtility.RunInContext(Context, () =>
+            {
+                if (value.IsInt)
+                    return JToken.FromObject(value.GetIntValue());
+
+                if (value.IsUInt)
+                    return JToken.FromObject(value.GetUIntValue());
+
+                if (value.IsDouble)
+                    return JToken.FromObject(value.GetDoubleValue());
+
+                if (value.IsBool)
+                    return JToken.FromObject(value.GetBoolValue());
+
+                if (value.IsDate)
+                    return JToken.FromObject(value.GetDateValue());
+
+                if (value.IsString)
+                    return JToken.FromObject(value.GetStringValue());
+
+                if (value.IsUndefined)
+                    return JValue.CreateUndefined();
+
+                if (value.IsArray)
+                {
+                    var array = new JArray();
+
+                    for (var i = 0; i < value.GetArrayLength(); i++)
+                        array.Add(ParseCefV8Value(value.GetValue(i)));
+
+                    return array;
+                }
+
+                if (value.IsObject)
+                {
+                    var obj = new JObject();
+
+                    foreach (var propertyName in value.GetKeys())
+                        obj.Add(propertyName, ParseCefV8Value(value.GetValue(propertyName)));
+
+                    return obj;
+                }
+
+                return JValue.CreateNull();
+            });
         }
         #endregion
 

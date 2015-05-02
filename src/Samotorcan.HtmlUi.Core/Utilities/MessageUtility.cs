@@ -21,6 +21,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// Sends the message.
         /// </summary>
         /// <typeparam name="TData">The type of the data.</typeparam>
+        /// <param name="process">The process.</param>
         /// <param name="cefBrowser">The cef browser.</param>
         /// <param name="name">The name.</param>
         /// <param name="callbackId">The callback identifier.</param>
@@ -30,7 +31,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// or
         /// name
         /// </exception>
-        public static void SendMessage<TData>(CefBrowser cefBrowser, string name, Guid? callbackId, TData data)
+        public static void SendMessage<TData>(CefProcessId process, CefBrowser cefBrowser, string name, Guid? callbackId, TData data)
         {
             if (cefBrowser == null)
                 throw new ArgumentNullException("cefBrowser");
@@ -40,7 +41,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
 
             var message = JsonUtility.SerializeToBson(new Message<TData>(callbackId, data));
 
-            SendBinaryMessage(cefBrowser, name, message);
+            SendBinaryMessage(process, cefBrowser, name, message);
         }
         #endregion
         #region DeserializeMessage
@@ -76,10 +77,11 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <summary>
         /// Sends the binary message.
         /// </summary>
+        /// <param name="process">The process.</param>
         /// <param name="cefBrowser">The cef browser.</param>
         /// <param name="name">The name.</param>
         /// <param name="message">The message.</param>
-        private static void SendBinaryMessage(CefBrowser cefBrowser, string name, byte[] message)
+        private static void SendBinaryMessage(CefProcessId process, CefBrowser cefBrowser, string name, byte[] message)
         {
             using (var processMessage = CefProcessMessage.Create(name))
             {
@@ -89,7 +91,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
                     {
                         processMessage.Arguments.SetBinary(0, binaryValue);
 
-                        cefBrowser.SendProcessMessage(CefProcessId.Browser, processMessage);
+                        cefBrowser.SendProcessMessage(process, processMessage);
                     }
                 }
                 finally

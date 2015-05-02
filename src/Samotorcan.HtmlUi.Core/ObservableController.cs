@@ -86,13 +86,19 @@ namespace Samotorcan.HtmlUi.Core
             ObservableControllerTypeInfos = new Dictionary<Type, ObservableControllerTypeInfo>();
         }
 
+        #endregion
+        #region Methods
+        #region Internal
+
+        #region Initialize
         /// <summary>
-        /// Initializes a new instance of the <see cref="ObservableController"/> class.
+        /// Initializes the observable controller.
         /// </summary>
         /// <param name="id">The identifier.</param>
-        public ObservableController(int id)
-            : base(id)
+        internal override void Initialize(int id)
         {
+            base.Initialize(id);
+
             PropertyChanges = new HashSet<string>();
             ObservableCollectionChanges = new Dictionary<string, ObservableCollectionChanges>();
 
@@ -101,20 +107,12 @@ namespace Samotorcan.HtmlUi.Core
 
             SyncChanges = true;
             PropertyChanged += PropertyChangedHandle;
-        }
 
-        #endregion
-        #region Methods
-        #region Internal
-
-        #region ClearChanges
-        /// <summary>
-        /// Clears the changes.
-        /// </summary>
-        internal void ClearChanges()
-        {
-            PropertyChanges.Clear();
-            ObservableCollectionChanges.Clear();
+            foreach (var property in ObservableControllerTypeInfo.Properties.Values)
+            {
+                if (property.IsObservableCollection)
+                    AddObservableCollection(property);
+            }
         }
         #endregion
         #region GetProperties

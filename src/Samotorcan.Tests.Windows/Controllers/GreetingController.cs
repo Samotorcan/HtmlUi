@@ -39,8 +39,7 @@ namespace Samotorcan.Tests.Windows.Controllers
 
         public int[] SomeArray { get; set; }
 
-        public GreetingController(int id)
-            : base(id)
+        public GreetingController()
         {
             FirstNumber = 123;
 

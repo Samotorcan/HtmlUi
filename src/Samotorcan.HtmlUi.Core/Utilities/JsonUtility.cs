@@ -22,7 +22,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
     internal static class JsonUtility
     {
         #region Properties
-        #region Private
+        #region Public
 
         #region Serializer
         /// <summary>
@@ -31,7 +31,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <value>
         /// The serializer.
         /// </value>
-        private static JsonSerializer Serializer { get; set; }
+        public static JsonSerializer Serializer { get; private set; }
         #endregion
         #region JsonSerializerSettings
         /// <summary>
@@ -40,7 +40,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <value>
         /// The json serializer settings.
         /// </value>
-        private static JsonSerializerSettings JsonSerializerSettings { get; set; }
+        public static JsonSerializerSettings JsonSerializerSettings { get; private set; }
         #endregion
 
         #endregion

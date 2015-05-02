@@ -8,6 +8,13 @@ var htmlUi;
 // definitions
 var htmlUi;
 (function (htmlUi) {
+    (function (ClientFunctionResultType) {
+        ClientFunctionResultType[ClientFunctionResultType["Value"] = 1] = "Value";
+        ClientFunctionResultType[ClientFunctionResultType["Undefined"] = 2] = "Undefined";
+        ClientFunctionResultType[ClientFunctionResultType["Exception"] = 3] = "Exception";
+        ClientFunctionResultType[ClientFunctionResultType["FunctionNotFound"] = 4] = "FunctionNotFound";
+    })(htmlUi.ClientFunctionResultType || (htmlUi.ClientFunctionResultType = {}));
+    var ClientFunctionResultType = htmlUi.ClientFunctionResultType;
     (function (ObservableCollectionChangeAction) {
         ObservableCollectionChangeAction[ObservableCollectionChangeAction["Add"] = 1] = "Add";
         ObservableCollectionChangeAction[ObservableCollectionChangeAction["Remove"] = 2] = "Remove";

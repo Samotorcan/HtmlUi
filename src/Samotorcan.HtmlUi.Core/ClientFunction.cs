@@ -6,24 +6,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Samotorcan.HtmlUi.Core.Messages
+namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// CallMethod
+    /// Client function.
     /// </summary>
-    internal class CallMethod
+    internal class ClientFunction
     {
         #region Properties
         #region Public
 
-        #region Id
+        #region ControllerId
         /// <summary>
-        /// Gets or sets the identifier.
+        /// Gets or sets the controller identifier.
         /// </summary>
         /// <value>
-        /// The identifier.
+        /// The controller identifier.
         /// </value>
-        public int Id { get; set; }
+        public int ControllerId { get; set; }
         #endregion
         #region Name
         /// <summary>
@@ -42,16 +42,7 @@ namespace Samotorcan.HtmlUi.Core.Messages
         /// The arguments.
         /// </value>
         [JsonProperty(PropertyName = "args")]
-        public JArray Arguments { get; set; }
-        #endregion
-        #region InternalMethod
-        /// <summary>
-        /// Gets or sets a value indicating whether [internal method].
-        /// </summary>
-        /// <value>
-        ///   <c>true</c> if [internal method]; otherwise, <c>false</c>.
-        /// </value>
-        public bool InternalMethod { get; set; }
+        public object[] Arguments { get; set; }
         #endregion
 
         #endregion

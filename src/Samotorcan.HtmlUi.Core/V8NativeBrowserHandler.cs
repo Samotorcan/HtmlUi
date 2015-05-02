@@ -1,12 +1,15 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Messages;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
 
@@ -60,6 +63,8 @@ namespace Samotorcan.HtmlUi.Core
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "sourceProcess", Justification = "I want it to match to OnProcessMessageReceived method.")]
         public bool ProcessMessage(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
         {
+            GeneralLog.Debug(string.Format("browser - process message: {0}", processMessage.Name));
+
             if (processMessage.Name == "native")
             {
                 var message = MessageUtility.DeserializeMessage<CallNative>(processMessage);
@@ -100,7 +105,7 @@ namespace Samotorcan.HtmlUi.Core
                         }
                         else
                         {
-                            if (returnData == Undefined.Value)
+                            if (returnData == Value.Undefined)
                             {
                                 nativeResponse.Exception = null;
                                 nativeResponse.Type = NativeResponseType.Undefined;
@@ -116,12 +121,21 @@ namespace Samotorcan.HtmlUi.Core
 
                         var returnJson = JsonUtility.SerializeToJson(nativeResponse);
 
-                        MessageUtility.SendMessage(browser, "native", message.CallbackId, returnJson);
+                        MessageUtility.SendMessage(CefProcessId.Renderer, browser, "native", message.CallbackId, returnJson);
                     }
                 }).ContinueWith(t =>
                 {
                     GeneralLog.Error("Native call exception.", t.Exception);
                 }, TaskContinuationOptions.OnlyOnFaulted);
+
+                return true;
+            }
+
+            if (processMessage.Name == "callFunctionResult")
+            {
+                var message = MessageUtility.DeserializeMessage<CallFunctionResult>(processMessage);
+
+                BaseMainApplication.Current.Window.SetCallFunctionResult(message.CallbackId.Value, message.Data.Result);
 
                 return true;
             }

@@ -8,6 +8,7 @@ using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Messages;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -135,6 +136,19 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
 
         #endregion
+        #region Private
+
+        #region WaitingCallFunction
+        /// <summary>
+        /// Gets or sets the waiting call function.
+        /// </summary>
+        /// <value>
+        /// The waiting call function.
+        /// </value>
+        private ConcurrentDictionary<Guid, TaskCompletionSource<JToken>> WaitingCallFunction { get; set; }
+        #endregion
+
+        #endregion
         #endregion
         #region Constructors
 
@@ -146,6 +160,7 @@ namespace Samotorcan.HtmlUi.Core
             View = "/Views/Index.html";
             Controllers = new Dictionary<int, Controller>();
             ObservableControllers = new Dictionary<int, ObservableController>();
+            WaitingCallFunction = new ConcurrentDictionary<Guid, TaskCompletionSource<JToken>>();
         }
 
         #endregion
@@ -165,32 +180,63 @@ namespace Samotorcan.HtmlUi.Core
                 KeyPress(this, new KeyPressEventArgs(nativeKeyCode, modifiers, keyEventType));
         }
         #endregion
-        #region CallFunction
+        #region CallFunctionAsync
         /// <summary>
-        /// Calls the function.
+        /// Calls the function asynchronous.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="data">The data.</param>
+        /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">name</exception>
-        internal void CallFunction(string name, object data)
+        internal Task<JToken> CallFunctionAsync(string name, object data)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException("name");
 
-            MessageUtility.SendMessage(CefBrowser, "callFunction", null, new CallFunction { Name = name, Data = data });
+            var callbackId = Guid.NewGuid();
+            var taskCompletionSource = new TaskCompletionSource<JToken>();
+
+            WaitingCallFunction.TryAdd(callbackId, taskCompletionSource);
+            MessageUtility.SendMessage(CefProcessId.Renderer, CefBrowser, "callFunction", callbackId, new CallFunction { Name = name, Data = data });
+
+            return taskCompletionSource.Task;
         }
 
         /// <summary>
-        /// Calls the function.
+        /// Calls the function asynchronous.
         /// </summary>
         /// <param name="name">The name.</param>
+        /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">name</exception>
-        internal void CallFunction(string name)
+        internal Task<JToken> CallFunctionAsync(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException("name");
 
-            MessageUtility.SendMessage(CefBrowser, "callFunction", null, new CallFunction { Name = name, Data = Undefined.Value });
+            var callbackId = Guid.NewGuid();
+            var taskCompletionSource = new TaskCompletionSource<JToken>();
+
+            WaitingCallFunction.TryAdd(callbackId, taskCompletionSource);
+            MessageUtility.SendMessage(CefProcessId.Renderer, CefBrowser, "callFunction", callbackId, new CallFunction { Name = name, Data = Value.Undefined });
+
+            return taskCompletionSource.Task;
+        }
+        #endregion
+        #region SetCallFunctionResult
+        /// <summary>
+        /// Sets the call function result.
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <param name="value">The value.</param>
+        /// <exception cref="System.ArgumentException">Invalid id.;id</exception>
+        internal void SetCallFunctionResult(Guid id, JToken value)
+        {
+            TaskCompletionSource<JToken> taskCompletionSource = null;
+
+            if (!WaitingCallFunction.TryRemove(id, out taskCompletionSource))
+                throw new ArgumentException("Invalid id.", "id");
+
+            taskCompletionSource.SetResult(value);
         }
         #endregion
 
@@ -203,7 +249,6 @@ namespace Samotorcan.HtmlUi.Core
             var controllerProvider = BaseMainApplication.Current.ControllerProvider;
             var id = FindNextFreeControllerId();
 
-            // create
             var controller = controllerProvider.CreateController(name, id);
 
             Controllers.Add(id, controller);
@@ -220,9 +265,7 @@ namespace Samotorcan.HtmlUi.Core
             var controllerProvider = BaseMainApplication.Current.ControllerProvider;
             var id = FindNextFreeControllerId();
 
-            // create
             var observableController = controllerProvider.CreateObservableController(name, id);
-            observableController.ClearChanges();
 
             ObservableControllers.Add(id, observableController);
 
@@ -320,7 +363,7 @@ namespace Samotorcan.HtmlUi.Core
             {
                 GeneralLog.Debug("Sync controller changes to client.");
 
-                CallFunction("syncControllerChanges", controllerChanges);
+                CallFunctionAsync("syncControllerChanges", controllerChanges);
             }
         }
         #endregion

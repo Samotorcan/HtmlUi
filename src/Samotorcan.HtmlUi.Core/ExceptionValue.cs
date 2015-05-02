@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// Undefined value.
+    /// Exception value.
     /// </summary>
-    internal sealed class Undefined
+    internal sealed class ExceptionValue
     {
         #region Properties
         #region Public
@@ -21,7 +21,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <value>
         /// The value.
         /// </value>
-        public static Undefined Value { get; private set; }
+        public static ExceptionValue Value { get; private set; }
         #endregion
 
         #endregion
@@ -29,17 +29,17 @@ namespace Samotorcan.HtmlUi.Core
         #region Constructors
 
         /// <summary>
-        /// Initializes the <see cref="Undefined"/> class.
+        /// Initializes the <see cref="ExceptionValue"/> class.
         /// </summary>
-        static Undefined()
+        static ExceptionValue()
         {
-            Value = new Undefined();
+            Value = new ExceptionValue();
         }
 
         /// <summary>
-        /// Prevents a default instance of the <see cref="Undefined"/> class from being created.
+        /// Prevents a default instance of the <see cref="ExceptionValue"/> class from being created.
         /// </summary>
-        private Undefined() { }
+        private ExceptionValue() { }
 
         #endregion
     }

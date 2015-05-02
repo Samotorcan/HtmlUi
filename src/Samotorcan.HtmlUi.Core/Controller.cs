@@ -99,8 +99,105 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Initializes a new instance of the <see cref="Controller"/> class.
         /// </summary>
+        public Controller() { }
+
+        #endregion
+        #region Methods
+        #region Public
+
+        #region CallFunction
+        /// <summary>
+        /// Calls the function asynchronous.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="name">The name.</param>
+        /// <param name="arguments">The arguments.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        [Exclude]
+        public Task<TResult> CallFunctionAsync<TResult>(string name, params object[] arguments)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentNullException(name);
+
+            if (arguments == null)
+                arguments = new object[0];
+
+            BaseMainApplication.Current.EnsureMainThread();
+
+            var resultAction = BaseMainApplication.Current.Window.CallFunctionAsync("callClientFunction", new ClientFunction { ControllerId = Id, Name = name, Arguments = arguments });
+
+            return resultAction.ContinueWith<TResult>((task) =>
+            {
+                var result = task.Result.ToObject<ClientFunctionResult>(JsonUtility.Serializer);
+
+                if (result.Type == ClientFunctionResultType.Exception)
+                    throw new CallFunctionException(result.Exception);
+
+                if (result.Type == ClientFunctionResultType.FunctionNotFound)
+                    throw new FunctionNotFoundException(name);
+
+                if (result.Type == ClientFunctionResultType.Undefined)
+                    return default(TResult);
+
+                return result.Value.ToObject<TResult>();
+            });
+        }
+
+        /// <summary>
+        /// Calls the function asynchronous.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="name">The name.</param>
+        /// <returns></returns>
+        [Exclude]
+        public Task<TResult> CallFunctionAsync<TResult>(string name)
+        {
+            return CallFunctionAsync<TResult>(name, null);
+        }
+
+        /// <summary>
+        /// Calls the function asynchronous.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="arguments">The arguments.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        [Exclude]
+        public Task CallFunctionAsync(string name, params object[] arguments)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentNullException(name);
+
+            if (arguments == null)
+                arguments = new object[0];
+
+            BaseMainApplication.Current.EnsureMainThread();
+
+            return BaseMainApplication.Current.Window.CallFunctionAsync("callClientFunction", new ClientFunction { ControllerId = Id, Name = name, Arguments = arguments });
+        }
+
+        /// <summary>
+        /// Calls the function asynchronous.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns></returns>
+        [Exclude]
+        public Task CallFunctionAsync(string name)
+        {
+            return CallFunctionAsync(name, null);
+        }
+        #endregion
+
+        #endregion
+        #region Internal
+
+        #region Initialize
+        /// <summary>
+        /// Initializes the controller.
+        /// </summary>
         /// <param name="id">The identifier.</param>
-        public Controller(int id)
+        internal virtual void Initialize(int id)
         {
             Id = id;
 
@@ -110,11 +207,7 @@ namespace Samotorcan.HtmlUi.Core
             LoadControllerTypeInfoIfNeeded();
             ControllerTypeInfo = ControllerTypeInfos[ControllerType];
         }
-
         #endregion
-        #region Methods
-        #region Internal
-
         #region WarmUp
         /// <summary>
         /// Warms up the native calls.
@@ -208,7 +301,7 @@ namespace Samotorcan.HtmlUi.Core
             {
                 method.Delegate.DynamicInvoke(delegateParameters.ToArray());
 
-                return Undefined.Value;
+                return Value.Undefined;
             }
             else
             {

@@ -1,6 +1,6 @@
 ﻿var app = angular.module('todoListApp', ['ui.bootstrap', 'htmlUi']);
 
-app.controller('todoListController', ['$scope', 'htmlUi.controller', 'focus', function ($scope, htmlUiController, focus) {
+app.controller('todoListController', ['$scope', 'htmlUi.controller', 'database', 'focus', function ($scope, htmlUiController, database, focus) {
     htmlUiController.createObservableController('TodoListController', $scope);
 
     $scope.todo = '';
@@ -37,6 +37,18 @@ app.controller('todoListController', ['$scope', 'htmlUi.controller', 'focus', fu
 
         $scope.buttonText = 'Edit';
     };
+
+    $scope.loadTodos = function () {
+        $scope.todos = database.loadTodos();
+    };
+
+    $scope.saveTodos = function () {
+        database.saveTodos($scope.todos);
+    };
+}]);
+
+app.factory('database', ['htmlUi.controller', function (htmlUiController) {
+    return htmlUiController.createController('DatabaseService');
 }]);
 
 app.directive('focusOn', function () {
@@ -49,10 +61,10 @@ app.directive('focusOn', function () {
     };
 });
 
-app.factory('focus', function ($rootScope, $timeout) {
+app.factory('focus', ['$rootScope', '$timeout', function ($rootScope, $timeout) {
     return function (name) {
         $timeout(function () {
             $rootScope.$broadcast('focusOn', name);
         });
     }
-});
+}]);

@@ -37,6 +37,74 @@ namespace Samotorcan.HtmlUi.Core.Utilities
                 action();
         }
         #endregion
+        #region RunInContext
+        /// <summary>
+        /// Run in context.
+        /// </summary>
+        /// <typeparam name="TReturn">The type of the return.</typeparam>
+        /// <param name="context">The context.</param>
+        /// <param name="action">The action.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// context
+        /// or
+        /// action
+        /// </exception>
+        public static TReturn RunInContext<TReturn>(CefV8Context context, Func<TReturn> action)
+        {
+            if (context == null)
+                throw new ArgumentNullException("context");
+
+            if (action == null)
+                throw new ArgumentNullException("action");
+
+            var contextEntered = false;
+            if (!CefV8Context.InContext || !CefV8Context.GetEnteredContext().IsSame(context))
+            {
+                context.Enter();
+                contextEntered = true;
+            }
+
+            try
+            {
+                return action();
+            }
+            finally
+            {
+                if (contextEntered)
+                {
+                    context.Exit();
+                    contextEntered = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Run in context.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="action">The action.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// context
+        /// or
+        /// action
+        /// </exception>
+        public static void RunInContext(CefV8Context context, Action action)
+        {
+            if (context == null)
+                throw new ArgumentNullException("context");
+
+            if (action == null)
+                throw new ArgumentNullException("action");
+
+            CefUtility.RunInContext<object>(context, () =>
+            {
+                action();
+
+                return null;
+            });
+        }
+        #endregion
 
         #endregion
         #endregion

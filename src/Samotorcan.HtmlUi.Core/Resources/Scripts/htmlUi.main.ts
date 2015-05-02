@@ -9,6 +9,25 @@ module htmlUi {
 
 // definitions
 module htmlUi {
+    export enum ClientFunctionResultType {
+        Value = 1,
+        Undefined = 2,
+        Exception = 3,
+        FunctionNotFound = 4
+    }
+
+    export interface IClientFunctionResult {
+        type: ClientFunctionResultType;
+        exception: Object;
+        value: Object;
+    }
+
+    export interface IClientFunction {
+        controllerId: number;
+        name: string;
+        args: Array<Object>;
+    }
+
     export interface IControllerChange {
         id: number;
         properties: { [name: string]: Object };

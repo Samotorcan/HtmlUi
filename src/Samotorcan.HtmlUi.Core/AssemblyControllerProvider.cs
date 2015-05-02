@@ -89,7 +89,10 @@ namespace Samotorcan.HtmlUi.Core
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException("name");
 
-            return (Controller)Activator.CreateInstance(GetControllerType(name), id);
+            var controller = (Controller)Activator.CreateInstance(GetControllerType(name));
+            controller.Initialize(id);
+
+            return controller;
         }
         #endregion
         #region CreateObservableController
@@ -105,7 +108,10 @@ namespace Samotorcan.HtmlUi.Core
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException("name");
 
-            return (ObservableController)Activator.CreateInstance(GetObservableControllerType(name), id);
+            var observableController = (ObservableController)Activator.CreateInstance(GetObservableControllerType(name));
+            observableController.Initialize(id);
+
+            return observableController;
         }
         #endregion
         #region IsUniqueControllerName

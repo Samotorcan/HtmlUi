@@ -289,6 +289,7 @@ var htmlUi;
         function init() {
             // register functions
             angular.native.registerFunction('syncControllerChanges', syncControllerChanges);
+            angular.native.registerFunction('callClientFunction', callClientFunction);
             // module
             var htmlUiModule = _angular.module('htmlUi', []);
             // run
@@ -296,8 +297,27 @@ var htmlUi;
                 $rootScope['htmlUiControllerChanges'] = _controllerDataContainer.controllerChanges;
                 addHtmlUiControllerChangesWatch($rootScope);
             }]);
-            // controller
+            // controller service
             htmlUiModule.factory('htmlUi.controller', [function () {
+                var createController = function (controllerName) {
+                    // create controller
+                    var controller = angular.native.createController(controllerName);
+                    var clientController = {};
+                    // methods
+                    htmlUi._.forEach(controller.methods, function (method) {
+                        clientController[method.name] = function () {
+                            return angular.native.callMethod(controller.id, method.name, htmlUi.utility.argumentsToArray(arguments));
+                        };
+                    });
+                    // destroy controller
+                    clientController['destroy'] = function () {
+                        angular.native.destroyController(controller.id);
+                    };
+                    // warm up native calls
+                    angular.native.callInternalMethodAsync(controller.id, 'warmUp', ['warmUp']).then(function () {
+                    });
+                    return clientController;
+                };
                 var createObservableController = function (controllerName, $scope) {
                     var scopeId = $scope.$id;
                     // create controller
@@ -332,6 +352,7 @@ var htmlUi;
                     return $scope;
                 };
                 return {
+                    createController: createController,
                     createObservableController: createObservableController
                 };
             }]);
@@ -466,6 +487,31 @@ var htmlUi;
                 var removedItem = removedItems[0];
                 collection.splice(toIndex, 0, removedItem);
             }
+        }
+        function callClientFunction(json) {
+            var clientFunction = JSON.parse(json);
+            var controllerData = _controllerDataContainer.getControllerData(clientFunction.controllerId);
+            var result = {
+                type: 1 /* Value */,
+                exception: null,
+                value: null
+            };
+            if (htmlUi._.isFunction(controllerData.$scope[clientFunction.name])) {
+                var func = controllerData.$scope[clientFunction.name];
+                try {
+                    result.value = func.apply({}, clientFunction.args);
+                }
+                catch (err) {
+                    result.type = 3 /* Exception */;
+                    result.exception = err;
+                }
+                if (result.value === undefined)
+                    result.type = 2 /* Undefined */;
+            }
+            else {
+                result.type = 4 /* FunctionNotFound */;
+            }
+            return result;
         }
     })(angular = htmlUi.angular || (htmlUi.angular = {}));
 })(htmlUi || (htmlUi = {}));

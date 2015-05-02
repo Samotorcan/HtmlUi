@@ -166,7 +166,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             // ok
             else
             {
-                if (ResponseValue == Undefined.Value)
+                if (ResponseValue == Value.Undefined)
                 {
                     nativeResponse.Type = NativeResponseType.Undefined;
                     nativeResponse.Value = null;
@@ -344,7 +344,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 BaseMainApplication.Current.Window.DestroyController(controllerId);
             });
 
-            return Undefined.Value;
+            return Value.Undefined;
         }
         #endregion
         #region SyncControllerChanges
@@ -364,7 +364,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 application.Window.SyncControllerChangesToServer(controllerChanges);
             });
 
-            return Undefined.Value;
+            return Value.Undefined;
         }
         #endregion
         #region CallMethod
@@ -405,7 +405,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             if (type == LogType.GeneralLog)
                 GeneralLog.Log(messageType, message);
 
-            return Undefined.Value;
+            return Value.Undefined;
         }
         #endregion
 

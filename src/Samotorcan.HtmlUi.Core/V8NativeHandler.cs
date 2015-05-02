@@ -85,6 +85,8 @@ namespace Samotorcan.HtmlUi.Core
             if (processMessage == null)
                 throw new ArgumentNullException("processMessage");
 
+            GeneralLog.Debug(string.Format("renderer - process message: {0}", processMessage.Name));
+
             // native
             if (processMessage.Name == "native")
             {
@@ -111,10 +113,14 @@ namespace Samotorcan.HtmlUi.Core
 
                 if (Functions.ContainsKey(functionName))
                 {
-                    if (data != Undefined.Value)
-                        Functions[functionName].Execute(data);
+                    JToken returnValue = null;
+
+                    if (data != Value.Undefined)
+                        returnValue = Functions[functionName].Execute(data);
                     else
-                        Functions[functionName].Execute();
+                        returnValue = Functions[functionName].Execute();
+
+                    MessageUtility.SendMessage(CefProcessId.Browser, CefBrowser, "callFunctionResult", message.CallbackId, new CallFunctionResult { Result = returnValue });
                 }
                 else
                 {
@@ -168,7 +174,7 @@ namespace Samotorcan.HtmlUi.Core
 
                 var callbackId = AddCallback(callbackFunction, CefV8Context.GetCurrentContext());
 
-                MessageUtility.SendMessage(CefBrowser, "native", callbackId, new CallNative { Name = functionName, Json = jsonData });
+                MessageUtility.SendMessage(CefProcessId.Browser, CefBrowser, "native", callbackId, new CallNative { Name = functionName, Json = jsonData });
 
                 return true;
             }

@@ -83,6 +83,9 @@
     <Compile Include="BaseApplication.cs" />
     <Compile Include="BaseMainApplication.cs" />
     <Compile Include="BaseChildApplication.cs" />
+    <Compile Include="ClientFunction.cs" />
+    <Compile Include="ClientFunctionResult.cs" />
+    <Compile Include="ClientFunctionResultType.cs" />
     <Compile Include="ControllerMethod.cs" />
     <Compile Include="ControllerMethodBase.cs" />
     <Compile Include="ControllerMethodDescription.cs" />
@@ -92,6 +95,7 @@
     <Compile Include="Diagnostics\Stopwatch.cs" />
     <Compile Include="Events\OnLoadStartEventArgs.cs" />
     <Compile Include="Events\OnLoadEndEventArgs.cs" />
+    <Compile Include="Exceptions\CallFunctionException.cs" />
     <Compile Include="Exceptions\SyncMaxDepthException.cs" />
     <Compile Include="Exceptions\FunctionNotFoundException.cs" />
     <Compile Include="Exceptions\ReadOnlyPropertyException.cs" />
@@ -105,6 +109,7 @@
     <Compile Include="Exceptions\ParameterCountMismatchException.cs" />
     <Compile Include="JavascriptException.cs" />
     <Compile Include="InternalMethodAttribute.cs" />
+    <Compile Include="Messages\CallFunctionResult.cs" />
     <Compile Include="Messages\CallFunction.cs" />
     <Compile Include="Messages\CallMethod.cs" />
     <Compile Include="Messages\CallNative.cs" />
@@ -126,7 +131,9 @@
     <Compile Include="Message.cs" />
     <Compile Include="Renderer\Handlers\LoadHandler.cs" />
     <Compile Include="SourceMap.cs" />
-    <Compile Include="Undefined.cs" />
+    <Compile Include="ExceptionValue.cs" />
+    <Compile Include="UndefinedValue.cs" />
+    <Compile Include="Value.cs" />
     <Compile Include="Utilities\ExceptionUtility.cs" />
     <Compile Include="Utilities\ExpressionUtility.cs" />
     <Compile Include="Utilities\UrlUtility.cs" />

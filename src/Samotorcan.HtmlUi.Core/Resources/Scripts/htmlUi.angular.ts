@@ -321,6 +321,7 @@ module htmlUi.angular {
     function init(): void {
         // register functions
         native.registerFunction('syncControllerChanges', syncControllerChanges);
+        native.registerFunction('callClientFunction', callClientFunction);
 
         // module
         var htmlUiModule = _angular.module('htmlUi', []);
@@ -332,8 +333,31 @@ module htmlUi.angular {
             addHtmlUiControllerChangesWatch($rootScope);
         }]);
 
-        // controller
+        // controller service
         htmlUiModule.factory('htmlUi.controller', [() => {
+            var createController = (controllerName: string): Object => {
+                // create controller
+                var controller = native.createController(controllerName);
+                var clientController = {};
+
+                // methods
+                _.forEach(controller.methods, (method) => {
+                    clientController[method.name] = () => {
+                        return native.callMethod<Object>(controller.id, method.name, utility.argumentsToArray(arguments));
+                    };
+                });
+
+                // destroy controller
+                clientController['destroy'] = () => {
+                    native.destroyController(controller.id);
+                };
+
+                // warm up native calls
+                native.callInternalMethodAsync<Object>(controller.id, 'warmUp', ['warmUp']).then(() => { });
+
+                return clientController;
+            };
+
             var createObservableController = (controllerName: string, $scope: ng.IScope): ng.IScope => {
                 var scopeId = $scope.$id;
 
@@ -377,6 +401,7 @@ module htmlUi.angular {
             };
 
             return {
+                createController: createController,
                 createObservableController: createObservableController
             };
         }]);
@@ -549,5 +574,34 @@ module htmlUi.angular {
 
             collection.splice(toIndex, 0, removedItem);
         }
+    }
+
+    function callClientFunction(json: string): IClientFunctionResult {
+        var clientFunction = <IClientFunction>JSON.parse(json);
+        var controllerData = _controllerDataContainer.getControllerData(clientFunction.controllerId);
+
+        var result: IClientFunctionResult = {
+            type: ClientFunctionResultType.Value,
+            exception: null,
+            value: null
+        };
+
+        if (_.isFunction(controllerData.$scope[clientFunction.name])) {
+            var func: Function = controllerData.$scope[clientFunction.name];
+
+            try {
+                result.value = func.apply({}, clientFunction.args);
+            } catch (err) {
+                result.type = ClientFunctionResultType.Exception;
+                result.exception = err;
+            }
+
+            if (result.value === undefined)
+                result.type = ClientFunctionResultType.Undefined;
+        } else {
+            result.type = ClientFunctionResultType.FunctionNotFound;
+        }
+
+        return result;
     }
 }
