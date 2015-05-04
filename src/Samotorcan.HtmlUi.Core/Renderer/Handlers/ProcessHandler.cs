@@ -168,6 +168,8 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </summary>
         protected override void OnWebKitInitialized()
         {
+            GeneralLog.Info("WebKit initialized.");
+
             CefRuntime.RegisterExtension("htmlUi.native", GetHtmlUiScript("native", false), V8NativeHandler);
 
             RegisterHtmlUiAsExtensionIfNeeded();
@@ -183,11 +185,11 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             if (extraInfo == null)
                 throw new ArgumentNullException("extraInfo");
 
+            GeneralLog.Info("Render process thread created.");
+
             NativeRequestUrl = extraInfo.GetString(0);
             RequestHostname = extraInfo.GetString(1);
             NativeRequestPort = extraInfo.GetInt(2);
-
-            GeneralLog.Info("Render process thread created.");
         }
         #endregion
         #region OnLoadStart
@@ -207,6 +209,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
                     V8NativeHandler.Reset();
 
                 RegisterHtmlUiAsScriptIfNeeded(context);
+                EvalHtmlUiScript("run", context);
             }
         }
         #endregion
@@ -275,7 +278,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         private void RegisterHtmlUiAsExtensionIfNeeded()
         {
 #if !DEBUG
-            CefRuntime.RegisterExtension("htmlUi.main", GetHtmlUiScript("main"), V8NativeHandler);
+            CefRuntime.RegisterExtension("htmlUi.main", GetHtmlUiScript("main", false), V8NativeHandler);
 #endif
         }
         #endregion
