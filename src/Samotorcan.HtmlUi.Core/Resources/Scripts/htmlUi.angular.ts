@@ -111,10 +111,17 @@ module htmlUi.angular {
             this.controllerChanges = [];
         }
 
-        addControllerData(controllerId: number): ControllerData {
+        addClientControllerData(controllerId: number): ControllerData {
             var controllerData: ControllerData = null;
 
             this.data[controllerId] = controllerData = new ControllerData(controllerId);
+
+            return controllerData;
+        }
+
+        addControllerData(controllerId: number): ControllerData {
+            var controllerData: ControllerData = this.addClientControllerData(controllerId);
+
             this.controllerChanges.push(controllerData.change);
 
             return controllerData;
@@ -137,11 +144,18 @@ module htmlUi.angular {
         }
     }
 
+    export interface IClientController {
+        destroy: () => void;
+    }
+
     export class ControllerData {
-        scopeId: number;
         controllerId: number;
         name: string;
+
+        clientController: IClientController;
+
         $scope: ng.IScope;
+        scopeId: number;
         propertyValues: { [name: string]: Object };
         observableCollectionValues: { [name: string]: Object[] };
         watches: { [name: string]: Function };
@@ -338,7 +352,14 @@ module htmlUi.angular {
             var createController = (controllerName: string): Object => {
                 // create controller
                 var controller = native.createController(controllerName);
-                var clientController = {};
+                var controllerData = _controllerDataContainer.addClientControllerData(controller.id);
+                controllerData.name = controllerName;
+
+                var clientController = controllerData.clientController = {
+                    destroy: (): void => {
+                        native.destroyController(controller.id);
+                    }
+                };
 
                 // methods
                 _.forEach(controller.methods, (method) => {
@@ -346,11 +367,6 @@ module htmlUi.angular {
                         return native.callMethod<Object>(controller.id, method.name, utility.argumentsToArray(arguments));
                     };
                 });
-
-                // destroy controller
-                clientController['destroy'] = () => {
-                    native.destroyController(controller.id);
-                };
 
                 // warm up native calls
                 native.callInternalMethodAsync<Object>(controller.id, 'warmUp', ['warmUp']).then(() => { });
@@ -361,7 +377,7 @@ module htmlUi.angular {
             var createObservableController = (controllerName: string, $scope: ng.IScope): ng.IScope => {
                 var scopeId = $scope.$id;
 
-                // create controller
+                // create observable controller
                 var observableController = native.createObservableController(controllerName);
 
                 var controllerData = _controllerDataContainer.addControllerData(observableController.id);
@@ -580,28 +596,33 @@ module htmlUi.angular {
         var clientFunction = <IClientFunction>JSON.parse(json);
         var controllerData = _controllerDataContainer.getControllerData(clientFunction.controllerId);
 
-        var result: IClientFunctionResult = {
-            type: ClientFunctionResultType.Value,
-            exception: null,
-            value: null
-        };
+        var runFunction = (func: Function): IClientFunctionResult => {
+            var result: IClientFunctionResult = {
+                type: ClientFunctionResultType.Value,
+                exception: null,
+                value: null
+            };
 
-        if (_.isFunction(controllerData.$scope[clientFunction.name])) {
-            var func: Function = controllerData.$scope[clientFunction.name];
+            if (_.isFunction(func)) {
+                try {
+                    result.value = func.apply({}, clientFunction.args);
+                } catch (err) {
+                    result.type = ClientFunctionResultType.Exception;
+                    result.exception = err;
+                }
 
-            try {
-                result.value = func.apply({}, clientFunction.args);
-            } catch (err) {
-                result.type = ClientFunctionResultType.Exception;
-                result.exception = err;
+                if (result.value === undefined)
+                    result.type = ClientFunctionResultType.Undefined;
+            } else {
+                result.type = ClientFunctionResultType.FunctionNotFound;
             }
 
-            if (result.value === undefined)
-                result.type = ClientFunctionResultType.Undefined;
-        } else {
-            result.type = ClientFunctionResultType.FunctionNotFound;
-        }
+            return result;
+        };
 
-        return result;
+        if (controllerData.clientController != null)
+            return runFunction(controllerData.clientController[clientFunction.name]);
+
+        return runFunction(controllerData.$scope[clientFunction.name]);
     }
 }

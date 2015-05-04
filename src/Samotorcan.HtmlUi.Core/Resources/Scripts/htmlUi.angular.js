@@ -99,9 +99,13 @@ var htmlUi;
                 enumerable: true,
                 configurable: true
             });
-            ControllerDataContainer.prototype.addControllerData = function (controllerId) {
+            ControllerDataContainer.prototype.addClientControllerData = function (controllerId) {
                 var controllerData = null;
                 this.data[controllerId] = controllerData = new ControllerData(controllerId);
+                return controllerData;
+            };
+            ControllerDataContainer.prototype.addControllerData = function (controllerId) {
+                var controllerData = this.addClientControllerData(controllerId);
                 this.controllerChanges.push(controllerData.change);
                 return controllerData;
             };
@@ -302,17 +306,19 @@ var htmlUi;
                 var createController = function (controllerName) {
                     // create controller
                     var controller = angular.native.createController(controllerName);
-                    var clientController = {};
+                    var controllerData = _controllerDataContainer.addClientControllerData(controller.id);
+                    controllerData.name = controllerName;
+                    var clientController = controllerData.clientController = {
+                        destroy: function () {
+                            angular.native.destroyController(controller.id);
+                        }
+                    };
                     // methods
                     htmlUi._.forEach(controller.methods, function (method) {
                         clientController[method.name] = function () {
                             return angular.native.callMethod(controller.id, method.name, htmlUi.utility.argumentsToArray(arguments));
                         };
                     });
-                    // destroy controller
-                    clientController['destroy'] = function () {
-                        angular.native.destroyController(controller.id);
-                    };
                     // warm up native calls
                     angular.native.callInternalMethodAsync(controller.id, 'warmUp', ['warmUp']).then(function () {
                     });
@@ -320,7 +326,7 @@ var htmlUi;
                 };
                 var createObservableController = function (controllerName, $scope) {
                     var scopeId = $scope.$id;
-                    // create controller
+                    // create observable controller
                     var observableController = angular.native.createObservableController(controllerName);
                     var controllerData = _controllerDataContainer.addControllerData(observableController.id);
                     controllerData.name = controllerName;
@@ -491,27 +497,31 @@ var htmlUi;
         function callClientFunction(json) {
             var clientFunction = JSON.parse(json);
             var controllerData = _controllerDataContainer.getControllerData(clientFunction.controllerId);
-            var result = {
-                type: 1 /* Value */,
-                exception: null,
-                value: null
+            var runFunction = function (func) {
+                var result = {
+                    type: 1 /* Value */,
+                    exception: null,
+                    value: null
+                };
+                if (htmlUi._.isFunction(func)) {
+                    try {
+                        result.value = func.apply({}, clientFunction.args);
+                    }
+                    catch (err) {
+                        result.type = 3 /* Exception */;
+                        result.exception = err;
+                    }
+                    if (result.value === undefined)
+                        result.type = 2 /* Undefined */;
+                }
+                else {
+                    result.type = 4 /* FunctionNotFound */;
+                }
+                return result;
             };
-            if (htmlUi._.isFunction(controllerData.$scope[clientFunction.name])) {
-                var func = controllerData.$scope[clientFunction.name];
-                try {
-                    result.value = func.apply({}, clientFunction.args);
-                }
-                catch (err) {
-                    result.type = 3 /* Exception */;
-                    result.exception = err;
-                }
-                if (result.value === undefined)
-                    result.type = 2 /* Undefined */;
-            }
-            else {
-                result.type = 4 /* FunctionNotFound */;
-            }
-            return result;
+            if (controllerData.clientController != null)
+                return runFunction(controllerData.clientController[clientFunction.name]);
+            return runFunction(controllerData.$scope[clientFunction.name]);
         }
     })(angular = htmlUi.angular || (htmlUi.angular = {}));
 })(htmlUi || (htmlUi = {}));
