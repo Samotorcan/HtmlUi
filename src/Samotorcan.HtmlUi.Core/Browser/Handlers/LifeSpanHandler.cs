@@ -39,7 +39,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// <param name="browser"></param>
         protected override void OnBeforeClose(CefBrowser browser)
         {
-            BaseMainApplication.Current.BrowserMessageRouter.OnBeforeClose(browser);
+            
         }
         #endregion
         #region OnAfterCreated

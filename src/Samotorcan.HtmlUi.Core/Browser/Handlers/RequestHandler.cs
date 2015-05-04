@@ -33,8 +33,6 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// <returns></returns>
         protected override bool OnBeforeBrowse(CefBrowser browser, CefFrame frame, CefRequest request, bool isRedirect)
         {
-            BaseMainApplication.Current.BrowserMessageRouter.OnBeforeBrowse(browser, frame);
-
             return false;
         }
         #endregion
@@ -48,7 +46,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         /// <param name="status"></param>
         protected override void OnRenderProcessTerminated(CefBrowser browser, CefTerminationStatus status)
         {
-            BaseMainApplication.Current.BrowserMessageRouter.OnRenderProcessTerminated(browser);
+            
         }
         #endregion
         #region GetResourceHandler

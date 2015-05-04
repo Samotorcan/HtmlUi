@@ -1,5 +1,4 @@
 ﻿using Samotorcan.HtmlUi.Core.Logs;
-using Samotorcan.HtmlUi.Core.Scheme;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -173,15 +172,6 @@ namespace Samotorcan.HtmlUi.Core
         #endregion
         #region Internal
 
-        #region BrowserMessageRouter
-        /// <summary>
-        /// Gets or sets the browser message router.
-        /// </summary>
-        /// <value>
-        /// The browser message router.
-        /// </value>
-        internal CefMessageRouterBrowserSide BrowserMessageRouter { get; set; }
-        #endregion
         #region NativeRequestPort
         private int _nativeRequestPort;
         /// <summary>
@@ -505,9 +495,6 @@ namespace Samotorcan.HtmlUi.Core
             {
                 InitializeCef();
 
-                RegisterSchemes();
-                RegisterMessageRouter();
-
                 OnInitialize();
                 RunMessageLoop();
 
@@ -573,29 +560,6 @@ namespace Samotorcan.HtmlUi.Core
             var app = new App();
 
             CefRuntime.Initialize(mainArgs, cefSettings, app, IntPtr.Zero);
-        }
-        #endregion
-        #region RegisterSchemes
-        /// <summary>
-        /// Registers the schemes.
-        /// </summary>
-        private void RegisterSchemes()
-        {
-            // TODO: Temp.
-            CefRuntime.RegisterSchemeHandlerFactory("http", "test.test.test", new DefaultAppSchemeHandlerFactory());
-
-            GeneralLog.Info("Schemes registered.");
-        }
-        #endregion
-        #region RegisterMessageRouter
-        /// <summary>
-        /// Registers the message router.
-        /// </summary>
-        private void RegisterMessageRouter()
-        {
-            BrowserMessageRouter = new CefMessageRouterBrowserSide(new CefMessageRouterConfig());
-
-            GeneralLog.Info("Message route registered.");
         }
         #endregion
         #region ShutdownInternal

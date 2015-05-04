@@ -186,8 +186,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
             if (message == null)
                 throw new ArgumentNullException("message");
 
-            return V8NativeBrowserHandler.ProcessMessage(browser, sourceProcess, message) ||
-                BaseMainApplication.Current.BrowserMessageRouter.OnProcessMessageReceived(browser, sourceProcess, message);
+            return V8NativeBrowserHandler.ProcessMessage(browser, sourceProcess, message);
         }
         #endregion
 

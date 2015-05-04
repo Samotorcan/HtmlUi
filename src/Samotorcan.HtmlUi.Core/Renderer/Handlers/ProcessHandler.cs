@@ -24,15 +24,6 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         #region Properties
         #region Private
 
-        #region MessageRouter
-        /// <summary>
-        /// Gets or sets the message router.
-        /// </summary>
-        /// <value>
-        /// The message router.
-        /// </value>
-        private CefMessageRouterRendererSide MessageRouter { get; set; }
-        #endregion
         #region CefBrowser
         /// <summary>
         /// Gets or sets the cef browser.
@@ -97,7 +88,6 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </summary>
         public ProcessHandler()
         {
-            MessageRouter = new CefMessageRouterRendererSide(new CefMessageRouterConfig());
             V8NativeHandler = new V8NativeHandler();
 
             LoadHandler = new LoadHandler();
@@ -119,8 +109,6 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         {
             if (frame == null)
                 throw new ArgumentNullException("frame");
-
-            MessageRouter.OnContextCreated(browser, frame, context);
         }
         #endregion
         #region OnContextReleased
@@ -132,7 +120,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// <param name="context">The context.</param>
         protected override void OnContextReleased(CefBrowser browser, CefFrame frame, CefV8Context context)
         {
-            MessageRouter.OnContextReleased(browser, frame, context);
+            
         }
         #endregion
         #region OnProcessMessageReceived
@@ -148,8 +136,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             if (message == null)
                 throw new ArgumentNullException("message");
 
-            return V8NativeHandler.ProcessMessage(browser, sourceProcess, message) ||
-                MessageRouter.OnProcessMessageReceived(browser, sourceProcess, message);
+            return V8NativeHandler.ProcessMessage(browser, sourceProcess, message);
         }
         #endregion
         #region OnBrowserCreated

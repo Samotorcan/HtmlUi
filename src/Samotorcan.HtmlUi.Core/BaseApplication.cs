@@ -121,6 +121,11 @@ namespace Samotorcan.HtmlUi.Core
 
             LogsDirectoryPath = PathUtility.NormalizedWorkingDirectory + "/" + LogsDirectory;
             EnsureLogsDirectory();
+
+            using (var stream = ResourceUtility.GetResourceAsStream("log4net.config"))
+            {
+                log4net.Config.XmlConfigurator.Configure(stream);
+            }
             log4net.GlobalContext.Properties["pid"] = Process.GetCurrentProcess().Id;
 
             CacheDirectoryPath = PathUtility.NormalizedWorkingDirectory + "/" + CacheDirectory;

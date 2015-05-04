@@ -88,6 +88,29 @@ namespace Samotorcan.HtmlUi.Core.Utilities
             }
         }
         #endregion
+        #region GetResourceAsStream
+        /// <summary>
+        /// Gets the resource as stream.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">name</exception>
+        /// <exception cref="System.ArgumentException">Resource not found.;name</exception>
+        public static Stream GetResourceAsStream(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentNullException("name");
+
+            name = ResourceUtility.GetFullResourceName(name);
+            var assembly = typeof(ResourceUtility).Assembly;
+
+            var stream = assembly.GetManifestResourceStream(name);
+            if (stream == null)
+                throw new ArgumentException("Resource not found.", "name");
+
+            return stream;
+        }
+        #endregion
         #region GetResourceNames
         /// <summary>
         /// Gets the resource names.
