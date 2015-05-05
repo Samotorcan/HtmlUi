@@ -5,13 +5,15 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samotorcan.HtmlUi.Windows", "Samotorcan.HtmlUi.Windows\Samotorcan.HtmlUi.Windows.csproj", "{788FC638-26A4-4F2B-8E2D-8110CB4A5DB6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samotorcan.Tests.Windows", "Samotorcan.Tests.Windows\Samotorcan.Tests.Windows.csproj", "{D4851DCB-EC44-4317-8909-E7061CF09ECF}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samotorcan.HtmlUi.Core", "Samotorcan.HtmlUi.Core\Samotorcan.HtmlUi.Core.csproj", "{0E723741-071B-405D-9E8E-CB5869750CE0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samotorcan.Tests.Windowsx64", "Samotorcan.Tests.Windowsx64\Samotorcan.Tests.Windowsx64.csproj", "{559F124B-E6C2-4E1F-B15B-484D5A86983B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samotorcan.Examples.TodoList", "Samotorcan.Examples.TodoList\Samotorcan.Examples.TodoList.csproj", "{651A9458-A6BF-4C15-99F9-6206D2E79683}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samotorcan.Tests.Windows", "Samotorcan.Tests.Windows\Samotorcan.Tests.Windows.csproj", "{29944A1B-BBEF-4777-85A7-EA7CA09910DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samotorcan.Tests.Windows.Application", "Samotorcan.Tests.Windows.Application\Samotorcan.Tests.Windows.Application.csproj", "{D4851DCB-EC44-4317-8909-E7061CF09ECF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,12 +28,6 @@ Global
 		{788FC638-26A4-4F2B-8E2D-8110CB4A5DB6}.NoCA|Any CPU.Build.0 = NoCA|Any CPU
 		{788FC638-26A4-4F2B-8E2D-8110CB4A5DB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{788FC638-26A4-4F2B-8E2D-8110CB4A5DB6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D4851DCB-EC44-4317-8909-E7061CF09ECF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D4851DCB-EC44-4317-8909-E7061CF09ECF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D4851DCB-EC44-4317-8909-E7061CF09ECF}.NoCA|Any CPU.ActiveCfg = Debug|Any CPU
-		{D4851DCB-EC44-4317-8909-E7061CF09ECF}.NoCA|Any CPU.Build.0 = Debug|Any CPU
-		{D4851DCB-EC44-4317-8909-E7061CF09ECF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D4851DCB-EC44-4317-8909-E7061CF09ECF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0E723741-071B-405D-9E8E-CB5869750CE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0E723741-071B-405D-9E8E-CB5869750CE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E723741-071B-405D-9E8E-CB5869750CE0}.NoCA|Any CPU.ActiveCfg = NoCA|Any CPU
@@ -50,6 +46,18 @@ Global
 		{651A9458-A6BF-4C15-99F9-6206D2E79683}.NoCA|Any CPU.Build.0 = Debug|Any CPU
 		{651A9458-A6BF-4C15-99F9-6206D2E79683}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{651A9458-A6BF-4C15-99F9-6206D2E79683}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29944A1B-BBEF-4777-85A7-EA7CA09910DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29944A1B-BBEF-4777-85A7-EA7CA09910DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29944A1B-BBEF-4777-85A7-EA7CA09910DB}.NoCA|Any CPU.ActiveCfg = Debug|Any CPU
+		{29944A1B-BBEF-4777-85A7-EA7CA09910DB}.NoCA|Any CPU.Build.0 = Debug|Any CPU
+		{29944A1B-BBEF-4777-85A7-EA7CA09910DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29944A1B-BBEF-4777-85A7-EA7CA09910DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4851DCB-EC44-4317-8909-E7061CF09ECF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4851DCB-EC44-4317-8909-E7061CF09ECF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4851DCB-EC44-4317-8909-E7061CF09ECF}.NoCA|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4851DCB-EC44-4317-8909-E7061CF09ECF}.NoCA|Any CPU.Build.0 = Debug|Any CPU
+		{D4851DCB-EC44-4317-8909-E7061CF09ECF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4851DCB-EC44-4317-8909-E7061CF09ECF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
