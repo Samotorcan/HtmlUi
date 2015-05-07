@@ -11,7 +11,7 @@ CEF binaries can be compiled from the [CEF sources](https://bitbucket.org/chromi
 To use CEF in C# the framework uses a library called [CefGlue](https://bitbucket.org/xilium/xilium.cefglue) to P/Invoke calls to CEF. Which CEF version the framework uses is conditional with the CefGlue library. When the CefGlue library gets updated so will the framework be upadated to use the newest CEF version.
 
 ## Usage
-The framework was only tested with Visual Studio 2013.
+The framework was only tested with Visual Studio 2013. To build the core project TypeScript 1.4 for Visual Studio 2013 extension is required.
 
 To create a new application first create a new Console Application in Visual Studio. The minimum C# supported version by the framework is 4.5.
 
@@ -24,29 +24,6 @@ To debug the application with CEF `Enable the Visual Studio hosting process` mus
 Next the output type in project options must be changed to Windows Application so the console window is not started.
 
 ![new console application](docs/ApplicationType.jpg)
-
-The framework uses [log4net](http://logging.apache.org/log4net/) to write logs. The example configuration for log4net is:
-```XML
-<log4net>
-  <appender name="GeneralLog" type="log4net.Appender.RollingFileAppender">
-    <file value="Logs/general.log"/>
-    <appendToFile value="true"/>
-    <lockingModel type="log4net.Appender.FileAppender+InterProcessLock"/>
-    <rollingStyle value="Size"/>
-    <maxSizeRollBackups value="5"/>
-    <maximumFileSize value="5MB"/>
-    <staticLogFileName value="true"/>
-    <layout type="log4net.Layout.PatternLayout">
-      <conversionPattern value="%date [%property{pid}-%thread] %level - %message%newline"/>
-    </layout>
-  </appender>
-  <root>
-    <level value="DEBUG"/>
-    <appender-ref ref="GeneralLog"/>
-  </root>
-</log4net>
-```
-The important part is to use InterProcessLock so the logs can be written from all the CEF processes.
 
 The framework will start multiple processes where the first started process will be the main application process. To correctly run child processes the main method of the application should look like something like this:
 ```C#
