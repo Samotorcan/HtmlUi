@@ -64,7 +64,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
             if (!commandLine.HasSwitch("locales-dir-path"))
                 commandLine.AppendSwitch("locales-dir-path", Path.Combine(PathUtility.WorkingDirectory, "locales"));
 
-            if (!BaseMainApplication.Current.EnableD3D11 && !commandLine.GetArguments().Contains(Argument.DisableD3D11.Value))
+            if (!BaseMainApplication.Current.D3D11Enabled && !commandLine.GetArguments().Contains(Argument.DisableD3D11.Value))
                 commandLine.AppendArgument(Argument.DisableD3D11.Value);
         }
         #endregion

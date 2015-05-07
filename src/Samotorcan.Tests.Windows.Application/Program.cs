@@ -22,7 +22,12 @@ namespace Samotorcan.Tests.Windows.Application
 
         private static void RunMainApplication()
         {
-            using (var application = new MainApplication())
+            var settings = new MainApplicationSettings();
+            settings.CommandLineArgsEnabled = true;
+            settings.ChromeViewsEnabled = true;
+            settings.WindowSettings.View = "chrome://about";
+
+            using (var application = new MainApplication(settings))
             {
                 application.Run();
             }

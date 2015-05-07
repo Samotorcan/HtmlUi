@@ -43,30 +43,13 @@ namespace Samotorcan.HtmlUi.Core
         #region Public
 
         #region View
-        private string _view;
         /// <summary>
         /// Gets or sets the view.
         /// </summary>
         /// <value>
         /// The view.
         /// </value>
-        /// <exception cref="System.InvalidOperationException">View can only be changed before the window is created.</exception>
-        public string View
-        {
-            get
-            {
-                return _view;
-            }
-            set
-            {
-                BaseMainApplication.Current.EnsureMainThread();
-
-                if (IsBrowserCreated)
-                    throw new InvalidOperationException("View can only be changed before the window is created.");
-
-                _view = value;
-            }
-        }
+        public string View { get; private set; }
         #endregion
         #region Borderless
         private bool _borderless;
@@ -155,13 +138,20 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseWindow"/> class.
         /// </summary>
-        protected BaseWindow()
+        /// <param name="settings">The settings.</param>
+        protected BaseWindow(BaseWindowSettings settings)
         {
-            View = "/Views/Index.html";
+            View = settings.View;
             Controllers = new Dictionary<int, Controller>();
             ObservableControllers = new Dictionary<int, ObservableController>();
             WaitingCallFunction = new ConcurrentDictionary<Guid, TaskCompletionSource<JToken>>();
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseWindow"/> class with default settings.
+        /// </summary>
+        protected BaseWindow()
+            : this(new BaseWindowSettings()) { }
 
         #endregion
         #region Methods

@@ -54,28 +54,14 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         public BaseWindow Window { get; protected set; }
         #endregion
-        #region EnableD3D11
-        private bool _enableD3D11;
+        #region D3D11Enabled
         /// <summary>
-        /// Gets or sets a value indicating whether d3d11 is enabled.
+        /// Gets a value indicating whether D3D11 is enabled.
         /// </summary>
         /// <value>
-        ///   <c>true</c> if d3d11 is enabled; otherwise, <c>false</c>.
+        ///   <c>true</c> if D3D11 is enabled; otherwise, <c>false</c>.
         /// </value>
-        public bool EnableD3D11
-        {
-            get
-            {
-                return _enableD3D11;
-            }
-            set
-            {
-                if (Window.IsBrowserCreated)
-                    throw new InvalidOperationException("EnableD3D11 can only be changed before the window is created.");
-
-                _enableD3D11 = value;
-            }
-        }
+        public bool D3D11Enabled { get; private set; }
         #endregion
         #region ContentProvider
         private IContentProvider _contentProvider;
@@ -138,6 +124,33 @@ namespace Samotorcan.HtmlUi.Core
         /// The synchronize maximum depth.
         /// </value>
         public int SyncMaxDepth { get; set; }
+        #endregion
+        #region RemoteDebuggingPort
+        /// <summary>
+        /// Gets the remote debugging port.
+        /// </summary>
+        /// <value>
+        /// The remote debugging port.
+        /// </value>
+        public int RemoteDebuggingPort { get; private set; }
+        #endregion
+        #region CommandLineArgsEnabled
+        /// <summary>
+        /// Gets or sets a value indicating whether command line arguments are enabled.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if command line arguments are enabled; otherwise, <c>false</c>.
+        /// </value>
+        public bool CommandLineArgsEnabled { get; private set; }
+        #endregion
+        #region ChromeViewsEnabled
+        /// <summary>
+        /// Gets or sets a value indicating whether chrome views are enabled.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if chrome views are enabled; otherwise, <c>false</c>.
+        /// </value>
+        public bool ChromeViewsEnabled { get; set; }
         #endregion
 
         #region RequestHostname
@@ -241,12 +254,13 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseMainApplication"/> class.
         /// </summary>
-        /// <exception cref="System.InvalidOperationException">You can only have one instance of Application at any given time.</exception>
-        protected BaseMainApplication()
-            : base()
+        /// <param name="settings">The settings.</param>
+        /// <exception cref="System.InvalidOperationException">Application must be run on main application process.</exception>
+        protected BaseMainApplication(BaseMainApplicationSettings settings)
+            : base(settings)
         {
             if (HtmlUiRuntime.ApplicationType != ApplicationType.MainApplication)
-                throw new InvalidOperationException("Application must be run on main application process.");
+                throw new InvalidOperationException("Application must be run on main application process."); 
 
             SynchronizationContext.SetSynchronizationContext(new HtmlUiSynchronizationContext());
 
@@ -256,10 +270,20 @@ namespace Samotorcan.HtmlUi.Core
             ControllerProvider = new AssemblyControllerProvider();
             RequestHostname = "localhost";
             NativeRequestPort = 16556;
+            D3D11Enabled = settings.D3D11Enabled;
+            RemoteDebuggingPort = settings.RemoteDebuggingPort;
+            CommandLineArgsEnabled = settings.CommandLineArgsEnabled;
+            ChromeViewsEnabled = settings.ChromeViewsEnabled;
 
             MimeTypes = GetDefaultMimeTypes();
             SyncMaxDepth = 10;
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseMainApplication"/> class with default settings.
+        /// </summary>
+        protected BaseMainApplication()
+            : this(new BaseMainApplicationSettings()) { }
 
         #endregion
         #region Methods
@@ -334,6 +358,9 @@ namespace Samotorcan.HtmlUi.Core
         {
             if (string.IsNullOrWhiteSpace(contentPath))
                 throw new ArgumentNullException("contentPath");
+
+            if (ChromeViewsEnabled && Regex.IsMatch(contentPath, "^chrome://about/?$"))
+                return "chrome://about";
 
             return string.Format("http://{0}/{1}",
                 RequestHostname,
@@ -545,14 +572,17 @@ namespace Samotorcan.HtmlUi.Core
                 LogFile = LogsDirectoryPath + "/cef.log",
                 CachePath = CacheDirectoryPath,
                 ResourcesDirPath = PathUtility.WorkingDirectory,
-                RemoteDebuggingPort = 20480,
+                RemoteDebuggingPort = RemoteDebuggingPort,
                 NoSandbox = true,
-                CommandLineArgsDisabled = true
+                CommandLineArgsDisabled = !CommandLineArgsEnabled
             };
 
             // arguments
-            var arguments = new List<string>();
-            if (!EnableD3D11 && !arguments.Contains(Argument.DisableD3D11.Value))
+            var arguments = CommandLineArgsEnabled
+                ? new List<string>(Environment.GetCommandLineArgs().Skip(1))
+                : new List<string>();
+
+            if (!D3D11Enabled && !arguments.Contains(Argument.DisableD3D11.Value))
                 arguments.Add(Argument.DisableD3D11.Value);
 
             // initialize

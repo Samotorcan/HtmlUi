@@ -83,8 +83,12 @@
     <Compile Include="AssemblyControllerProvider.cs" />
     <Compile Include="Attributes\ExcludeAttribute.cs" />
     <Compile Include="BaseApplication.cs" />
+    <Compile Include="BaseApplicationSettings.cs" />
+    <Compile Include="BaseChildApplicationSettings.cs" />
     <Compile Include="BaseMainApplication.cs" />
     <Compile Include="BaseChildApplication.cs" />
+    <Compile Include="BaseMainApplicationSettings.cs" />
+    <Compile Include="BaseWindowSettings.cs" />
     <Compile Include="ClientFunction.cs" />
     <Compile Include="ClientFunctionResult.cs" />
     <Compile Include="ClientFunctionResultType.cs" />

@@ -13,6 +13,7 @@ using Samotorcan.HtmlUi.Core.Utilities;
 using System.Runtime.InteropServices;
 using Samotorcan.HtmlUi.Core.Renderer;
 using Samotorcan.HtmlUi.Core.Events;
+using Samotorcan.HtmlUi.Core;
 
 namespace Samotorcan.HtmlUi.Windows
 {
@@ -20,7 +21,7 @@ namespace Samotorcan.HtmlUi.Windows
     /// Window.
     /// </summary>
     [CLSCompliant(false)]
-    public class Window : Core.BaseWindow
+    public class Window : BaseWindow
     {
         #region Properties
         #region Public
@@ -108,8 +109,9 @@ namespace Samotorcan.HtmlUi.Windows
         /// <summary>
         /// Initializes a new instance of the <see cref="Window"/> class.
         /// </summary>
-        public Window()
-            : base()
+        /// <param name="settings">The settings.</param>
+        public Window(WindowSettings settings)
+            : base(settings)
         {
             MainApplication.Current.InvokeOnUi(() => {
                 Form = new Form();
@@ -130,6 +132,12 @@ namespace Samotorcan.HtmlUi.Windows
             KeyPress += Window_KeyPress;
             Browser_MouseEventDelegate = new NativeMethods.HookProc(Browser_MouseEvent);
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Window"/> class with default settings.
+        /// </summary>
+        public Window()
+            : this(new WindowSettings()) { }
 
         #endregion
         #region Methods

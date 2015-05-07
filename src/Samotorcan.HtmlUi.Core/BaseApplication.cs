@@ -111,8 +111,9 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseApplication"/> class.
         /// </summary>
+        /// <param name="settings">The settings.</param>
         /// <exception cref="System.InvalidOperationException">You can only have one instance of Application at any given time.</exception>
-        protected BaseApplication()
+        protected BaseApplication(BaseApplicationSettings settings)
         {
             if (Current != null)
                 throw new InvalidOperationException("You can only have one instance of Application at any given time.");
@@ -134,6 +135,12 @@ namespace Samotorcan.HtmlUi.Core
             ThreadId = Thread.CurrentThread.ManagedThreadId;
             Current = this;
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseApplication"/> class with default settings.
+        /// </summary>
+        protected BaseApplication()
+            : this(new BaseApplicationSettings()) { }
 
         #endregion
         #region Methods

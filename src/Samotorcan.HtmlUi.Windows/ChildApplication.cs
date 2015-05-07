@@ -38,7 +38,14 @@ namespace Samotorcan.HtmlUi.Windows
         /// <summary>
         /// Initializes a new instance of the <see cref="ChildApplication"/> class.
         /// </summary>
-        public ChildApplication() : base() { }
+        public ChildApplication(ChildApplicationSettings settings)
+            : base(settings) { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ChildApplication"/> class with default settings.
+        /// </summary>
+        public ChildApplication()
+            : this(new ChildApplicationSettings()) { }
 
         #endregion
     }

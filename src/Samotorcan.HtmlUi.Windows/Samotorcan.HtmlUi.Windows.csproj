@@ -102,13 +102,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChildApplication.cs" />
+    <Compile Include="ChildApplicationSettings.cs" />
     <Compile Include="MainApplication.cs" />
     <Compile Include="Form.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="MainApplicationSettings.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Window.cs" />
+    <Compile Include="WindowSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

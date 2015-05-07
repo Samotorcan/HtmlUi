@@ -1,4 +1,5 @@
-﻿using Samotorcan.HtmlUi.Core.Logs;
+﻿using Samotorcan.HtmlUi.Core;
+using Samotorcan.HtmlUi.Core.Logs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace Samotorcan.HtmlUi.Windows
     /// Main application.
     /// </summary>
     [CLSCompliant(false)]
-    public class MainApplication : Core.BaseMainApplication
+    public class MainApplication : BaseMainApplication
     {
         #region Properties
         #region Public
@@ -111,8 +112,8 @@ namespace Samotorcan.HtmlUi.Windows
         /// <summary>
         /// Initializes a new instance of the <see cref="MainApplication"/> class.
         /// </summary>
-        public MainApplication()
-            : base()
+        public MainApplication(MainApplicationSettings settings)
+            : base(settings)
         {
             UiSynchronizationContextCreated = new AutoResetEvent(false);
 
@@ -122,8 +123,14 @@ namespace Samotorcan.HtmlUi.Windows
 
             UiSynchronizationContextCreated.WaitOne();
 
-            Window = new Window();
+            Window = new Window(settings.WindowSettings);
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainApplication"/> class with default settings.
+        /// </summary>
+        public MainApplication()
+            : this(new MainApplicationSettings()) { }
 
         #endregion
         #region Methods
