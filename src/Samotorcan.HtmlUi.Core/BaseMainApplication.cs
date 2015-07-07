@@ -260,7 +260,7 @@ namespace Samotorcan.HtmlUi.Core
             : base(settings)
         {
             if (HtmlUiRuntime.ApplicationType != ApplicationType.MainApplication)
-                throw new InvalidOperationException("Application must be run on main application process."); 
+                throw new InvalidOperationException("Application must be run on main application process.");
 
             SynchronizationContext.SetSynchronizationContext(new HtmlUiSynchronizationContext());
 
