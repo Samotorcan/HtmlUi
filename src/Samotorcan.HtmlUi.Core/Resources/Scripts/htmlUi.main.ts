@@ -105,7 +105,7 @@ module htmlUi.utility {
     }
 
     export function inject(func: Function, inject: Function): Function {
-        return () => {
+        return function () {
             inject.apply(this, arguments);
             return func.apply(this, arguments);
         };

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Browser.Handlers
@@ -34,9 +30,9 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             if (frame.IsMain)
             {
-                BaseMainApplication.Current.InvokeOnMain(() =>
+                Application.Current.InvokeOnMain(() =>
                 {
-                    BaseMainApplication.Current.Window.DestroyControllers();
+                    Application.Current.Window.DestroyControllers();
                 });
             }
         }

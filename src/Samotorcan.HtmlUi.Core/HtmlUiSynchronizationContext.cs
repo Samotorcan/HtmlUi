@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Samotorcan.HtmlUi.Core
 {
@@ -27,7 +23,7 @@ namespace Samotorcan.HtmlUi.Core
             if (d == null)
                 throw new ArgumentNullException("d");
 
-            BaseMainApplication.Current.InvokeOnMainAsync(() =>
+            Application.Current.InvokeOnMainAsync(() =>
             {
                 d.Invoke(state);
             });
@@ -45,7 +41,7 @@ namespace Samotorcan.HtmlUi.Core
             if (d == null)
                 throw new ArgumentNullException("d");
 
-            BaseMainApplication.Current.InvokeOnMain(() =>
+            Application.Current.InvokeOnMain(() =>
             {
                 d.Invoke(state);
             });

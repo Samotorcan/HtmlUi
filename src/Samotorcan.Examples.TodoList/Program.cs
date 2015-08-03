@@ -1,12 +1,5 @@
 ﻿using Samotorcan.HtmlUi.Core;
-using Samotorcan.HtmlUi.Windows;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using Samotorcan.HtmlUi.OS;
 
 namespace Samotorcan.Examples.TodoList
 {
@@ -14,26 +7,13 @@ namespace Samotorcan.Examples.TodoList
     {
         static void Main(string[] args)
         {
-            if (HtmlUiRuntime.ApplicationType == ApplicationType.MainApplication)
-                RunMainApplication();
-            else
-                RunChildApplication();
-        }
-
-        private static void RunMainApplication()
-        {
-            using (var application = new MainApplication())
+            if (HtmlUiRuntime.ApplicationType == ApplicationType.ChildApplication)
             {
-                application.Run();
+                OSChildApplication.Run();
+                return;
             }
-        }
 
-        private static void RunChildApplication()
-        {
-            using (var application = new ChildApplication())
-            {
-                application.Run();
-            }
+            OSApplication.Run();
         }
     }
 }

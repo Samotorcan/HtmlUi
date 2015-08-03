@@ -10,8 +10,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Samotorcan.HtmlUi.Core
 {
@@ -881,7 +879,7 @@ namespace Samotorcan.HtmlUi.Core
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "0#", Justification = "It must be a ref field.")]
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
         {
-            BaseMainApplication.Current.EnsureMainThread();
+            Application.Current.EnsureMainThread();
 
             if (EqualityComparer<T>.Default.Equals(field, value))
                 return false;

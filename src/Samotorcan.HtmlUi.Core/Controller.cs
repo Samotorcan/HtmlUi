@@ -1,20 +1,12 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using Samotorcan.HtmlUi.Core.Attributes;
-using Samotorcan.HtmlUi.Core.Diagnostics;
 using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Samotorcan.HtmlUi.Core
@@ -123,9 +115,9 @@ namespace Samotorcan.HtmlUi.Core
             if (arguments == null)
                 arguments = new object[0];
 
-            BaseMainApplication.Current.EnsureMainThread();
+            Application.Current.EnsureMainThread();
 
-            var resultAction = BaseMainApplication.Current.Window.CallFunctionAsync("callClientFunction", new ClientFunction { ControllerId = Id, Name = name, Arguments = arguments });
+            var resultAction = Application.Current.Window.CallFunctionAsync("callClientFunction", new ClientFunction { ControllerId = Id, Name = name, Arguments = arguments });
 
             return resultAction.ContinueWith<TResult>((task) =>
             {
@@ -172,9 +164,9 @@ namespace Samotorcan.HtmlUi.Core
             if (arguments == null)
                 arguments = new object[0];
 
-            BaseMainApplication.Current.EnsureMainThread();
+            Application.Current.EnsureMainThread();
 
-            return BaseMainApplication.Current.Window.CallFunctionAsync("callClientFunction", new ClientFunction { ControllerId = Id, Name = name, Arguments = arguments });
+            return Application.Current.Window.CallFunctionAsync("callClientFunction", new ClientFunction { ControllerId = Id, Name = name, Arguments = arguments });
         }
 
         /// <summary>
@@ -340,22 +332,22 @@ namespace Samotorcan.HtmlUi.Core
 
             if (methodInfos.Count(m => m.Name == methodInfo.Name) > 1)
             {
-                GeneralLog.Warn(string.Format("Overloaded methods are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
+                Logger.Warn(string.Format("Overloaded methods are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
                 isValid = false;
             }
             else if (methodInfo.GetParameters().Any(p => p.ParameterType.IsByRef))
             {
-                GeneralLog.Warn(string.Format("Ref parameters are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
+                Logger.Warn(string.Format("Ref parameters are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
                 isValid = false;
             }
             else if (methodInfo.GetParameters().Any(p => p.IsOut))
             {
-                GeneralLog.Warn(string.Format("Out parameters are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
+                Logger.Warn(string.Format("Out parameters are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
                 isValid = false;
             }
             else if (methodInfo.IsGenericMethod)
             {
-                GeneralLog.Warn(string.Format("Generic methods are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
+                Logger.Warn(string.Format("Generic methods are not supported. (controller = \"{0}\", method = \"{1}\")", Name, methodInfo.Name));
                 isValid = false;
             }
 

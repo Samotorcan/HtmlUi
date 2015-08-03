@@ -2,77 +2,77 @@
 var htmlUi;
 (function (htmlUi) {
     var native;
-    (function (_native) {
+    (function (native_1) {
         function syncControllerChanges(controllerChanges) {
             callNativeSync('syncControllerChanges', controllerChanges);
         }
-        _native.syncControllerChanges = syncControllerChanges;
+        native_1.syncControllerChanges = syncControllerChanges;
         function syncControllerChangesAsync(controllerChanges, callback) {
             callNativeAsync('syncControllerChanges', controllerChanges, callback);
         }
-        _native.syncControllerChangesAsync = syncControllerChangesAsync;
+        native_1.syncControllerChangesAsync = syncControllerChangesAsync;
         function getControllerNames() {
             return callNativeSync('getControllerNames');
         }
-        _native.getControllerNames = getControllerNames;
+        native_1.getControllerNames = getControllerNames;
         function getControllerNamesAsync(callback) {
             callNativeAsync('getControllerNames', null, callback);
         }
-        _native.getControllerNamesAsync = getControllerNamesAsync;
+        native_1.getControllerNamesAsync = getControllerNamesAsync;
         function createController(name) {
             return callNativeSync('createController', { name: name });
         }
-        _native.createController = createController;
+        native_1.createController = createController;
         function createControllerAsync(name, callback) {
             callNativeAsync('createController', { name: name }, callback);
         }
-        _native.createControllerAsync = createControllerAsync;
+        native_1.createControllerAsync = createControllerAsync;
         function createObservableController(name) {
             return callNativeSync('createObservableController', { name: name });
         }
-        _native.createObservableController = createObservableController;
+        native_1.createObservableController = createObservableController;
         function createObservableControllerAsync(name, callback) {
             callNativeAsync('createObservableController', { name: name }, callback);
         }
-        _native.createObservableControllerAsync = createObservableControllerAsync;
+        native_1.createObservableControllerAsync = createObservableControllerAsync;
         function destroyController(id) {
             callNativeSync('destroyController', id);
         }
-        _native.destroyController = destroyController;
+        native_1.destroyController = destroyController;
         function destroyControllerAsync(id, callback) {
             callNativeAsync('destroyController', id, callback);
         }
-        _native.destroyControllerAsync = destroyControllerAsync;
+        native_1.destroyControllerAsync = destroyControllerAsync;
         function callMethod(id, name, args) {
             return callNativeSync('callMethod', { id: id, name: name, args: args });
         }
-        _native.callMethod = callMethod;
+        native_1.callMethod = callMethod;
         function callMethodAsync(id, name, args, callback) {
             callNativeAsync('callMethod', { id: id, name: name, args: args }, callback);
         }
-        _native.callMethodAsync = callMethodAsync;
+        native_1.callMethodAsync = callMethodAsync;
         function callInternalMethod(id, name, args) {
             return callNativeSync('callMethod', { id: id, name: name, args: args, internalMethod: true });
         }
-        _native.callInternalMethod = callInternalMethod;
+        native_1.callInternalMethod = callInternalMethod;
         function callInternalMethodAsync(id, name, args, callback) {
             callNativeAsync('callMethod', { id: id, name: name, args: args, internalMethod: true }, callback);
         }
-        _native.callInternalMethodAsync = callInternalMethodAsync;
+        native_1.callInternalMethodAsync = callInternalMethodAsync;
         function registerFunction(name, func) {
             // !native function registerFunction();
             registerFunction(name, func);
         }
-        _native.registerFunction = registerFunction;
+        native_1.registerFunction = registerFunction;
         function log(type, messageType, message) {
             callNativeSync('log', { type: type, messageType: messageType, message: message });
         }
-        _native.log = log;
+        native_1.log = log;
         function loadInternalScript(scriptName) {
             // !native function loadInternalScript();
             loadInternalScript(scriptName);
         }
-        _native.loadInternalScript = loadInternalScript;
+        native_1.loadInternalScript = loadInternalScript;
         function callNativeAsync(name, data, callback) {
             var jsonData = JSON.stringify(data);
             var internalCallback = function (jsonResponse) {
@@ -81,7 +81,7 @@ var htmlUi;
             };
             native(name, jsonData, internalCallback);
         }
-        _native.callNativeAsync = callNativeAsync;
+        native_1.callNativeAsync = callNativeAsync;
         function native(name, jsonData, callback) {
             // !native function native();
             return native(name, jsonData, callback);
@@ -98,12 +98,12 @@ var htmlUi;
                 xhr.send();
             }
             var response = JSON.parse(xhr.responseText);
-            if (response.type == 1 /* Value */)
+            if (response.type == htmlUi.NativeResponseType.Value)
                 return response.value;
-            if (response.type == 3 /* Exception */)
+            if (response.type == htmlUi.NativeResponseType.Exception)
                 throw response.exception;
         }
-        _native.callNativeSync = callNativeSync;
+        native_1.callNativeSync = callNativeSync;
         var NativeResponse = (function () {
             function NativeResponse(jsonResponse) {
                 var nativeResponse = JSON.parse(jsonResponse);
@@ -112,15 +112,15 @@ var htmlUi;
                 this.value = nativeResponse.value;
             }
             NativeResponse.prototype.getValue = function () {
-                if (this.type == 3 /* Exception */)
+                if (this.type == htmlUi.NativeResponseType.Exception)
                     throw this.exception;
-                if (this.type == 1 /* Value */)
+                if (this.type == htmlUi.NativeResponseType.Value)
                     return this.value;
                 return undefined;
             };
             return NativeResponse;
         })();
-        _native.NativeResponse = NativeResponse;
+        native_1.NativeResponse = NativeResponse;
     })(native = htmlUi.native || (htmlUi.native = {}));
 })(htmlUi || (htmlUi = {}));
 //# sourceMappingURL=htmlUi.native.js.map

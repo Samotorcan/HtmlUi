@@ -2,17 +2,10 @@
 using Newtonsoft.Json.Bson;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using Samotorcan.HtmlUi.Core.Diagnostics;
-using Samotorcan.HtmlUi.Core.Logs;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
-using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Utilities
 {

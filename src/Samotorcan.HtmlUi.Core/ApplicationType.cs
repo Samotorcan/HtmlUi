@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Samotorcan.HtmlUi.Core
+﻿namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
     /// Application type.
@@ -12,9 +6,9 @@ namespace Samotorcan.HtmlUi.Core
     public enum ApplicationType
     {
         /// <summary>
-        /// The main application.
+        /// The application.
         /// </summary>
-        MainApplication,
+        Application,
 
         /// <summary>
         /// The child application.

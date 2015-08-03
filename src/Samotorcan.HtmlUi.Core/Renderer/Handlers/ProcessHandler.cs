@@ -1,18 +1,12 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
 using Samotorcan.HtmlUi.Core.Events;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Xilium.CefGlue;
-using Xilium.CefGlue.Wrapper;
 
 namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 {
@@ -168,7 +162,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </summary>
         protected override void OnWebKitInitialized()
         {
-            GeneralLog.Info("WebKit initialized.");
+            Logger.Info("WebKit initialized.");
 
             CefRuntime.RegisterExtension("htmlUi.native", GetHtmlUiScript("native", false), V8NativeHandler);
 
@@ -185,7 +179,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             if (extraInfo == null)
                 throw new ArgumentNullException("extraInfo");
 
-            GeneralLog.Info("Render process thread created.");
+            Logger.Info("Render process thread created.");
 
             NativeRequestUrl = extraInfo.GetString(0);
             RequestHostname = extraInfo.GetString(1);
@@ -240,7 +234,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             if (exception == null)
                 throw new ArgumentNullException("exception");
 
-            GeneralLog.Error("Render process unhandled exception: " + exception.Message);
+            Logger.Error("Render process unhandled exception: " + exception.Message);
         }
         #endregion
 
@@ -365,7 +359,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             CefV8Exception exception = null;
 
             if (!context.TryEval(GetHtmlUiScript(name, true), out returnValue, out exception))
-                GeneralLog.Error(string.Format("Register html ui script exception: {0}.", JsonConvert.SerializeObject(exception)));
+                Logger.Error(string.Format("Register html ui script exception: {0}.", JsonConvert.SerializeObject(exception)));
         }
         #endregion
         #region IsLocalUrl

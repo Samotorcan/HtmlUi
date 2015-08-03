@@ -1,26 +1,17 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Samotorcan.HtmlUi.Core.Browser.Handlers;
 using Samotorcan.HtmlUi.Core.Events;
-using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Messages;
-using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Xilium.CefGlue;
-using Xilium.CefGlue.Wrapper;
 
 namespace Samotorcan.HtmlUi.Core.Browser
 {
     /// <summary>
     /// Client.
     /// </summary>
-    [CLSCompliant(false)]
-    public class Client : CefClient
+    internal class Client : CefClient
     {
         #region Events
 
@@ -108,7 +99,8 @@ namespace Samotorcan.HtmlUi.Core.Browser
             KeyboardHandler = new KeyboardHandler();
 
             // set events
-            LifeSpanHandler.BrowserCreated += (sender, e) => {
+            LifeSpanHandler.BrowserCreated += (sender, e) =>
+            {
                 if (BrowserCreated != null)
                     BrowserCreated(this, e);
             };
@@ -204,7 +196,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         {
             var controllerChanges = JsonConvert.DeserializeObject<List<ControllerChange>>(json);
 
-            BaseMainApplication.Current.Window.SyncControllerChangesToServer(controllerChanges);
+            Application.Current.Window.SyncControllerChangesToServer(controllerChanges);
 
             return Value.Undefined;
         }
@@ -219,7 +211,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         [NativeFunction]
         private object GetControllerNames(string json)
         {
-            return BaseMainApplication.Current.GetControllerNames();
+            return Application.Current.GetControllerNames();
         }
         #endregion
         #region CreateController
@@ -232,7 +224,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         private object CreateController(string json)
         {
             var createController = JsonConvert.DeserializeObject<CreateController>(json);
-            var controller = BaseMainApplication.Current.Window.CreateController(createController.Name);
+            var controller = Application.Current.Window.CreateController(createController.Name);
 
             return controller.GetControllerDescription();
         }
@@ -247,7 +239,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         private object CreateObservableController(string json)
         {
             var createController = JsonConvert.DeserializeObject<CreateController>(json);
-            var observableController = BaseMainApplication.Current.Window.CreateObservableController(createController.Name);
+            var observableController = Application.Current.Window.CreateObservableController(createController.Name);
 
             return observableController.GetObservableControllerDescription();
         }
@@ -263,7 +255,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         {
             var controllerId = JsonConvert.DeserializeObject<int>(json);
 
-            BaseMainApplication.Current.Window.DestroyController(controllerId);
+            Application.Current.Window.DestroyController(controllerId);
 
             return Value.Undefined;
         }
@@ -279,7 +271,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         {
             var methodData = JsonConvert.DeserializeObject<CallMethod>(json);
 
-            return BaseMainApplication.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Arguments, methodData.InternalMethod);
+            return Application.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Arguments, methodData.InternalMethod);
         }
         #endregion
 

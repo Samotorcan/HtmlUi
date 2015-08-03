@@ -1,12 +1,6 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Samotorcan.HtmlUi.Core.Logs;
+﻿using Newtonsoft.Json.Linq;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core

@@ -12,17 +12,14 @@ var htmlUi;
             }
             Object.defineProperty(ControllerChange.prototype, "hasChanges", {
                 get: function () {
-                    return htmlUi._.keys(this.properties).length != 0 || (htmlUi._.keys(this.observableCollections).length != 0 && htmlUi._.any(this.observableCollections, function (changes) {
-                        return changes.hasChanges;
-                    }));
+                    return htmlUi._.keys(this.properties).length != 0 ||
+                        (htmlUi._.keys(this.observableCollections).length != 0 && htmlUi._.any(this.observableCollections, function (changes) { return changes.hasChanges; }));
                 },
                 enumerable: true,
                 configurable: true
             });
             ControllerChange.prototype.getObservableCollection = function (propertyName) {
-                var observableCollections = htmlUi._.find(this.observableCollections, function (observableCollection) {
-                    observableCollection.name == propertyName;
-                });
+                var observableCollections = htmlUi._.find(this.observableCollections, function (observableCollection) { observableCollection.name == propertyName; });
                 if (observableCollections == null) {
                     observableCollections = new ObservableCollectionChanges();
                     this.observableCollections[propertyName] = observableCollections;
@@ -43,7 +40,8 @@ var htmlUi;
                     delete this.properties[propertyName];
             };
             ControllerChange.prototype.addObservableCollectionChange = function (propertyName, action, newItem, newStartingIndex, oldStartingIndex) {
-                this.getObservableCollection(propertyName).actions.push(new ObservableCollectionChange(action, newItem, newStartingIndex, oldStartingIndex));
+                this.getObservableCollection(propertyName).actions
+                    .push(new ObservableCollectionChange(action, newItem, newStartingIndex, oldStartingIndex));
             };
             ControllerChange.prototype.hasObservableCollection = function (propertyName) {
                 return htmlUi._.has(this.observableCollections, propertyName);
@@ -92,9 +90,7 @@ var htmlUi;
             }
             Object.defineProperty(ControllerDataContainer.prototype, "hasControllerChanges", {
                 get: function () {
-                    return htmlUi._.any(this.controllerChanges, function (controllerChange) {
-                        return controllerChange.hasChanges;
-                    });
+                    return htmlUi._.any(this.controllerChanges, function (controllerChange) { return controllerChange.hasChanges; });
                 },
                 enumerable: true,
                 configurable: true
@@ -270,9 +266,9 @@ var htmlUi;
             function callNativeAsync(name, data) {
                 var deferred = angular.services.$q.defer();
                 htmlUi.native.callNativeAsync(name, data, function (response) {
-                    if (response.type == 1 /* Value */)
+                    if (response.type == htmlUi.NativeResponseType.Value)
                         deferred.resolve(response.value);
-                    else if (response.type == 3 /* Exception */)
+                    else if (response.type == htmlUi.NativeResponseType.Exception)
                         deferred.reject(response.exception);
                     else
                         deferred.resolve();
@@ -298,70 +294,68 @@ var htmlUi;
             var htmlUiModule = _angular.module('htmlUi', []);
             // run
             htmlUiModule.run(['$rootScope', function ($rootScope) {
-                $rootScope['htmlUiControllerChanges'] = _controllerDataContainer.controllerChanges;
-                addHtmlUiControllerChangesWatch($rootScope);
-            }]);
+                    $rootScope['htmlUiControllerChanges'] = _controllerDataContainer.controllerChanges;
+                    addHtmlUiControllerChangesWatch($rootScope);
+                }]);
             // controller service
             htmlUiModule.factory('htmlUi.controller', [function () {
-                var createController = function (controllerName) {
-                    // create controller
-                    var controller = angular.native.createController(controllerName);
-                    var controllerData = _controllerDataContainer.addClientControllerData(controller.id);
-                    controllerData.name = controllerName;
-                    var clientController = controllerData.clientController = {
-                        destroy: function () {
-                            angular.native.destroyController(controller.id);
-                        }
+                    var createController = function (controllerName) {
+                        // create controller
+                        var controller = angular.native.createController(controllerName);
+                        var controllerData = _controllerDataContainer.addClientControllerData(controller.id);
+                        controllerData.name = controllerName;
+                        var clientController = controllerData.clientController = {
+                            destroy: function () {
+                                angular.native.destroyController(controller.id);
+                            }
+                        };
+                        // methods
+                        htmlUi._.forEach(controller.methods, function (method) {
+                            clientController[method.name] = function () {
+                                return angular.native.callMethod(controller.id, method.name, htmlUi.utility.argumentsToArray(arguments));
+                            };
+                        });
+                        // warm up native calls
+                        angular.native.callInternalMethodAsync(controller.id, 'warmUp', ['warmUp']).then(function () { });
+                        return clientController;
                     };
-                    // methods
-                    htmlUi._.forEach(controller.methods, function (method) {
-                        clientController[method.name] = function () {
-                            return angular.native.callMethod(controller.id, method.name, htmlUi.utility.argumentsToArray(arguments));
-                        };
-                    });
-                    // warm up native calls
-                    angular.native.callInternalMethodAsync(controller.id, 'warmUp', ['warmUp']).then(function () {
-                    });
-                    return clientController;
-                };
-                var createObservableController = function (controllerName, $scope) {
-                    var scopeId = $scope.$id;
-                    // create observable controller
-                    var observableController = angular.native.createObservableController(controllerName);
-                    var controllerData = _controllerDataContainer.addControllerData(observableController.id);
-                    controllerData.name = controllerName;
-                    controllerData.$scope = $scope;
-                    controllerData.scopeId = $scope.$id;
-                    // properties
-                    htmlUi._.forEach(observableController.properties, function (property) {
-                        var propertyName = property.name;
-                        $scope[propertyName] = property.value;
-                        // watch observable collection
-                        if (htmlUi._.isArray(property.value))
-                            addCollectionWatch(propertyName, $scope);
-                        // watch property
-                        addPropertyWatch(propertyName, $scope);
-                    });
-                    // methods
-                    htmlUi._.forEach(observableController.methods, function (method) {
-                        $scope[method.name] = function () {
-                            return angular.native.callMethod(observableController.id, method.name, htmlUi.utility.argumentsToArray(arguments));
-                        };
-                    });
-                    // destroy controller
-                    $scope.$on('$destroy', function () {
-                        angular.native.destroyController(observableController.id);
-                    });
-                    // warm up native calls
-                    angular.native.callInternalMethodAsync($scope.$id, 'warmUp', ['warmUp']).then(function () {
-                    });
-                    return $scope;
-                };
-                return {
-                    createController: createController,
-                    createObservableController: createObservableController
-                };
-            }]);
+                    var createObservableController = function (controllerName, $scope) {
+                        var scopeId = $scope.$id;
+                        // create observable controller
+                        var observableController = angular.native.createObservableController(controllerName);
+                        var controllerData = _controllerDataContainer.addControllerData(observableController.id);
+                        controllerData.name = controllerName;
+                        controllerData.$scope = $scope;
+                        controllerData.scopeId = $scope.$id;
+                        // properties
+                        htmlUi._.forEach(observableController.properties, function (property) {
+                            var propertyName = property.name;
+                            $scope[propertyName] = property.value;
+                            // watch observable collection
+                            if (htmlUi._.isArray(property.value))
+                                addCollectionWatch(propertyName, $scope);
+                            // watch property
+                            addPropertyWatch(propertyName, $scope);
+                        });
+                        // methods
+                        htmlUi._.forEach(observableController.methods, function (method) {
+                            $scope[method.name] = function () {
+                                return angular.native.callMethod(observableController.id, method.name, htmlUi.utility.argumentsToArray(arguments));
+                            };
+                        });
+                        // destroy controller
+                        $scope.$on('$destroy', function () {
+                            angular.native.destroyController(observableController.id);
+                        });
+                        // warm up native calls
+                        angular.native.callInternalMethodAsync($scope.$id, 'warmUp', ['warmUp']).then(function () { });
+                        return $scope;
+                    };
+                    return {
+                        createController: createController,
+                        createObservableController: createObservableController
+                    };
+                }]);
         }
         function addHtmlUiControllerChangesWatch($rootScope) {
             $rootScope.$watch('htmlUiControllerChanges', function () {
@@ -394,7 +388,9 @@ var htmlUi;
             var scopeId = $scope.$id;
             var controllerData = _controllerDataContainer.getControllerDataByScopeId(scopeId);
             controllerData.addWatch(propertyName, $scope.$watchCollection(propertyName, function (newCollection, oldCollection) {
-                if (newCollection !== oldCollection && !htmlUi.utility.isArrayShallowEqual(newCollection, oldCollection) && !controllerData.hasObservableCollectionValue(propertyName, newCollection) && !controllerData.change.hasProperty(propertyName)) {
+                if (newCollection !== oldCollection && !htmlUi.utility.isArrayShallowEqual(newCollection, oldCollection) &&
+                    !controllerData.hasObservableCollectionValue(propertyName, newCollection) &&
+                    !controllerData.change.hasProperty(propertyName)) {
                     var compareValues = htmlUi._.zip(oldCollection, newCollection);
                     htmlUi._.forEach(compareValues, function (compareValue, index) {
                         var oldValue = compareValue[0];
@@ -402,16 +398,16 @@ var htmlUi;
                         if (index < oldCollection.length && index < newCollection.length) {
                             // replace
                             if (oldValue !== newValue) {
-                                controllerData.change.addObservableCollectionChange(propertyName, 3 /* Replace */, newValue, index, null);
+                                controllerData.change.addObservableCollectionChange(propertyName, htmlUi.ObservableCollectionChangeAction.Replace, newValue, index, null);
                             }
                         }
                         else if (index < oldCollection.length && index >= newCollection.length) {
                             // remove
-                            controllerData.change.addObservableCollectionChange(propertyName, 2 /* Remove */, null, null, index);
+                            controllerData.change.addObservableCollectionChange(propertyName, htmlUi.ObservableCollectionChangeAction.Remove, null, null, index);
                         }
                         else {
                             // add
-                            controllerData.change.addObservableCollectionChange(propertyName, 1 /* Add */, newValue, index, null);
+                            controllerData.change.addObservableCollectionChange(propertyName, htmlUi.ObservableCollectionChangeAction.Add, newValue, index, null);
                         }
                     });
                 }
@@ -444,16 +440,16 @@ var htmlUi;
                         var collection = controller[propertyName];
                         htmlUi._.forEach(changes.actions, function (change) {
                             switch (change.action) {
-                                case 1 /* Add */:
+                                case htmlUi.ObservableCollectionChangeAction.Add:
                                     observableCollectionAddAction(collection, change);
                                     break;
-                                case 2 /* Remove */:
+                                case htmlUi.ObservableCollectionChangeAction.Remove:
                                     observableCollectionRemoveAction(collection, change);
                                     break;
-                                case 3 /* Replace */:
+                                case htmlUi.ObservableCollectionChangeAction.Replace:
                                     observableCollectionReplaceAction(collection, change);
                                     break;
-                                case 4 /* Move */:
+                                case htmlUi.ObservableCollectionChangeAction.Move:
                                     observableCollectionMoveAction(collection, change);
                                     break;
                             }
@@ -499,7 +495,7 @@ var htmlUi;
             var controllerData = _controllerDataContainer.getControllerData(clientFunction.controllerId);
             var runFunction = function (func) {
                 var result = {
-                    type: 1 /* Value */,
+                    type: htmlUi.ClientFunctionResultType.Value,
                     exception: null,
                     value: null
                 };
@@ -508,14 +504,14 @@ var htmlUi;
                         result.value = func.apply({}, clientFunction.args);
                     }
                     catch (err) {
-                        result.type = 3 /* Exception */;
+                        result.type = htmlUi.ClientFunctionResultType.Exception;
                         result.exception = err;
                     }
                     if (result.value === undefined)
-                        result.type = 2 /* Undefined */;
+                        result.type = htmlUi.ClientFunctionResultType.Undefined;
                 }
                 else {
-                    result.type = 4 /* FunctionNotFound */;
+                    result.type = htmlUi.ClientFunctionResultType.FunctionNotFound;
                 }
                 return result;
             };

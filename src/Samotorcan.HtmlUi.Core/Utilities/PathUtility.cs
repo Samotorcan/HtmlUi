@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Samotorcan.HtmlUi.Core.Utilities
 {
@@ -30,28 +27,9 @@ namespace Samotorcan.HtmlUi.Core.Utilities
             get
             {
                 if (string.IsNullOrEmpty(_workingDirectory))
-                    _workingDirectory = Path.GetDirectoryName(PathUtility.Application);
+                    _workingDirectory = Path.GetDirectoryName(PathUtility.Application).Replace('\\', '/');
 
                 return _workingDirectory;
-            }
-        }
-        #endregion
-        #region NormalizedWorkingDirectory
-        private static string _normalizedWorkingDirectory;
-        /// <summary>
-        /// Gets the normalized working directory.
-        /// </summary>
-        /// <value>
-        /// The normalized working directory.
-        /// </value>
-        public static string NormalizedWorkingDirectory
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(_normalizedWorkingDirectory))
-                    _normalizedWorkingDirectory = PathUtility.WorkingDirectory.Replace('\\', '/');
-
-                return _normalizedWorkingDirectory;
             }
         }
         #endregion
@@ -68,7 +46,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
             get
             {
                 if (string.IsNullOrEmpty(_application))
-                    _application = new Uri(Assembly.GetEntryAssembly().CodeBase).LocalPath;
+                    _application = new Uri(Assembly.GetEntryAssembly().CodeBase).LocalPath.Replace('\\', '/');
 
                 return _application;
             }

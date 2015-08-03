@@ -1,12 +1,9 @@
 ﻿using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Samotorcan.HtmlUi.Core
 {
@@ -54,7 +51,7 @@ namespace Samotorcan.HtmlUi.Core
             // actual file
             if (ContentSearch == ContentSearch.FileAndAssembly || ContentSearch == ContentSearch.File)
             {
-                var filePath = PathUtility.NormalizedWorkingDirectory + path;
+                var filePath = PathUtility.WorkingDirectory + path;
 
                 if (File.Exists(filePath))
                     return File.ReadAllBytes(filePath);
@@ -107,7 +104,7 @@ namespace Samotorcan.HtmlUi.Core
             // actual file
             if (ContentSearch == ContentSearch.FileAndAssembly || ContentSearch == ContentSearch.File)
             {
-                var filePath = PathUtility.NormalizedWorkingDirectory + path;
+                var filePath = PathUtility.WorkingDirectory + path;
 
                 if (File.Exists(filePath))
                     return true;

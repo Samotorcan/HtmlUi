@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
+using Samotorcan.HtmlUi.Core.Utilities;
 
 namespace Samotorcan.HtmlUi.Core
 {
@@ -28,9 +25,9 @@ namespace Samotorcan.HtmlUi.Core
             {
                 if (_applicationType == null)
                 {
-                    var processArguments = Environment.GetCommandLineArgs();
+                    var processArguments = EnvironmentUtility.GetCommandLineArgs();
 
-                    _applicationType = processArguments.Any(a => a.StartsWith("--type=")) ? ApplicationType.ChildApplication : ApplicationType.MainApplication;
+                    _applicationType = processArguments.Any(a => a.StartsWith("--type=")) ? ApplicationType.ChildApplication : ApplicationType.Application;
                 }
 
                 return _applicationType.Value;

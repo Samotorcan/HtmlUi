@@ -1,11 +1,7 @@
 ﻿using Samotorcan.HtmlUi.Core.Logs;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Samotorcan.HtmlUi.Core.Diagnostics
 {
@@ -134,7 +130,7 @@ namespace Samotorcan.HtmlUi.Core.Diagnostics
         /// <param name="name">The name.</param>
         private static void LogMeasure(System.Diagnostics.Stopwatch stopwatch, string name)
         {
-            GeneralLog.Debug(string.Format("[{0}ms] - {1}", stopwatch.Elapsed.TotalMilliseconds.ToString(CultureInfo.InvariantCulture), name));
+            Logger.Debug(string.Format("[{0}ms] - {1}", stopwatch.Elapsed.TotalMilliseconds.ToString(CultureInfo.InvariantCulture), name));
         }
         #endregion
 

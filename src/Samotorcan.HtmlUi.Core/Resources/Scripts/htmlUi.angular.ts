@@ -363,7 +363,7 @@ module htmlUi.angular {
 
                 // methods
                 _.forEach(controller.methods, (method) => {
-                    clientController[method.name] = () => {
+                    clientController[method.name] = function () {
                         return native.callMethod<Object>(controller.id, method.name, utility.argumentsToArray(arguments));
                     };
                 });
@@ -400,7 +400,7 @@ module htmlUi.angular {
 
                 // methods
                 _.forEach(observableController.methods,(method) => {
-                    $scope[method.name] = () => {
+                    $scope[method.name] = function () {
                         return native.callMethod<Object>(observableController.id, method.name, utility.argumentsToArray(arguments));
                     };
                 });

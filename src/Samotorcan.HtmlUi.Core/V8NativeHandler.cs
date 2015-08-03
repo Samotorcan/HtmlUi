@@ -1,15 +1,10 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Samotorcan.HtmlUi.Core.Diagnostics;
-using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Messages;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core
@@ -85,7 +80,7 @@ namespace Samotorcan.HtmlUi.Core
             if (processMessage == null)
                 throw new ArgumentNullException("processMessage");
 
-            GeneralLog.Debug(string.Format("renderer - process message: {0}", processMessage.Name));
+            Logger.Debug(string.Format("renderer - process message: {0}", processMessage.Name));
 
             // native
             if (processMessage.Name == "native")
@@ -124,7 +119,7 @@ namespace Samotorcan.HtmlUi.Core
                 }
                 else
                 {
-                    GeneralLog.Error(string.Format("Call function - function {0} is not registered.", functionName));
+                    Logger.Error(string.Format("Call function - function {0} is not registered.", functionName));
                 }
 
                 return true;

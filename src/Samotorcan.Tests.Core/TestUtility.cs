@@ -1,11 +1,7 @@
 ﻿using OpenQA.Selenium.Chrome;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Samotorcan.Tests.Core
 {
@@ -43,6 +39,7 @@ namespace Samotorcan.Tests.Core
         /// Creates the driver service.
         /// </summary>
         /// <returns></returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "It's returned.")]
         public static ChromeDriverService CreateDriverService()
         {
             var driverService = ChromeDriverService.CreateDefaultService(TestUtility.AssemblyDirectory, "chromedriver.exe");
@@ -79,8 +76,12 @@ namespace Samotorcan.Tests.Core
         /// <param name="factory">The factory.</param>
         /// <param name="function">The function.</param>
         /// <returns></returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters", Justification = "ChromeDriver is better.")]
         public static bool FactoryHasFunction(ChromeDriver driver, string factory, string function)
         {
+            if (driver == null)
+                throw new ArgumentNullException("driver");
+
             return (bool)driver.ExecuteScript(string.Format(@"
                 try {{
                     var factory = angular.element(document.body).injector().get('{0}');

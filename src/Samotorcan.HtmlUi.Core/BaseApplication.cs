@@ -1,13 +1,9 @@
 ﻿using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Samotorcan.HtmlUi.Core
 {
@@ -115,21 +111,20 @@ namespace Samotorcan.HtmlUi.Core
         /// <exception cref="System.InvalidOperationException">You can only have one instance of Application at any given time.</exception>
         protected BaseApplication(BaseApplicationSettings settings)
         {
+            if (settings == null)
+                throw new ArgumentNullException("settings");
+
             if (Current != null)
                 throw new InvalidOperationException("You can only have one instance of Application at any given time.");
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-            LogsDirectoryPath = PathUtility.NormalizedWorkingDirectory + "/" + LogsDirectory;
+            LogsDirectoryPath = PathUtility.WorkingDirectory + "/" + LogsDirectory;
             EnsureLogsDirectory();
 
-            using (var stream = ResourceUtility.GetResourceAsStream("log4net.config"))
-            {
-                log4net.Config.XmlConfigurator.Configure(stream);
-            }
-            log4net.GlobalContext.Properties["pid"] = Process.GetCurrentProcess().Id;
+            InitializeLog4Net();
 
-            CacheDirectoryPath = PathUtility.NormalizedWorkingDirectory + "/" + CacheDirectory;
+            CacheDirectoryPath = PathUtility.WorkingDirectory + "/" + CacheDirectory;
             EnsureCacheDirectory();
 
             ThreadId = Thread.CurrentThread.ManagedThreadId;
@@ -144,37 +139,6 @@ namespace Samotorcan.HtmlUi.Core
 
         #endregion
         #region Methods
-        #region Public
-
-        #region Run
-        /// <summary>
-        /// Runs the application.
-        /// </summary>
-        /// <exception cref="System.InvalidOperationException">Application is already running.</exception>
-        public void Run()
-        {
-            EnsureMainThread();
-
-            if (IsRunning)
-                throw new InvalidOperationException("Application is already running.");
-
-            IsRunning = true;
-            GeneralLog.Info("Application Run started.");
-
-            try
-            {
-                RunInternal();
-            }
-            finally
-            {
-                IsRunning = false;
-            }
-
-            GeneralLog.Info("Application Run ended.");
-        }
-        #endregion
-
-        #endregion
         #region Internal
 
         #region EnsureMainThread
@@ -186,6 +150,33 @@ namespace Samotorcan.HtmlUi.Core
         {
             if (Thread.CurrentThread.ManagedThreadId != ThreadId)
                 throw new InvalidOperationException("Must be called from the main thread.");
+        }
+        #endregion
+        #region RunApplication
+        /// <summary>
+        /// Runs the application.
+        /// </summary>
+        /// <exception cref="System.InvalidOperationException">Application is already running.</exception>
+        internal void RunApplication()
+        {
+            EnsureMainThread();
+
+            if (IsRunning)
+                throw new InvalidOperationException("Application is already running.");
+
+            IsRunning = true;
+            Logger.Info("Application Run started.");
+
+            try
+            {
+                RunInternal();
+            }
+            finally
+            {
+                IsRunning = false;
+            }
+
+            Logger.Info("Application Run ended.");
         }
         #endregion
 
@@ -230,7 +221,20 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="e">The <see cref="UnhandledExceptionEventArgs"/> instance containing the event data.</param>
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            GeneralLog.Error("Unhandled exception.", e.ExceptionObject as Exception);
+            Logger.Error("Unhandled exception.", e.ExceptionObject as Exception);
+        }
+        #endregion
+        #region InitializeLog4Net
+        /// <summary>
+        /// Initializes the log4net.
+        /// </summary>
+        private void InitializeLog4Net()
+        {
+            using (var stream = ResourceUtility.GetResourceAsStream("log4net.config"))
+            {
+                log4net.Config.XmlConfigurator.Configure(stream);
+            }
+            log4net.GlobalContext.Properties["pid"] = Process.GetCurrentProcess().Id;
         }
         #endregion
 

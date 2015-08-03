@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Browser.Handlers
@@ -65,10 +61,10 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             if (request == null)
                 throw new ArgumentNullException("request");
 
-            if (BaseMainApplication.Current.IsContentUrl(request.Url))
+            if (Application.Current.IsContentUrl(request.Url))
                 return new ContentResourceHandler();
 
-            if (BaseMainApplication.Current.IsNativeRequestUrl(request.Url))
+            if (Application.Current.IsNativeRequestUrl(request.Url))
                 return new NativeRequestResourceHandler();
 
             return null;

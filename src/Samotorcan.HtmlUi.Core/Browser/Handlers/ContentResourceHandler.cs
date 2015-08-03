@@ -1,13 +1,8 @@
-﻿using Samotorcan.HtmlUi.Core.Exceptions;
-using Samotorcan.HtmlUi.Core.Logs;
+﻿using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Browser.Handlers
@@ -125,8 +120,8 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 response.MimeType = "application/octet-stream";
                 var extension = Path.GetExtension(Url);
 
-                if (!string.IsNullOrWhiteSpace(extension) && BaseMainApplication.Current.MimeTypes.ContainsKey(extension))
-                    response.MimeType = BaseMainApplication.Current.MimeTypes[extension];
+                if (!string.IsNullOrWhiteSpace(extension) && Application.Current.MimeTypes.ContainsKey(extension))
+                    response.MimeType = Application.Current.MimeTypes[extension];
             }
             else
             {
@@ -152,7 +147,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 throw new ArgumentNullException("request");
 
             Url = request.Url;
-            var application = BaseMainApplication.Current;
+            var application = Application.Current;
 
             application.InvokeOnMainAsync(() =>
             {
@@ -168,7 +163,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                     Data = null;
                     Exception = e;
 
-                    GeneralLog.Error("Content request exception.", e);
+                    Logger.Error("Content request exception.", e);
                 }
 
                 callback.Continue();

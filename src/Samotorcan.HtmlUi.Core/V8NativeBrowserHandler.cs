@@ -1,15 +1,9 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Samotorcan.HtmlUi.Core.Exceptions;
+﻿using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Messages;
 using Samotorcan.HtmlUi.Core.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Xilium.CefGlue;
 
@@ -63,13 +57,13 @@ namespace Samotorcan.HtmlUi.Core
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "sourceProcess", Justification = "I want it to match to OnProcessMessageReceived method.")]
         public bool ProcessMessage(CefBrowser browser, CefProcessId sourceProcess, CefProcessMessage processMessage)
         {
-            GeneralLog.Debug(string.Format("browser - process message: {0}", processMessage.Name));
+            Logger.Debug(string.Format("browser - process message: {0}", processMessage.Name));
 
             if (processMessage.Name == "native")
             {
                 var message = MessageUtility.DeserializeMessage<CallNative>(processMessage);
 
-                BaseMainApplication.Current.InvokeOnMainAsync(() =>
+                Application.Current.InvokeOnMainAsync(() =>
                 {
                     var returnData = (object)null;
                     var exception = (Exception)null;
@@ -125,7 +119,7 @@ namespace Samotorcan.HtmlUi.Core
                     }
                 }).ContinueWith(t =>
                 {
-                    GeneralLog.Error("Native call exception.", t.Exception);
+                    Logger.Error("Native call exception.", t.Exception);
                 }, TaskContinuationOptions.OnlyOnFaulted);
 
                 return true;
@@ -135,7 +129,7 @@ namespace Samotorcan.HtmlUi.Core
             {
                 var message = MessageUtility.DeserializeMessage<CallFunctionResult>(processMessage);
 
-                BaseMainApplication.Current.Window.SetCallFunctionResult(message.CallbackId.Value, message.Data.Result);
+                Application.Current.Window.SetCallFunctionResult(message.CallbackId.Value, message.Data.Result);
 
                 return true;
             }

@@ -37,10 +37,9 @@ var htmlUi;
         }
         utility.argumentsToArray = argumentsToArray;
         function inject(func, inject) {
-            var _this = this;
             return function () {
-                inject.apply(_this, arguments);
-                return func.apply(_this, arguments);
+                inject.apply(this, arguments);
+                return func.apply(this, arguments);
             };
         }
         utility.inject = inject;

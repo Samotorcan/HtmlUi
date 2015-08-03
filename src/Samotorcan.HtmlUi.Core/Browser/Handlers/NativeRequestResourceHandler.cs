@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.Core.Messages;
@@ -9,10 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Browser.Handlers
@@ -200,7 +196,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 throw new ArgumentNullException("callback");
 
             Url = request.Url;
-            Path = BaseMainApplication.Current.GetNativeRequestPath(Url);
+            Path = Application.Current.GetNativeRequestPath(Url);
 
             try
             {
@@ -265,9 +261,9 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         {
             List<string> controllerNames = null;
 
-            BaseMainApplication.Current.InvokeOnMain(() =>
+            Application.Current.InvokeOnMain(() =>
             {
-                controllerNames = BaseMainApplication.Current.GetControllerNames();
+                controllerNames = Application.Current.GetControllerNames();
             });
 
             return controllerNames;
@@ -285,9 +281,9 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             var controllerData = GetPostData<CreateController>(request);
             ControllerDescription controllerDescription = null;
 
-            BaseMainApplication.Current.InvokeOnMain(() =>
+            Application.Current.InvokeOnMain(() =>
             {
-                var controller = BaseMainApplication.Current.Window.CreateController(controllerData.Name);
+                var controller = Application.Current.Window.CreateController(controllerData.Name);
 
                 controllerDescription = controller.GetControllerDescription();
 
@@ -311,9 +307,9 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             var controllerData = GetPostData<CreateController>(request);
             ObservableControllerDescription observableControllerDescription = null;
 
-            BaseMainApplication.Current.InvokeOnMain(() =>
+            Application.Current.InvokeOnMain(() =>
             {
-                var observableController = BaseMainApplication.Current.Window.CreateObservableController(controllerData.Name);
+                var observableController = Application.Current.Window.CreateObservableController(controllerData.Name);
 
                 observableControllerDescription = observableController.GetObservableControllerDescription();
 
@@ -339,9 +335,9 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         {
             var controllerId = GetPostData<int>(request);
 
-            BaseMainApplication.Current.InvokeOnMain(() =>
+            Application.Current.InvokeOnMain(() =>
             {
-                BaseMainApplication.Current.Window.DestroyController(controllerId);
+                Application.Current.Window.DestroyController(controllerId);
             });
 
             return Value.Undefined;
@@ -358,7 +354,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         {
             var controllerChanges = GetPostData<List<ControllerChange>>(request);
 
-            var application = BaseMainApplication.Current;
+            var application = Application.Current;
             application.InvokeOnMain(() =>
             {
                 application.Window.SyncControllerChangesToServer(controllerChanges);
@@ -379,9 +375,9 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             var methodData = GetPostData<CallMethod>(request);
             object response = null;
 
-            BaseMainApplication.Current.InvokeOnMain(() =>
+            Application.Current.InvokeOnMain(() =>
             {
-                response = BaseMainApplication.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Arguments, methodData.InternalMethod);
+                response = Application.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Arguments, methodData.InternalMethod);
             });
 
             return response;
@@ -403,7 +399,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             var message = jsonToken["message"].ToString();
 
             if (type == LogType.GeneralLog)
-                GeneralLog.Log(messageType, message);
+                Logger.Log(messageType, message);
 
             return Value.Undefined;
         }

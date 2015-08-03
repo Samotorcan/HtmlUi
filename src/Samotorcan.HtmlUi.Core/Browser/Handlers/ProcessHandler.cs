@@ -1,10 +1,5 @@
-﻿using Samotorcan.HtmlUi.Core.Utilities;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Browser.Handlers
@@ -27,23 +22,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             if (commandLine == null)
                 throw new ArgumentNullException("commandLine");
 
-            // .NET in Windows treat assemblies as native images, so no any magic required.
-            // Mono on any platform usually located far away from entry assembly, so we want prepare command line to call it correctly.
-            if (Type.GetType("Mono.Runtime") != null)
-            {
-                if (!commandLine.HasSwitch("cefglue"))
-                {
-                    var path = PathUtility.Application;
-                    commandLine.SetProgram(path);
-
-                    var mono = CefRuntime.Platform == CefRuntimePlatform.Linux ? "/usr/bin/mono" : @"C:\Program Files\Mono-2.10.8\bin\monow.exe";
-                    commandLine.PrependArgument(mono);
-
-                    commandLine.AppendSwitch("cefglue", "w");
-                }
-            }
-
-            if (!BaseMainApplication.Current.D3D11Enabled && !commandLine.GetArguments().Contains(Argument.DisableD3D11.Value))
+            if (!Application.Current.D3D11Enabled && !commandLine.GetArguments().Contains(Argument.DisableD3D11.Value))
                 commandLine.AppendArgument(Argument.DisableD3D11.Value);
         }
         #endregion
@@ -61,9 +40,9 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             if (extraInfo == null)
                 throw new ArgumentNullException("extraInfo");
 
-            extraInfo.SetString(0, BaseMainApplication.Current.NativeRequestUrl);
-            extraInfo.SetString(1, BaseMainApplication.Current.RequestHostname);
-            extraInfo.SetInt(2, BaseMainApplication.Current.NativeRequestPort);
+            extraInfo.SetString(0, Application.Current.NativeRequestUrl);
+            extraInfo.SetString(1, Application.Current.RequestHostname);
+            extraInfo.SetInt(2, Application.Current.NativeRequestPort);
         }
         #endregion
 

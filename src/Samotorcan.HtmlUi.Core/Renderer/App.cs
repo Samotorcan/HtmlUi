@@ -1,12 +1,5 @@
 ﻿using Samotorcan.HtmlUi.Core.Renderer.Handlers;
-using Samotorcan.HtmlUi.Core.Utilities;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Renderer
@@ -14,8 +7,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer
     /// <summary>
     /// Renderer app.
     /// </summary>
-    [CLSCompliant(false)]
-    public class App : CefApp
+    internal class App : CefApp
     {
         #region Properties
         #region Private
@@ -57,12 +49,6 @@ namespace Samotorcan.HtmlUi.Core.Renderer
         {
             if (commandLine == null)
                 throw new ArgumentNullException("commandLine");
-
-            if (!commandLine.HasSwitch("resources-dir-path"))
-                commandLine.AppendSwitch("resources-dir-path", PathUtility.WorkingDirectory);
-
-            if (!commandLine.HasSwitch("locales-dir-path"))
-                commandLine.AppendSwitch("locales-dir-path", Path.Combine(PathUtility.WorkingDirectory, "locales"));
         }
         #endregion
         #region GetRenderProcessHandler

@@ -1,10 +1,6 @@
 ﻿using Samotorcan.HtmlUi.Core.Exceptions;
 using Samotorcan.HtmlUi.Core.Logs;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Samotorcan.HtmlUi.Core.Utilities
 {
@@ -69,7 +65,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
             }
             catch (Exception e)
             {
-                GeneralLog.Error("Unhandled exception", e);
+                Logger.Error("Unhandled exception", e);
 
                 throw;
             }

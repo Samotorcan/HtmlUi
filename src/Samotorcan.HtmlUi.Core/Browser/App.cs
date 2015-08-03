@@ -1,12 +1,5 @@
 ﻿using Samotorcan.HtmlUi.Core.Browser.Handlers;
-using Samotorcan.HtmlUi.Core.Utilities;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Browser
@@ -14,8 +7,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
     /// <summary>
     /// Browser app.
     /// </summary>
-    [CLSCompliant(false)]
-    public class App : CefApp
+    internal class App : CefApp
     {
         #region Properties
         #region Private
@@ -57,15 +49,6 @@ namespace Samotorcan.HtmlUi.Core.Browser
         {
             if (commandLine == null)
                 throw new ArgumentNullException("commandLine");
-
-            if (!commandLine.HasSwitch("resources-dir-path"))
-                commandLine.AppendSwitch("resources-dir-path", PathUtility.WorkingDirectory);
-
-            if (!commandLine.HasSwitch("locales-dir-path"))
-                commandLine.AppendSwitch("locales-dir-path", Path.Combine(PathUtility.WorkingDirectory, "locales"));
-
-            if (!BaseMainApplication.Current.D3D11Enabled && !commandLine.GetArguments().Contains(Argument.DisableD3D11.Value))
-                commandLine.AppendArgument(Argument.DisableD3D11.Value);
         }
         #endregion
         #region GetBrowserProcessHandler

@@ -184,4 +184,5 @@ ModelManifest.xml
 Samotorcan.HtmlUi.sln.GhostDoc.xml
 Samotorcan.HtmlUi.Core/Resources/Scripts/references.js
 Samotorcan.HtmlUi.Core/Resources/Scripts/references.js.map
-Samotorcan.HtmlUi.Core/ApiPortabilityAnalysis.htm
+Samotorcan.HtmlUi.Core/ApiPortabilityAnalysis*.htm
+.vs/
