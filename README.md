@@ -29,7 +29,7 @@ The Platform Target must also be set to either x86 or x64 and the correct bit ve
 
 ![new console application](docs/PlatformTarget.jpg)
 
-The framework will start multiple processes where the first started process will be the main application process. To correctly run child processes the main method of the application should look like something like this:
+The framework will start multiple processes where the first started process will be the main application process. To correctly run child processes the main method of the application should look like something like this.
 ```C#
 static void Main(string[] args)
 {
