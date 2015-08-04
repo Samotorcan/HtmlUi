@@ -42,10 +42,10 @@ namespace Samotorcan.Tests.Core
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "It's returned.")]
         public static ChromeDriverService CreateDriverService()
         {
-            var driverService = ChromeDriverService.CreateDefaultService(TestUtility.AssemblyDirectory, "chromedriver.exe");
+            var driverService = ChromeDriverService.CreateDefaultService(AssemblyDirectory, "chromedriver.exe");
 
             driverService.Port = 21480;
-            driverService.LogPath = TestUtility.AssemblyDirectory + "/chromedriver.log";
+            driverService.LogPath = AssemblyDirectory + "/chromedriver.log";
             driverService.EnableVerboseLogging = true;
             driverService.HideCommandPromptWindow = true;
 
@@ -59,12 +59,13 @@ namespace Samotorcan.Tests.Core
         /// Creates the driver.
         /// </summary>
         /// <param name="driverService">The driver service.</param>
+        /// <param name="applicationName">Name of the application.</param>
         /// <returns></returns>
-        public static ChromeDriver CreateDriver(ChromeDriverService driverService)
+        public static ChromeDriver CreateDriver(ChromeDriverService driverService, string applicationName)
         {
             return new ChromeDriver(driverService, new ChromeOptions
             {
-                BinaryLocation = TestUtility.AssemblyDirectory + "/Samotorcan.Tests.Windows.Application.exe"
+                BinaryLocation = AssemblyDirectory + "/" + applicationName
             });
         }
         #endregion
