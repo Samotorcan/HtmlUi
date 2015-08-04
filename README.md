@@ -5,13 +5,13 @@ HtmlUi is a framework for creating desktop C# applications with HTML user interf
 The framework uses [CEF](https://bitbucket.org/chromiumembedded/cef) library to render the UI and C# to connect controllers with the UI. For client side on the UI the framework curently only support [AngularJS](https://angularjs.org/). Every AngularJS controller is linked with the C# controller and so every property changed in the C# controller gets updated to the AngularJS controller and vice versa. Methods on the C# controller are also linked to to the AngularJS side so they can be called from the UI.
 
 ## CEF binaries
-CEF binaries can be compiled from the [CEF sources](https://bitbucket.org/chromiumembedded/cef/wiki/BranchesAndBuilding) or downloaded from the [CEF Builds](https://cefbuilds.com/). HtmlUi currently uses CEF version 3.2272.2035. The required files for CEF to run are listed [here](https://code.google.com/p/chromiumembedded/source/browse/trunk/cef3/tools/distrib/win/README.redistrib.txt). The repository also includes the Windows x86 binaries to run examples without the need to search and download the right CEF.
+CEF binaries can be compiled from the [CEF sources](https://bitbucket.org/chromiumembedded/cef/wiki/BranchesAndBuilding) or downloaded from the [CEF Builds](https://cefbuilds.com/). HtmlUi currently uses CEF version 3.2357.1281. The required files for CEF to run are listed [here](https://code.google.com/p/chromiumembedded/source/browse/trunk/cef3/tools/distrib/win/README.redistrib.txt). The repository also includes the Windows x86 and Linux x64 binaries to run examples without the need to search and download the right CEF.
 
 ## CefGlue
 To use CEF in C# the framework uses a library called [CefGlue](https://bitbucket.org/xilium/xilium.cefglue) to P/Invoke calls to CEF. Which CEF version the framework uses is conditional with the CefGlue library. When the CefGlue library gets updated so will the framework be upadated to use the newest CEF version.
 
 ## Usage
-The framework was only tested with Visual Studio 2013. To build the core project TypeScript 1.4 for Visual Studio 2013 extension is required.
+The framework was only tested with Visual Studio 2015.
 
 To create a new application first create a new Console Application in Visual Studio. The minimum C# supported version by the framework is 4.5.
 
@@ -25,30 +25,21 @@ Next the output type in project options must be changed to Windows Application s
 
 ![new console application](docs/ApplicationType.jpg)
 
-The framework will start multiple processes where the first started process will be the main application process. To correctly run child processes the main method of the application should look like something like this:
+The Platform Target must also be set to either x86 or x64 and the correct bit version of CEF must be copied next to the application. Windows x86 and Linux x64 CEF binaries can be found in the [repository](src/References/cef).
+
+![new console application](docs/PlatformTarget.jpg)
+
+The framework will start multiple processes where the first started process will be the main application process. To correctly run child processes the main method of the application should look like something like this.
 ```C#
 static void Main(string[] args)
 {
-    if (HtmlUiRuntime.ApplicationType == ApplicationType.MainApplication)
-        RunMainApplication();
-    else
-        RunChildApplication();
-}
-
-private static void RunMainApplication()
-{
-    using (var application = new MainApplication())
+    if (HtmlUiRuntime.ApplicationType == ApplicationType.ChildApplication)
     {
-        application.Run();
+        OSChildApplication.Run();
+        return;
     }
-}
 
-private static void RunChildApplication()
-{
-    using (var application = new ChildApplication())
-    {
-        application.Run();
-    }
+    OSApplication.Run();
 }
 ```
 At this part the HtmlUi must be added in references to correctly find HtmlUi classes.
@@ -99,7 +90,23 @@ public class ExampleController : ObservableController
 }
 ```
 
+## Windows
+The create an application for Windows only the CEF binaries must be copied next to the application tu run properly. No additional steps are needed.
+
+## Linux
+The run the application on Linux [Mono](http://www.mono-project.com/) is required. After Mono is installed on Linux the application must be packed into a bundle with  [mkbundle](http://www.mono-project.com/archived/guiderunning_mono_applications/#bundles). The CEF library must be linked before `libc.so`. To achieve this you can run the application with `LD_PRELOAD` like this `LD_PRELOAD=LD_PRELOAD=/path/to/libcef.so /path/to/your/app` or by modifying the link part in mkbundle process. An example of how to modify the mkbundle process to include the `libcef.so` before `libc.so`.
+
+```Shell
+mkbundle -c -o host.c -oo bundles.o yourApp.exe
+cc -ggdb -o yourApp -Wall host.c -Wl,-rpath=. libcef.so `pkg-config --cflags --libs mono-2` bundles.o
+rm host.c bundles.o
+```
+
+The CEF bit version is dependent on the bit version of Mono. If you have a x86 version of Mono you will need a x86 version of CEF and if you have a x64 version of Mono you will need a x64 version of CEF.
+
 ## Examples
 The sources contain one example application [TodoList](src/Samotorcan.Examples.TodoList). The application shows how to use the HtmlUi framework to sync todo items from UI to C# and load and save todo items in a JSON file.
+
+To run the example application the required CEF version must be copied next to the example application and for Linux the example application must also be packed with mkbundle.
 
 ![new console application](docs/TodoList.jpg)
