@@ -1,7 +1,7 @@
 ﻿/// <reference path="references.ts" />
 
 // definitions
-module htmlUi.angular {
+namespace htmlUi.angular {
     export class ControllerChange implements htmlUi.IControllerChange {
         id: number;
         properties: { [name: string]: Object };
@@ -227,7 +227,7 @@ module htmlUi.angular {
 }
 
 // services
-module htmlUi.angular {
+namespace htmlUi.angular {
     var _angular: ng.IAngularStatic = window['angular'];
 
     var _$q: ng.IQService = null;
@@ -243,7 +243,7 @@ module htmlUi.angular {
 }
 
 // native
-module htmlUi.angular.native {
+namespace htmlUi.angular.native {
     export function syncControllerChanges(controllerChanges: ControllerChange[]): void {
         htmlUi.native.callNativeSync('syncControllerChanges', controllerChanges);
     }
@@ -325,7 +325,7 @@ module htmlUi.angular.native {
 }
 
 // main
-module htmlUi.angular {
+namespace htmlUi.angular {
     var _angular: ng.IAngularStatic = window['angular'];
 
     var _controllerDataContainer = new ControllerDataContainer();
@@ -363,8 +363,8 @@ module htmlUi.angular {
 
                 // methods
                 _.forEach(controller.methods, (method) => {
-                    clientController[method.name] = function () {
-                        return native.callMethod<Object>(controller.id, method.name, utility.argumentsToArray(arguments));
+                    clientController[method.name] = (...args: any[]) => {
+                        return native.callMethod<Object>(controller.id, method.name, args);
                     };
                 });
 
@@ -400,8 +400,8 @@ module htmlUi.angular {
 
                 // methods
                 _.forEach(observableController.methods,(method) => {
-                    $scope[method.name] = function () {
-                        return native.callMethod<Object>(observableController.id, method.name, utility.argumentsToArray(arguments));
+                    $scope[method.name] = (...args: any[]) => {
+                        return native.callMethod<Object>(observableController.id, method.name, args);
                     };
                 });
 

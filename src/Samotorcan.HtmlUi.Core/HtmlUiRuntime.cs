@@ -1,5 +1,7 @@
 ﻿using System.Linq;
 using Samotorcan.HtmlUi.Core.Utilities;
+using Xilium.CefGlue;
+using System;
 
 namespace Samotorcan.HtmlUi.Core
 {
@@ -31,6 +33,32 @@ namespace Samotorcan.HtmlUi.Core
                 }
 
                 return _applicationType.Value;
+            }
+        }
+        #endregion
+        #region Platform
+        /// <summary>
+        /// Gets the platform.
+        /// </summary>
+        /// <value>
+        /// The platform.
+        /// </value>
+        /// <exception cref="System.InvalidOperationException">Unknown platform.</exception>
+        public static Platform Platform
+        {
+            get
+            {
+                switch (CefRuntime.Platform)
+                {
+                    case CefRuntimePlatform.Windows:
+                        return Platform.Windows;
+                    case CefRuntimePlatform.Linux:
+                        return Platform.Linux;
+                    case CefRuntimePlatform.MacOSX:
+                        return Platform.OSX;
+                    default:
+                        throw new InvalidOperationException("Unknown platform.");
+                }
             }
         }
         #endregion

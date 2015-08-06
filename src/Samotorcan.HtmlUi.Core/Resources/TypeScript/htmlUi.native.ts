@@ -1,6 +1,6 @@
 ﻿/// <reference path="references.ts" />
 
-module htmlUi.native {
+namespace htmlUi.native {
     export function syncControllerChanges(controllerChanges: IControllerChange[]): void {
         callNativeSync('syncControllerChanges', controllerChanges);
     }

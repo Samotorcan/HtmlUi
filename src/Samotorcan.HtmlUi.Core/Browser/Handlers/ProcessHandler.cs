@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using Samotorcan.HtmlUi.Core.Events;
+using Samotorcan.HtmlUi.Core.Logs;
 using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Browser.Handlers
@@ -9,6 +11,16 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
     /// </summary>
     internal class ProcessHandler : CefBrowserProcessHandler
     {
+        #region Events
+
+        #region ContextInitialized
+        /// <summary>
+        /// Occurs when context is initialized.
+        /// </summary>
+        public event EventHandler<ContextInitializedEventArgs> ContextInitialized;
+        #endregion
+
+        #endregion
         #region Methods
         #region Protected
 
@@ -40,9 +52,23 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             if (extraInfo == null)
                 throw new ArgumentNullException("extraInfo");
 
-            extraInfo.SetString(0, Application.Current.NativeRequestUrl);
-            extraInfo.SetString(1, Application.Current.RequestHostname);
-            extraInfo.SetInt(2, Application.Current.NativeRequestPort);
+            var app = Application.Current;
+
+            extraInfo.SetString(0, app.NativeRequestUrl);
+            extraInfo.SetString(1, app.RequestHostname);
+            extraInfo.SetInt(2, app.NativeRequestPort);
+            extraInfo.SetBool(3, app.IncludeHtmUiScriptMapping);
+            extraInfo.SetInt(4, (int)Logger.LogSeverity);
+        }
+        #endregion
+        #region OnContextInitialized
+        /// <summary>
+        /// Called when context is initialized.
+        /// </summary>
+        protected override void OnContextInitialized()
+        {
+            if (ContextInitialized != null)
+                ContextInitialized(this, new ContextInitializedEventArgs());
         }
         #endregion
 

@@ -2,7 +2,6 @@
 using Samotorcan.HtmlUi.Core;
 using Samotorcan.HtmlUi.Linux;
 using Samotorcan.HtmlUi.Windows;
-using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.OS
 {
@@ -21,15 +20,15 @@ namespace Samotorcan.HtmlUi.OS
         /// <param name="settings">The settings.</param>
         public static void Run(ChildApplicationSettings settings)
         {
-            switch (CefRuntime.Platform)
+            switch (HtmlUiRuntime.Platform)
             {
-                case CefRuntimePlatform.Windows:
+                case Platform.Windows:
                     WindowsChildApplication.Run(new WindowsChildApplicationSettings(settings));
                     break;
-                case CefRuntimePlatform.Linux:
+                case Platform.Linux:
                     LinuxChildApplication.Run(new LinuxChildApplicationSettings(settings));
                     break;
-                case CefRuntimePlatform.MacOSX:
+                case Platform.OSX:
                     throw new NotSupportedException();
             }
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Samotorcan.HtmlUi.Core.Logs;
 using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Browser.Handlers
@@ -66,6 +67,8 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             if (Application.Current.IsNativeRequestUrl(request.Url))
                 return new NativeRequestResourceHandler();
+
+            Logger.Debug(string.Format("External request: {0}", request.Url));
 
             return null;
         }

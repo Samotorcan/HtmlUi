@@ -196,7 +196,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
         {
             var controllerChanges = JsonConvert.DeserializeObject<List<ControllerChange>>(json);
 
-            Application.Current.Window.SyncControllerChangesToServer(controllerChanges);
+            Application.Current.Window.SyncControllerChangesToNative(controllerChanges);
 
             return Value.Undefined;
         }

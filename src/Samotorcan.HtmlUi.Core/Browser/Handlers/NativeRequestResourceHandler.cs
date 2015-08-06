@@ -198,6 +198,8 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             Url = request.Url;
             Path = Application.Current.GetNativeRequestPath(Url);
 
+            Logger.Debug(string.Format("Native request: {0}", Url));
+
             try
             {
                 var nativeMethod = FindNativeMethod(Path);
@@ -357,7 +359,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             var application = Application.Current;
             application.InvokeOnMain(() =>
             {
-                application.Window.SyncControllerChangesToServer(controllerChanges);
+                application.Window.SyncControllerChangesToNative(controllerChanges);
             });
 
             return Value.Undefined;

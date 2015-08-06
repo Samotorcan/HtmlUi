@@ -283,17 +283,17 @@ namespace Samotorcan.HtmlUi.Core
             ObservableControllers.Clear();
         }
         #endregion
-        #region SyncControllerChangesToServer
+        #region SyncControllerChangesToNative
         /// <summary>
-        /// Synchronizes the controller changes to server.
+        /// Synchronizes the controller changes to native.
         /// </summary>
         /// <param name="controllerChanges">The controller changes.</param>
         /// <exception cref="ControllerNotFoundException"></exception>
-        internal void SyncControllerChangesToServer(IEnumerable<ControllerChange> controllerChanges)
+        internal void SyncControllerChangesToNative(IEnumerable<ControllerChange> controllerChanges)
         {
             Application.Current.EnsureMainThread();
 
-            Logger.Debug(string.Format("Sync controller changes to server: {0}", JsonConvert.SerializeObject(controllerChanges)));
+            Logger.Debug(string.Format("Sync controller changes to native: {0}", JsonConvert.SerializeObject(controllerChanges)));
 
             foreach (var controllerChange in controllerChanges)
             {

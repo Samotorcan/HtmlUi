@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Utilities
 {
@@ -21,7 +20,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         {
             var args = Environment.GetCommandLineArgs().AsEnumerable();
 
-            if (CefRuntime.Platform == CefRuntimePlatform.Windows)
+            if (HtmlUiRuntime.Platform == Platform.Windows)
                 args = args.Skip(1);
 
             return args.ToArray();

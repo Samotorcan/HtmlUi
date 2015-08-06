@@ -1,6 +1,7 @@
 ﻿using Samotorcan.HtmlUi.Core.Browser.Handlers;
 using System;
 using Xilium.CefGlue;
+using Samotorcan.HtmlUi.Core.Events;
 
 namespace Samotorcan.HtmlUi.Core.Browser
 {
@@ -9,6 +10,16 @@ namespace Samotorcan.HtmlUi.Core.Browser
     /// </summary>
     internal class App : CefApp
     {
+        #region Events
+
+        #region ContextInitialized
+        /// <summary>
+        /// Occurs when context is initialized.
+        /// </summary>
+        public event EventHandler<ContextInitializedEventArgs> ContextInitialized;
+        #endregion
+
+        #endregion
         #region Properties
         #region Private
 
@@ -33,6 +44,12 @@ namespace Samotorcan.HtmlUi.Core.Browser
             : base()
         {
             BrowserProcessHandler = new ProcessHandler();
+
+            BrowserProcessHandler.ContextInitialized += (s, args) =>
+            {
+                if (ContextInitialized != null)
+                    ContextInitialized(this, new ContextInitializedEventArgs());
+            };
         }
 
         #endregion

@@ -1,45 +1,18 @@
 /// <reference path="references.ts" />
-// definitions
-var htmlUi;
-(function (htmlUi) {
-    (function (ClientFunctionResultType) {
-        ClientFunctionResultType[ClientFunctionResultType["Value"] = 1] = "Value";
-        ClientFunctionResultType[ClientFunctionResultType["Undefined"] = 2] = "Undefined";
-        ClientFunctionResultType[ClientFunctionResultType["Exception"] = 3] = "Exception";
-        ClientFunctionResultType[ClientFunctionResultType["FunctionNotFound"] = 4] = "FunctionNotFound";
-    })(htmlUi.ClientFunctionResultType || (htmlUi.ClientFunctionResultType = {}));
-    var ClientFunctionResultType = htmlUi.ClientFunctionResultType;
-    (function (ObservableCollectionChangeAction) {
-        ObservableCollectionChangeAction[ObservableCollectionChangeAction["Add"] = 1] = "Add";
-        ObservableCollectionChangeAction[ObservableCollectionChangeAction["Remove"] = 2] = "Remove";
-        ObservableCollectionChangeAction[ObservableCollectionChangeAction["Replace"] = 3] = "Replace";
-        ObservableCollectionChangeAction[ObservableCollectionChangeAction["Move"] = 4] = "Move";
-    })(htmlUi.ObservableCollectionChangeAction || (htmlUi.ObservableCollectionChangeAction = {}));
-    var ObservableCollectionChangeAction = htmlUi.ObservableCollectionChangeAction;
-    (function (NativeResponseType) {
-        NativeResponseType[NativeResponseType["Value"] = 1] = "Value";
-        NativeResponseType[NativeResponseType["Undefined"] = 2] = "Undefined";
-        NativeResponseType[NativeResponseType["Exception"] = 3] = "Exception";
-    })(htmlUi.NativeResponseType || (htmlUi.NativeResponseType = {}));
-    var NativeResponseType = htmlUi.NativeResponseType;
-})(htmlUi || (htmlUi = {}));
 // utility
 var htmlUi;
 (function (htmlUi) {
     var utility;
     (function (utility) {
-        function argumentsToArray(args) {
-            var argsArray = [];
-            htmlUi._.forEach(args, function (arg) {
-                argsArray.push(arg);
-            });
-            return argsArray;
-        }
-        utility.argumentsToArray = argumentsToArray;
         function inject(func, inject) {
+            var _this = this;
             return function () {
-                inject.apply(this, arguments);
-                return func.apply(this, arguments);
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i - 0] = arguments[_i];
+                }
+                inject.apply(_this, args);
+                return func.apply(_this, args);
             };
         }
         utility.inject = inject;

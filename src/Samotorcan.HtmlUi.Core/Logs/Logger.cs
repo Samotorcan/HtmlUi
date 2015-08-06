@@ -10,6 +10,19 @@ namespace Samotorcan.HtmlUi.Core.Logs
     public static class Logger
     {
         #region Properties
+        #region Public
+
+        #region LogSeverity
+        /// <summary>
+        /// Gets or sets the log severity.
+        /// </summary>
+        /// <value>
+        /// The log severity.
+        /// </value>
+        public static LogSeverity LogSeverity { get; set; }
+        #endregion
+
+        #endregion
         #region Private
 
         #region InternalLogger
@@ -47,16 +60,33 @@ namespace Samotorcan.HtmlUi.Core.Logs
         public static void Log(LogMessageType messageType, object message, Exception exception)
         {
             if (messageType == LogMessageType.Debug)
-                InternalLogger.Debug(message, exception);
-
-            if (messageType == LogMessageType.Info)
-                InternalLogger.Info(message, exception);
-
-            if (messageType == LogMessageType.Warn)
-                InternalLogger.Warn(message, exception);
-
-            if (messageType == LogMessageType.Error)
-                InternalLogger.Error(message, exception);
+            {
+                if (LogSeverity == LogSeverity.Debug)
+                {
+                    InternalLogger.Debug(message, exception);
+                }
+            }
+            else if (messageType == LogMessageType.Info)
+            {
+                if (LogSeverity == LogSeverity.Debug || LogSeverity == LogSeverity.Info)
+                {
+                    InternalLogger.Info(message, exception);
+                }
+            }
+            else if (messageType == LogMessageType.Warn)
+            {
+                if (LogSeverity == LogSeverity.Debug || LogSeverity == LogSeverity.Info || LogSeverity == LogSeverity.Warn)
+                {
+                    InternalLogger.Warn(message, exception);
+                }
+            }
+            else if (messageType == LogMessageType.Error)
+            {
+                if (LogSeverity == LogSeverity.Debug || LogSeverity == LogSeverity.Info || LogSeverity == LogSeverity.Warn || LogSeverity == LogSeverity.Error)
+                {
+                    InternalLogger.Error(message, exception);
+                }
+            }
         }
 
         /// <summary>
@@ -66,7 +96,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="message">The message.</param>
         public static void Log(LogMessageType messageType, object message)
         {
-            Logger.Log(messageType, message, null);
+            Log(messageType, message, null);
         }
         #endregion
 
@@ -77,7 +107,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="message">The message object to log.</param>
         public static void Debug(object message)
         {
-            Logger.Log(LogMessageType.Debug, message);
+            Log(LogMessageType.Debug, message);
         }
 
         /// <summary>
@@ -87,7 +117,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="exception">The exception to log, including its stack trace.</param>
         public static void Debug(object message, Exception exception)
         {
-            Logger.Log(LogMessageType.Debug, message, exception);
+            Log(LogMessageType.Debug, message, exception);
         }
         #endregion
         #region Info
@@ -97,7 +127,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="message">The message object to log.</param>
         public static void Info(object message)
         {
-            Logger.Log(LogMessageType.Info, message);
+            Log(LogMessageType.Info, message);
         }
 
         /// <summary>
@@ -107,7 +137,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="exception">The exception to log, including its stack trace.</param>
         public static void Info(object message, Exception exception)
         {
-            Logger.Log(LogMessageType.Info, message, exception);
+            Log(LogMessageType.Info, message, exception);
         }
         #endregion
         #region Warn
@@ -117,7 +147,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="message">The message object to log.</param>
         public static void Warn(object message)
         {
-            Logger.Log(LogMessageType.Warn, message);
+            Log(LogMessageType.Warn, message);
         }
 
         /// <summary>
@@ -127,7 +157,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="exception">The exception to log, including its stack trace.</param>
         public static void Warn(object message, Exception exception)
         {
-            Logger.Log(LogMessageType.Warn, message, exception);
+            Log(LogMessageType.Warn, message, exception);
         }
         #endregion
         #region Error
@@ -137,7 +167,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="message">The message object to log.</param>
         public static void Error(object message)
         {
-            Logger.Log(LogMessageType.Error, message);
+            Log(LogMessageType.Error, message);
         }
 
         /// <summary>
@@ -147,7 +177,7 @@ namespace Samotorcan.HtmlUi.Core.Logs
         /// <param name="exception">The exception to log, including its stack trace.</param>
         public static void Error(object message, Exception exception)
         {
-            Logger.Log(LogMessageType.Error, message, exception);
+            Log(LogMessageType.Error, message, exception);
         }
         #endregion
 

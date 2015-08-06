@@ -1,4 +1,5 @@
 ﻿using Samotorcan.HtmlUi.Core;
+using Samotorcan.HtmlUi.Core.Logs;
 using Samotorcan.HtmlUi.OS;
 
 namespace Samotorcan.Examples.TodoList
@@ -13,7 +14,10 @@ namespace Samotorcan.Examples.TodoList
                 return;
             }
 
-            OSApplication.Run();
+            OSApplication.Run(new ApplicationSettings
+            {
+                LogSeverity = LogSeverity.Debug
+            });
         }
     }
 }

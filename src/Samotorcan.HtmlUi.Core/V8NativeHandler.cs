@@ -80,7 +80,7 @@ namespace Samotorcan.HtmlUi.Core
             if (processMessage == null)
                 throw new ArgumentNullException("processMessage");
 
-            Logger.Debug(string.Format("renderer - process message: {0}", processMessage.Name));
+            Logger.Debug(string.Format("Renderer process message: {0}", processMessage.Name));
 
             // native
             if (processMessage.Name == "native")

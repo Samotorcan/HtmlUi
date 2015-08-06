@@ -172,6 +172,10 @@
     <Compile Include="Application.cs" />
     <Compile Include="ChildApplication.cs" />
     <Compile Include="ApplicationSettings.cs" />
+    <Compile Include="Events\ContextInitializedEventArgs.cs" />
+    <Compile Include="Logs\LogSeverity.cs" />
+    <Compile Include="Platform.cs" />
+    <Compile Include="Renderer\Handlers\DeveloperToolsRequestHandler.cs" />
     <Compile Include="WindowSettings.cs" />
     <Compile Include="ClientFunction.cs" />
     <Compile Include="ClientFunctionResult.cs" />
@@ -299,14 +303,14 @@
     <EmbeddedResource Include="Resources\Views\NativeRequestException.html" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="Resources\Scripts\angular.d.ts" />
-    <EmbeddedResource Include="Resources\Scripts\htmlUi.main.ts" />
-    <EmbeddedResource Include="Resources\Scripts\htmlUi.angular.ts" />
-    <EmbeddedResource Include="Resources\Scripts\htmlUi.run.ts" />
-    <TypeScriptCompile Include="Resources\Scripts\jquery.d.ts" />
-    <EmbeddedResource Include="Resources\Scripts\htmlUi.native.ts" />
-    <TypeScriptCompile Include="Resources\Scripts\lodash.d.ts" />
-    <TypeScriptCompile Include="Resources\Scripts\references.ts" />
+    <TypeScriptCompile Include="Resources\TypeScript\angular.d.ts" />
+    <EmbeddedResource Include="Resources\TypeScript\htmlUi.main.ts" />
+    <EmbeddedResource Include="Resources\TypeScript\htmlUi.angular.ts" />
+    <EmbeddedResource Include="Resources\TypeScript\htmlUi.run.ts" />
+    <TypeScriptCompile Include="Resources\TypeScript\jquery.d.ts" />
+    <EmbeddedResource Include="Resources\TypeScript\htmlUi.native.ts" />
+    <TypeScriptCompile Include="Resources\TypeScript\lodash.d.ts" />
+    <TypeScriptCompile Include="Resources\TypeScript\references.ts" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Scripts\htmlUi.main.js" />
@@ -321,7 +325,22 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\Scripts\htmlUi.run.js" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'NoCA|x86'">
+    <TypeScriptTarget>ES5</TypeScriptTarget>
+    <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
+    <TypeScriptNoImplicitAny>False</TypeScriptNoImplicitAny>
+    <TypeScriptModuleKind>None</TypeScriptModuleKind>
+    <TypeScriptRemoveComments>False</TypeScriptRemoveComments>
+    <TypeScriptOutFile />
+    <TypeScriptOutDir>Resources\Scripts</TypeScriptOutDir>
+    <TypeScriptGeneratesDeclarations>False</TypeScriptGeneratesDeclarations>
+    <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
+    <TypeScriptSourceMap>True</TypeScriptSourceMap>
+    <TypeScriptMapRoot />
+    <TypeScriptSourceRoot>Resources\Typescript</TypeScriptSourceRoot>
+  </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

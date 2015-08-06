@@ -144,6 +144,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         public bool ChromeViewsEnabled { get; set; }
         #endregion
+        #region IncludeHtmUiScriptMapping
+        /// <summary>
+        /// Gets or sets a value indicating whether to include HTM UI script mapping.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> to include HTM UI script mapping; otherwise, <c>false</c>.
+        /// </value>
+        public bool IncludeHtmUiScriptMapping { get; private set; }
+        #endregion
 
         #region RequestHostname
         private string _requestHostname;
@@ -244,7 +253,7 @@ namespace Samotorcan.HtmlUi.Core
         {
             get
             {
-                return CefRuntime.Platform == CefRuntimePlatform.Windows;
+                return HtmlUiRuntime.Platform == Platform.Windows;
             }
         }
         #endregion
@@ -316,6 +325,9 @@ namespace Samotorcan.HtmlUi.Core
             RemoteDebuggingPort = settings.RemoteDebuggingPort ?? 0;
             CommandLineArgsEnabled = settings.CommandLineArgsEnabled;
             ChromeViewsEnabled = settings.ChromeViewsEnabled;
+            IncludeHtmUiScriptMapping = settings.IncludeHtmUiScriptMapping;
+
+            Logger.LogSeverity = settings.LogSeverity;
 
             MimeTypes = GetDefaultMimeTypes();
             SyncMaxDepth = 10;
@@ -625,7 +637,6 @@ namespace Samotorcan.HtmlUi.Core
             {
                 InitializeCef();
 
-                OnInitialize();
                 RunMessageLoop();
 
                 ShutdownInternal();
@@ -734,6 +745,11 @@ namespace Samotorcan.HtmlUi.Core
             // initialize
             var mainArgs = new CefMainArgs(arguments.ToArray());
             var app = new App();
+
+            app.ContextInitialized += (s, args) =>
+            {
+                OnInitialize();
+            };
 
             CefRuntime.Initialize(mainArgs, cefSettings, app, IntPtr.Zero);
 

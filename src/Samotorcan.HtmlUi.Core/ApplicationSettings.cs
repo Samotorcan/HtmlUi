@@ -1,4 +1,6 @@
-﻿namespace Samotorcan.HtmlUi.Core
+﻿using Samotorcan.HtmlUi.Core.Logs;
+
+namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
     /// Application settings.
@@ -44,6 +46,24 @@
         /// </value>
         public bool ChromeViewsEnabled { get; set; }
         #endregion
+        #region IncludeHtmUiScriptMapping
+        /// <summary>
+        /// Gets or sets a value indicating whether to include HTM UI script mapping.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> to include HTM UI script mapping; otherwise, <c>false</c>.
+        /// </value>
+        public bool IncludeHtmUiScriptMapping { get; set; }
+        #endregion
+        #region LogSeverity
+        /// <summary>
+        /// Gets or sets the log severity.
+        /// </summary>
+        /// <value>
+        /// The log severity.
+        /// </value>
+        public LogSeverity LogSeverity { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -85,6 +105,8 @@
                 CommandLineArgsEnabled = settings.CommandLineArgsEnabled;
                 RemoteDebuggingPort = settings.RemoteDebuggingPort;
                 ChromeViewsEnabled = settings.ChromeViewsEnabled;
+                IncludeHtmUiScriptMapping = settings.IncludeHtmUiScriptMapping;
+                LogSeverity = settings.LogSeverity;
             }
             else
             {
@@ -92,6 +114,8 @@
                 CommandLineArgsEnabled = false;
                 RemoteDebuggingPort = null;
                 ChromeViewsEnabled = false;
+                IncludeHtmUiScriptMapping = false;
+                LogSeverity = LogSeverity.Error;
             }
         }
         #endregion

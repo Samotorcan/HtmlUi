@@ -266,9 +266,9 @@ var htmlUi;
             function callNativeAsync(name, data) {
                 var deferred = angular.services.$q.defer();
                 htmlUi.native.callNativeAsync(name, data, function (response) {
-                    if (response.type == htmlUi.NativeResponseType.Value)
+                    if (response.type == 1 /* Value */)
                         deferred.resolve(response.value);
-                    else if (response.type == htmlUi.NativeResponseType.Exception)
+                    else if (response.type == 3 /* Exception */)
                         deferred.reject(response.exception);
                     else
                         deferred.resolve();
@@ -312,7 +312,11 @@ var htmlUi;
                         // methods
                         htmlUi._.forEach(controller.methods, function (method) {
                             clientController[method.name] = function () {
-                                return angular.native.callMethod(controller.id, method.name, htmlUi.utility.argumentsToArray(arguments));
+                                var args = [];
+                                for (var _i = 0; _i < arguments.length; _i++) {
+                                    args[_i - 0] = arguments[_i];
+                                }
+                                return angular.native.callMethod(controller.id, method.name, args);
                             };
                         });
                         // warm up native calls
@@ -340,7 +344,11 @@ var htmlUi;
                         // methods
                         htmlUi._.forEach(observableController.methods, function (method) {
                             $scope[method.name] = function () {
-                                return angular.native.callMethod(observableController.id, method.name, htmlUi.utility.argumentsToArray(arguments));
+                                var args = [];
+                                for (var _i = 0; _i < arguments.length; _i++) {
+                                    args[_i - 0] = arguments[_i];
+                                }
+                                return angular.native.callMethod(observableController.id, method.name, args);
                             };
                         });
                         // destroy controller
@@ -398,16 +406,16 @@ var htmlUi;
                         if (index < oldCollection.length && index < newCollection.length) {
                             // replace
                             if (oldValue !== newValue) {
-                                controllerData.change.addObservableCollectionChange(propertyName, htmlUi.ObservableCollectionChangeAction.Replace, newValue, index, null);
+                                controllerData.change.addObservableCollectionChange(propertyName, 3 /* Replace */, newValue, index, null);
                             }
                         }
                         else if (index < oldCollection.length && index >= newCollection.length) {
                             // remove
-                            controllerData.change.addObservableCollectionChange(propertyName, htmlUi.ObservableCollectionChangeAction.Remove, null, null, index);
+                            controllerData.change.addObservableCollectionChange(propertyName, 2 /* Remove */, null, null, index);
                         }
                         else {
                             // add
-                            controllerData.change.addObservableCollectionChange(propertyName, htmlUi.ObservableCollectionChangeAction.Add, newValue, index, null);
+                            controllerData.change.addObservableCollectionChange(propertyName, 1 /* Add */, newValue, index, null);
                         }
                     });
                 }
@@ -440,16 +448,16 @@ var htmlUi;
                         var collection = controller[propertyName];
                         htmlUi._.forEach(changes.actions, function (change) {
                             switch (change.action) {
-                                case htmlUi.ObservableCollectionChangeAction.Add:
+                                case 1 /* Add */:
                                     observableCollectionAddAction(collection, change);
                                     break;
-                                case htmlUi.ObservableCollectionChangeAction.Remove:
+                                case 2 /* Remove */:
                                     observableCollectionRemoveAction(collection, change);
                                     break;
-                                case htmlUi.ObservableCollectionChangeAction.Replace:
+                                case 3 /* Replace */:
                                     observableCollectionReplaceAction(collection, change);
                                     break;
-                                case htmlUi.ObservableCollectionChangeAction.Move:
+                                case 4 /* Move */:
                                     observableCollectionMoveAction(collection, change);
                                     break;
                             }
@@ -495,7 +503,7 @@ var htmlUi;
             var controllerData = _controllerDataContainer.getControllerData(clientFunction.controllerId);
             var runFunction = function (func) {
                 var result = {
-                    type: htmlUi.ClientFunctionResultType.Value,
+                    type: 1 /* Value */,
                     exception: null,
                     value: null
                 };
@@ -504,14 +512,14 @@ var htmlUi;
                         result.value = func.apply({}, clientFunction.args);
                     }
                     catch (err) {
-                        result.type = htmlUi.ClientFunctionResultType.Exception;
+                        result.type = 3 /* Exception */;
                         result.exception = err;
                     }
                     if (result.value === undefined)
-                        result.type = htmlUi.ClientFunctionResultType.Undefined;
+                        result.type = 2 /* Undefined */;
                 }
                 else {
-                    result.type = htmlUi.ClientFunctionResultType.FunctionNotFound;
+                    result.type = 4 /* FunctionNotFound */;
                 }
                 return result;
             };

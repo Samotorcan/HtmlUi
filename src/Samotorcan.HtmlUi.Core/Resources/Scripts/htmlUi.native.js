@@ -98,9 +98,9 @@ var htmlUi;
                 xhr.send();
             }
             var response = JSON.parse(xhr.responseText);
-            if (response.type == htmlUi.NativeResponseType.Value)
+            if (response.type == 1 /* Value */)
                 return response.value;
-            if (response.type == htmlUi.NativeResponseType.Exception)
+            if (response.type == 3 /* Exception */)
                 throw response.exception;
         }
         native_1.callNativeSync = callNativeSync;
@@ -112,9 +112,9 @@ var htmlUi;
                 this.value = nativeResponse.value;
             }
             NativeResponse.prototype.getValue = function () {
-                if (this.type == htmlUi.NativeResponseType.Exception)
+                if (this.type == 3 /* Exception */)
                     throw this.exception;
-                if (this.type == htmlUi.NativeResponseType.Value)
+                if (this.type == 1 /* Value */)
                     return this.value;
                 return undefined;
             };

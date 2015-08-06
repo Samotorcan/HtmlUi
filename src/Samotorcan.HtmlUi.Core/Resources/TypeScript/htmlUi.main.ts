@@ -1,8 +1,8 @@
 ﻿/// <reference path="references.ts" />
 
 // definitions
-module htmlUi {
-    export enum ClientFunctionResultType {
+namespace htmlUi {
+    export const enum ClientFunctionResultType {
         Value = 1,
         Undefined = 2,
         Exception = 3,
@@ -39,7 +39,7 @@ module htmlUi {
         oldStartingIndex: number;
     }
 
-    export enum ObservableCollectionChangeAction {
+    export const enum ObservableCollectionChangeAction {
         Add = 1,
         Remove = 2,
         Replace = 3,
@@ -52,7 +52,7 @@ module htmlUi {
         value: TValue;
     }
 
-    export enum NativeResponseType {
+    export const enum NativeResponseType {
         Value = 1,
         Undefined = 2,
         Exception = 3
@@ -93,21 +93,11 @@ module htmlUi {
 }
 
 // utility
-module htmlUi.utility {
-    export function argumentsToArray(args: IArguments): any[] {
-        var argsArray = [];
-
-        _.forEach(args, function (arg) {
-            argsArray.push(arg);
-        });
-
-        return argsArray;
-    }
-
+namespace htmlUi.utility {
     export function inject(func: Function, inject: Function): Function {
-        return function () {
-            inject.apply(this, arguments);
-            return func.apply(this, arguments);
+        return (...args: any[]) => {
+            inject.apply(this, args);
+            return func.apply(this, args);
         };
     }
 
@@ -140,7 +130,7 @@ module htmlUi.utility {
 }
 
 // settings
-module htmlUi.settings {
+namespace htmlUi.settings {
     // constants
     declare var _nativeRequestUrl: string;
 
@@ -156,7 +146,7 @@ module htmlUi.settings {
 }
 
 // main
-module htmlUi {
+namespace htmlUi {
     export function domReady(func: () => void): void {
         if (document.readyState === 'complete')
             setTimeout(func, 0);

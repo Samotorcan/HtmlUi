@@ -149,6 +149,8 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             Url = request.Url;
             var application = Application.Current;
 
+            Logger.Debug(string.Format("Content request: {0}", Url));
+
             application.InvokeOnMainAsync(() =>
             {
                 try

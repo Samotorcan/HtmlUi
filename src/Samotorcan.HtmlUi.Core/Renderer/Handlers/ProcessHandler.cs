@@ -72,6 +72,15 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </value>
         private LoadHandler LoadHandler { get; set; }
         #endregion
+        #region IncludeHtmUiScriptMapping
+        /// <summary>
+        /// Gets or sets a value indicating whether to include HTM UI script mapping.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> to include HTM UI script mapping; otherwise, <c>false</c>.
+        /// </value>
+        private bool IncludeHtmUiScriptMapping { get; set; }
+        #endregion
 
         #endregion
         #endregion
@@ -166,7 +175,8 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 
             CefRuntime.RegisterExtension("htmlUi.native", GetHtmlUiScript("native", false), V8NativeHandler);
 
-            RegisterHtmlUiAsExtensionIfNeeded();
+            if (!IncludeHtmUiScriptMapping)
+                CefRuntime.RegisterExtension("htmlUi.main", GetHtmlUiScript("main", false), V8NativeHandler);
         }
         #endregion
         #region OnRenderThreadCreated
@@ -179,11 +189,14 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             if (extraInfo == null)
                 throw new ArgumentNullException("extraInfo");
 
-            Logger.Info("Render process thread created.");
-
             NativeRequestUrl = extraInfo.GetString(0);
             RequestHostname = extraInfo.GetString(1);
             NativeRequestPort = extraInfo.GetInt(2);
+            IncludeHtmUiScriptMapping = extraInfo.GetBool(3);
+
+            Logger.LogSeverity = (LogSeverity)extraInfo.GetInt(4);
+
+            Logger.Info("Render process thread created.");
         }
         #endregion
         #region OnLoadStart
@@ -202,8 +215,10 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
                 if (V8NativeHandler != null)
                     V8NativeHandler.Reset();
 
-                RegisterHtmlUiAsScriptIfNeeded(context);
-                EvalHtmlUiScript("run", context);
+                if (IncludeHtmUiScriptMapping)
+                    EvalHtmlUiScript("main", context);
+
+                EvalHtmlUiScript("run", context, false);
             }
         }
         #endregion
@@ -265,29 +280,6 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             return string.Format("{0} = '{1}';", name, value);
         }
         #endregion
-        #region RegisterHtmlUiAsExtensionIfNeeded
-        /// <summary>
-        /// Registers the HTML UI as extension if needed.
-        /// </summary>
-        private void RegisterHtmlUiAsExtensionIfNeeded()
-        {
-#if !DEBUG
-            CefRuntime.RegisterExtension("htmlUi.main", GetHtmlUiScript("main", false), V8NativeHandler);
-#endif
-        }
-        #endregion
-        #region RegisterHtmlUiAsScriptIfNeeded
-        /// <summary>
-        /// Registers the HTML UI as script if needed.
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "context", Justification = "Debug only.")]
-        private void RegisterHtmlUiAsScriptIfNeeded(CefV8Context context)
-        {
-#if DEBUG
-            EvalHtmlUiScript("main", context);
-#endif
-        }
-        #endregion
         #region GetHtmlUiScript
         /// <summary>
         /// Gets the HTML UI script.
@@ -313,8 +305,10 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 
             if (mapping)
             {
-                var typescriptName = string.Format("Scripts/htmlUi.{0}.ts", name);
+                var typescriptName = string.Format("TypeScript/htmlUi.{0}.ts", name);
                 var typescript = ResourceUtility.GetResourceAsString(typescriptName);
+
+                Logger.Warn("Mapping" + typescriptName);
 
                 processedExtensionResource = Regex.Replace(processedExtensionResource, @"^//# sourceMappingURL=.*$", (match) =>
                 {
@@ -353,13 +347,23 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </summary>
         /// <param name="name">The name.</param>
         /// <param name="context">The context.</param>
-        private void EvalHtmlUiScript(string name, CefV8Context context)
+        private void EvalHtmlUiScript(string name, CefV8Context context, bool mapping)
         {
             CefV8Value returnValue = null;
             CefV8Exception exception = null;
 
-            if (!context.TryEval(GetHtmlUiScript(name, true), out returnValue, out exception))
+            if (!context.TryEval(GetHtmlUiScript(name, mapping), out returnValue, out exception))
                 Logger.Error(string.Format("Register html ui script exception: {0}.", JsonConvert.SerializeObject(exception)));
+        }
+
+        /// <summary>
+        /// Evals the HTML UI script.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="context">The context.</param>
+        private void EvalHtmlUiScript(string name, CefV8Context context)
+        {
+            EvalHtmlUiScript(name, context, true);
         }
         #endregion
         #region IsLocalUrl
