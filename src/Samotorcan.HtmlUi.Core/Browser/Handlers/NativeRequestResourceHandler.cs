@@ -10,133 +10,48 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Text;
 using Xilium.CefGlue;
+using Samotorcan.HtmlUi.Core.Attributes;
 
 namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 {
-    /// <summary>
-    /// Native request resource handler.
-    /// </summary>
     internal class NativeRequestResourceHandler : CefResourceHandler
     {
-        #region Properties
-        #region Private
-
-        #region Url
-        /// <summary>
-        /// Gets or sets the URL.
-        /// </summary>
-        /// <value>
-        /// The URL.
-        /// </value>
         private string Url { get; set; }
-        #endregion
-        #region Path
-        /// <summary>
-        /// Gets or sets the path.
-        /// </summary>
-        /// <value>
-        /// The path.
-        /// </value>
         public string Path { get; set; }
-        #endregion
-        #region Exception
-        /// <summary>
-        /// Gets or sets the exception.
-        /// </summary>
-        /// <value>
-        /// The exception.
-        /// </value>
         private Exception Exception { get; set; }
-        #endregion
-        #region Data
-        /// <summary>
-        /// Gets or sets the data.
-        /// </summary>
-        /// <value>
-        /// The data.
-        /// </value>
         private byte[] Data { get; set; }
-        #endregion
-        #region ResponseValue
-        /// <summary>
-        /// Gets or sets the response value.
-        /// </summary>
-        /// <value>
-        /// The response value.
-        /// </value>
         private object ResponseValue { get; set; }
-        #endregion
-        #region AllBytesRead
-        /// <summary>
-        /// Gets or sets all bytes read.
-        /// </summary>
-        /// <value>
-        /// All bytes read.
-        /// </value>
         private int AllBytesRead { get; set; }
-        #endregion
-        #region NativeFunctions
-        /// <summary>
-        /// Gets or sets the native functions.
-        /// </summary>
-        /// <value>
-        /// The native functions.
-        /// </value>
-        private Dictionary<string, Func<CefRequest, object>> NativeFunctions { get; set; }
-        #endregion
 
-        #endregion
-        #endregion
-        #region Constructors
+        private delegate object NativeFunctionDelegate(CefRequest request);
+        private Dictionary<string, NativeFunctionDelegate> NativeFunctions { get; set; }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NativeRequestResourceHandler"/> class.
-        /// </summary>
+        private Application Application
+        {
+            get
+            {
+                return Application.Current;
+            }
+        }
+
         public NativeRequestResourceHandler()
             : base()
         {
-            NativeFunctions = NativeFunctionAttribute.GetMethods<NativeRequestResourceHandler, Func<CefRequest, object>>(this);
+            NativeFunctions = NativeFunctionAttribute.GetHandlers<NativeRequestResourceHandler, NativeFunctionDelegate>(this);
         }
 
-        #endregion
-        #region Methods
-        #region Protected
-
-        #region CanGetCookie
-        /// <summary>
-        /// Cookies are disabled, returns false.
-        /// </summary>
-        /// <param name="cookie"></param>
-        /// <returns></returns>
         protected override bool CanGetCookie(CefCookie cookie)
         {
             return false;
         }
-        #endregion
-        #region CanSetCookie
-        /// <summary>
-        /// Cookies are disabled, returns false.
-        /// </summary>
-        /// <param name="cookie"></param>
-        /// <returns></returns>
+
         protected override bool CanSetCookie(CefCookie cookie)
         {
             return false;
         }
-        #endregion
-        #region Cancel
-        /// <summary>
-        /// Request processing has been canceled.
-        /// </summary>
+
         protected override void Cancel() { }
-        #endregion
-        #region GetResponseHeaders
-        /// <summary>
-        /// Gets the response headers.
-        /// </summary>
-        /// <param name="response"></param>
-        /// <param name="responseLength"></param>
-        /// <param name="redirectUrl"></param>
+
         protected override void GetResponseHeaders(CefResponse response, out long responseLength, out string redirectUrl)
         {
             if (response == null)
@@ -147,19 +62,16 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             response.Status = 200;
             response.StatusText = "OK";
             response.MimeType = "application/json";
-            response.SetHeaderMap(new NameValueCollection { { "Access-Control-Allow-Origin", "*" } });
+            response.SetHeaderMap(new NameValueCollection { { "Access-Control-Allow-Origin", string.Format("http://{0}", Application.RequestHostname) } });
 
             var nativeResponse = new NativeResponse();
 
-            // exception
             if (Exception != null)
             {
                 nativeResponse.Type = NativeResponseType.Exception;
                 nativeResponse.Value = null;
                 nativeResponse.Exception = ExceptionUtility.CreateJavascriptException(Exception);
             }
-
-            // ok
             else
             {
                 if (ResponseValue == Value.Undefined)
@@ -179,14 +91,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             Data = JsonUtility.SerializeToByteJson(nativeResponse);
             responseLength = Data.Length;
         }
-        #endregion
-        #region ProcessRequest
-        /// <summary>
-        /// Processes the request for the view.
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="callback"></param>
-        /// <returns></returns>
+
         protected override bool ProcessRequest(CefRequest request, CefCallback callback)
         {
             if (request == null)
@@ -196,16 +101,16 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
                 throw new ArgumentNullException("callback");
 
             Url = request.Url;
-            Path = Application.Current.GetNativeRequestPath(Url);
+            Path = Application.GetNativeRequestPath(Url);
 
             Logger.Debug(string.Format("Native request: {0}", Url));
 
             try
             {
-                var nativeMethod = FindNativeMethod(Path);
+                var nativeFunction = FindNativeFunction(Path);
 
-                if (nativeMethod != null)
-                    ResponseValue = nativeMethod(request);
+                if (nativeFunction != null)
+                    ResponseValue = nativeFunction(request);
                 else
                     Exception = new NativeNotFoundException(Path);
             }
@@ -219,16 +124,7 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             return true;
         }
-        #endregion
-        #region ReadResponse
-        /// <summary>
-        /// Reads the response.
-        /// </summary>
-        /// <param name="response"></param>
-        /// <param name="bytesToRead"></param>
-        /// <param name="bytesRead"></param>
-        /// <param name="callback"></param>
-        /// <returns></returns>
+
         protected override bool ReadResponse(Stream response, int bytesToRead, out int bytesRead, CefCallback callback)
         {
             if (response == null)
@@ -246,46 +142,30 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             return true;
         }
-        #endregion
 
-        #endregion
-        #region Private
-
-        #region GetControllerNames
-        /// <summary>
-        /// Gets the controller names.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "request", Justification = "It has to match to the delegate.")]
-        [NativeFunction]
-        private object GetControllerNames(CefRequest request)
+        [NativeFunction("getControllerNames")]
+        private object NativeFunctionGetControllerNames(CefRequest request)
         {
             List<string> controllerNames = null;
 
-            Application.Current.InvokeOnMain(() =>
+            Application.InvokeOnMain(() =>
             {
-                controllerNames = Application.Current.GetControllerNames();
+                controllerNames = Application.GetControllerNames();
             });
 
             return controllerNames;
         }
-        #endregion
-        #region CreateController
-        /// <summary>
-        /// Creates the controller.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        /// <returns></returns>
-        [NativeFunction]
-        private object CreateController(CefRequest request)
+
+        [NativeFunction("createController")]
+        private object NativeFunctionCreateController(CefRequest request)
         {
             var controllerData = GetPostData<CreateController>(request);
             ControllerDescription controllerDescription = null;
 
-            Application.Current.InvokeOnMain(() =>
+            Application.InvokeOnMain(() =>
             {
-                var controller = Application.Current.Window.CreateController(controllerData.Name);
+                var controller = Application.Window.CreateController(controllerData.Name);
 
                 controllerDescription = controller.GetControllerDescription();
 
@@ -296,22 +176,16 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             return controllerDescription;
         }
-        #endregion
-        #region CreateObservableController
-        /// <summary>
-        /// Creates the observable controller.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        /// <returns></returns>
-        [NativeFunction]
-        private object CreateObservableController(CefRequest request)
+
+        [NativeFunction("createObservableController")]
+        private object NativeFunctionCreateObservableController(CefRequest request)
         {
             var controllerData = GetPostData<CreateController>(request);
             ObservableControllerDescription observableControllerDescription = null;
 
-            Application.Current.InvokeOnMain(() =>
+            Application.InvokeOnMain(() =>
             {
-                var observableController = Application.Current.Window.CreateObservableController(controllerData.Name);
+                var observableController = Application.Window.CreateObservableController(controllerData.Name);
 
                 observableControllerDescription = observableController.GetObservableControllerDescription();
 
@@ -325,74 +199,49 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             return observableControllerDescription;
         }
-        #endregion
-        #region DestroyController
-        /// <summary>
-        /// Destroys the controller.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        /// <returns></returns>
-        [NativeFunction]
-        private object DestroyController(CefRequest request)
+
+        [NativeFunction("destroyController")]
+        private object NativeFunctionDestroyController(CefRequest request)
         {
             var controllerId = GetPostData<int>(request);
 
-            Application.Current.InvokeOnMain(() =>
+            Application.InvokeOnMain(() =>
             {
-                Application.Current.Window.DestroyController(controllerId);
+                Application.Window.DestroyController(controllerId);
             });
 
             return Value.Undefined;
         }
-        #endregion
-        #region SyncControllerChanges
-        /// <summary>
-        /// Synchronizes the controller changes.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        /// <returns></returns>
-        [NativeFunction]
-        private object SyncControllerChanges(CefRequest request)
+
+        [NativeFunction("syncControllerChanges")]
+        private object NativeFunctionSyncControllerChanges(CefRequest request)
         {
             var controllerChanges = GetPostData<List<ControllerChange>>(request);
 
-            var application = Application.Current;
-            application.InvokeOnMain(() =>
+            Application.InvokeOnMain(() =>
             {
-                application.Window.SyncControllerChangesToNative(controllerChanges);
+                Application.Window.SyncControllerChangesToNative(controllerChanges);
             });
 
             return Value.Undefined;
         }
-        #endregion
-        #region CallMethod
-        /// <summary>
-        /// Calls the method.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        /// <returns></returns>
-        [NativeFunction]
-        private object CallMethod(CefRequest request)
+
+        [NativeFunction("callMethod")]
+        private object NativeFunctionCallMethod(CefRequest request)
         {
             var methodData = GetPostData<CallMethod>(request);
             object response = null;
 
-            Application.Current.InvokeOnMain(() =>
+            Application.InvokeOnMain(() =>
             {
-                response = Application.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Arguments, methodData.InternalMethod);
+                response = Application.Window.CallMethod(methodData.Id, methodData.Name, methodData.Arguments, methodData.InternalMethod);
             });
 
             return response;
         }
-        #endregion
-        #region Log
-        /// <summary>
-        /// Logs the message.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        /// <returns></returns>
-        [NativeFunction]
-        private object Log(CefRequest request)
+
+        [NativeFunction("log")]
+        private object NativeFunctionLog(CefRequest request)
         {
             var jsonToken = GetPostJsonToken(request);
 
@@ -400,90 +249,54 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
             var messageType = LogMessageType.Parse((string)jsonToken["messageType"]);
             var message = jsonToken["message"].ToString();
 
-            if (type == LogType.GeneralLog)
+            if (type == LogType.Logger)
                 Logger.Log(messageType, message);
+            else
+                throw new ArgumentException("Invalid log type.");
 
             return Value.Undefined;
         }
-        #endregion
 
-        #region GetPostData
-        /// <summary>
-        /// Gets the post data.
-        /// </summary>
-        /// <typeparam name="TData">The type of the data.</typeparam>
-        /// <param name="request">The request.</param>
-        /// <returns></returns>
         private TData GetPostData<TData>(CefRequest request)
         {
             var json = GetPostJson(request);
 
             return JsonConvert.DeserializeObject<TData>(json);
         }
-        #endregion
-        #region GetAnonymousPostData
-        /// <summary>
-        /// Gets the anonymous post data.
-        /// </summary>
-        /// <typeparam name="TData">The type of the data.</typeparam>
-        /// <param name="request">The request.</param>
-        /// <param name="anonymousObject">The anonymous object.</param>
-        /// <returns></returns>
+
         private TData GetAnonymousPostData<TData>(CefRequest request, TData anonymousObject)
         {
             var json = GetPostJson(request);
 
             return JsonConvert.DeserializeAnonymousType(json, anonymousObject);
         }
-        #endregion
-        #region GetPostJson
-        /// <summary>
-        /// Gets the post json.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        /// <returns></returns>
+
         private string GetPostJson(CefRequest request)
         {
             return Encoding.UTF8.GetString(request.PostData.GetElements()[0].GetBytes());
         }
-        #endregion
-        #region GetPostJsonToken
-        /// <summary>
-        /// Gets the post json token.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        /// <returns></returns>
+
         private JToken GetPostJsonToken(CefRequest request)
         {
             var json = GetPostJson(request);
 
             return JToken.Parse(json);
         }
-        #endregion
-        #region FindNativeMethod
-        /// <summary>
-        /// Finds the native method.
-        /// </summary>
-        /// <param name="methodName">Name of the method.</param>
-        /// <returns></returns>
-        private Func<CefRequest, object> FindNativeMethod(string methodName)
+
+        private NativeFunctionDelegate FindNativeFunction(string name)
         {
-            Func<CefRequest, object> nativeMethod = null;
+            NativeFunctionDelegate nativeFunction = null;
 
-            if (NativeFunctions.TryGetValue(methodName, out nativeMethod))
-                return nativeMethod;
+            if (NativeFunctions.TryGetValue(name, out nativeFunction))
+                return nativeFunction;
 
-            if (NativeFunctions.TryGetValue(StringUtility.PascalCase(methodName), out nativeMethod))
-                return nativeMethod;
+            if (NativeFunctions.TryGetValue(StringUtility.PascalCase(name), out nativeFunction))
+                return nativeFunction;
 
-            if (NativeFunctions.TryGetValue(StringUtility.CamelCase(methodName), out nativeMethod))
-                return nativeMethod;
+            if (NativeFunctions.TryGetValue(StringUtility.CamelCase(name), out nativeFunction))
+                return nativeFunction;
 
             return null;
         }
-        #endregion
-
-        #endregion
-        #endregion
     }
 }

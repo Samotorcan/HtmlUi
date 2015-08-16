@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
+using Samotorcan.HtmlUi.Core.Attributes;
 using Samotorcan.HtmlUi.Core.Events;
-using Samotorcan.HtmlUi.Core.Logs;
+using Samotorcan.HtmlUi.Core.Metadata;
 using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Browser.Handlers
@@ -21,6 +24,15 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
         #endregion
 
         #endregion
+
+        private Dictionary<string, SyncProperty> SyncProperties { get; set; }
+
+        public ProcessHandler()
+            : base()
+        {
+            SyncProperties = SyncPropertyAttribute.GetProperties<Application>();
+        }
+
         #region Methods
         #region Protected
 
@@ -54,11 +66,14 @@ namespace Samotorcan.HtmlUi.Core.Browser.Handlers
 
             var app = Application.Current;
 
-            extraInfo.SetString(0, app.NativeRequestUrl);
-            extraInfo.SetString(1, app.RequestHostname);
-            extraInfo.SetInt(2, app.NativeRequestPort);
-            extraInfo.SetBool(3, app.IncludeHtmUiScriptMapping);
-            extraInfo.SetInt(4, (int)Logger.LogSeverity);
+            lock (app.SyncPropertiesLock)
+            {
+                var properties = SyncProperties.ToDictionary(p => p.Key, p => p.Value.GetDelegate.DynamicInvoke(app));
+
+                extraInfo.SetString(0, JsonConvert.SerializeObject(properties));
+
+                Application.Current.RenderProcessThreadCreated = true;
+            }
         }
         #endregion
         #region OnContextInitialized

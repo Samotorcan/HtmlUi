@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Samotorcan.HtmlUi.Core
+namespace Samotorcan.HtmlUi.Core.Logs
 {
     /// <summary>
     /// Log message type.
@@ -82,17 +82,17 @@ namespace Samotorcan.HtmlUi.Core
             if (string.IsNullOrWhiteSpace(logMessageType))
                 throw new ArgumentNullException("logMessageType");
 
-            if (logMessageType == LogMessageType.Debug.Value)
-                return LogMessageType.Debug;
+            if (logMessageType == Debug.Value)
+                return Debug;
 
-            if (logMessageType == LogMessageType.Info.Value)
-                return LogMessageType.Info;
+            if (logMessageType == Info.Value)
+                return Info;
 
-            if (logMessageType == LogMessageType.Warn.Value)
-                return LogMessageType.Warn;
+            if (logMessageType == Warn.Value)
+                return Warn;
 
-            if (logMessageType == LogMessageType.Error.Value)
-                return LogMessageType.Error;
+            if (logMessageType == Error.Value)
+                return Error;
 
             throw new ArgumentException("Invalid log message type.", "logMessageType");
         }

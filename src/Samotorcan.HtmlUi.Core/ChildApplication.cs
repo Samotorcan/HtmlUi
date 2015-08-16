@@ -2,6 +2,7 @@
 using System;
 using Xilium.CefGlue;
 using Samotorcan.HtmlUi.Core.Utilities;
+using Samotorcan.HtmlUi.Core.Messages;
 
 namespace Samotorcan.HtmlUi.Core
 {
@@ -28,6 +29,8 @@ namespace Samotorcan.HtmlUi.Core
             }
         }
         #endregion
+
+        private CefBrowser CefBrowser { get; set; }
 
         #endregion
         #endregion
@@ -64,11 +67,21 @@ namespace Samotorcan.HtmlUi.Core
             CefRuntime.Load();
 
             var mainArgs = new CefMainArgs(EnvironmentUtility.GetCommandLineArgs());
+
             var app = new App();
+            app.BrowserCreated += (s, e) =>
+            {
+                CefBrowser = e.CefBrowser;
+            };
 
             CefRuntime.ExecuteProcess(mainArgs, app, IntPtr.Zero);
         }
         #endregion
+
+        protected override void SyncPropertyInternal(string name, object value)
+        {
+            MessageUtility.SendMessage(CefProcessId.Browser, CefBrowser, "syncProperty", new SyncProperty { Name = name, Value = value });
+        }
 
         #endregion
         #endregion

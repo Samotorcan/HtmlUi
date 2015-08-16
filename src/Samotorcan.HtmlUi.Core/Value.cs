@@ -23,21 +23,6 @@
             }
         }
         #endregion
-        #region Exception
-        /// <summary>
-        /// Gets the exception.
-        /// </summary>
-        /// <value>
-        /// The exception.
-        /// </value>
-        public static ExceptionValue Exception
-        {
-            get
-            {
-                return ExceptionValue.Value;
-            }
-        }
-        #endregion
 
         #endregion
         #endregion

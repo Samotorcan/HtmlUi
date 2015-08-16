@@ -27,7 +27,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <summary>
         /// Occurs when browser is created.
         /// </summary>
-        protected event EventHandler<BrowserCreatedEventArgs> BrowserCreated;
+        internal event EventHandler<BrowserCreatedEventArgs> BrowserCreated;
         #endregion
         #region KeyPress
         /// <summary>
@@ -62,6 +62,15 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         internal bool IsBrowserCreated { get; private set; }
         #endregion
+        #region CefBrowser
+        /// <summary>
+        /// Gets or sets the cef browser.
+        /// </summary>
+        /// <value>
+        /// The cef browser.
+        /// </value>
+        internal CefBrowser CefBrowser { get; set; }
+        #endregion
         #region Controllers
         /// <summary>
         /// Gets or sets the controllers.
@@ -83,16 +92,6 @@ namespace Samotorcan.HtmlUi.Core
 
         #endregion
         #region Protected
-
-        #region CefBrowser
-        /// <summary>
-        /// Gets or sets the cef browser.
-        /// </summary>
-        /// <value>
-        /// The cef browser.
-        /// </value>
-        protected CefBrowser CefBrowser { get; set; }
-        #endregion
 
         #endregion
         #region Private
@@ -160,7 +159,7 @@ namespace Samotorcan.HtmlUi.Core
             var taskCompletionSource = new TaskCompletionSource<JToken>();
 
             WaitingCallFunction.TryAdd(callbackId, taskCompletionSource);
-            MessageUtility.SendMessage(CefProcessId.Renderer, CefBrowser, "callFunction", callbackId, new CallFunction { Name = name, Data = data });
+            MessageUtility.SendMessage(CefProcessId.Renderer, CefBrowser, "callFunction", new CallFunction { Name = name, Data = data, CallbackId = callbackId });
 
             return taskCompletionSource.Task;
         }
@@ -180,7 +179,7 @@ namespace Samotorcan.HtmlUi.Core
             var taskCompletionSource = new TaskCompletionSource<JToken>();
 
             WaitingCallFunction.TryAdd(callbackId, taskCompletionSource);
-            MessageUtility.SendMessage(CefProcessId.Renderer, CefBrowser, "callFunction", callbackId, new CallFunction { Name = name, Data = Value.Undefined });
+            MessageUtility.SendMessage(CefProcessId.Renderer, CefBrowser, "callFunction", new CallFunction { Name = name, Data = Value.Undefined, CallbackId = callbackId });
 
             return taskCompletionSource.Task;
         }
@@ -324,7 +323,7 @@ namespace Samotorcan.HtmlUi.Core
 
             if (controllerChanges.Any())
             {
-                Logger.Debug("Sync controller changes to client.");
+                Logger.Debug(string.Format("Sync controller changes to client: {0}", JsonConvert.SerializeObject(controllerChanges)));
 
                 CallFunctionAsync("syncControllerChanges", controllerChanges);
             }

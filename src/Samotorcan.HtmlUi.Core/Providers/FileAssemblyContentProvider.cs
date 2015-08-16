@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Samotorcan.HtmlUi.Core
+namespace Samotorcan.HtmlUi.Core.Providers
 {
     /// <summary>
     /// File and assembly content provider.

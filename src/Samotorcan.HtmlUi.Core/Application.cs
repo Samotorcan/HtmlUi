@@ -10,6 +10,8 @@ using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Samotorcan.HtmlUi.Core.Browser;
+using Samotorcan.HtmlUi.Core.Providers;
+using Samotorcan.HtmlUi.Core.Messages;
 
 namespace Samotorcan.HtmlUi.Core
 {
@@ -144,87 +146,10 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         public bool ChromeViewsEnabled { get; set; }
         #endregion
-        #region IncludeHtmUiScriptMapping
-        /// <summary>
-        /// Gets or sets a value indicating whether to include HTM UI script mapping.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> to include HTM UI script mapping; otherwise, <c>false</c>.
-        /// </value>
-        public bool IncludeHtmUiScriptMapping { get; private set; }
-        #endregion
-
-        #region RequestHostname
-        private string _requestHostname;
-        /// <summary>
-        /// Gets or sets the request hostname.
-        /// </summary>
-        /// <value>
-        /// The request hostname.
-        /// </value>
-        /// <exception cref="System.ArgumentException">Invalid request hostname.;RequestHostname</exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "Hostname", Justification = "Hostname is better.")]
-        public string RequestHostname
-        {
-            get
-            {
-                return _requestHostname;
-            }
-            set
-            {
-                if (string.IsNullOrWhiteSpace(value))
-                    throw new ArgumentNullException("value");
-
-                if (Uri.CheckHostName(value) != UriHostNameType.Dns)
-                    throw new ArgumentException("Invalid request hostname.", "value");
-
-                _requestHostname = value;
-            }
-        }
-        #endregion
 
         #endregion
         #region Internal
 
-        #region NativeRequestPort
-        private int _nativeRequestPort;
-        /// <summary>
-        /// Gets or sets the native request port.
-        /// </summary>
-        /// <value>
-        /// The native request port.
-        /// </value>
-        /// <exception cref="System.ArgumentException">Invalid port.;Port</exception>
-        internal int NativeRequestPort
-        {
-            get
-            {
-                return _nativeRequestPort;
-            }
-            set
-            {
-                if (value < 0 || value > 65535)
-                    throw new ArgumentException("Invalid port.", "value");
-
-                _nativeRequestPort = value;
-            }
-        }
-        #endregion
-        #region NativeRequestUrl
-        /// <summary>
-        /// Gets the native request URL.
-        /// </summary>
-        /// <value>
-        /// The native request URL.
-        /// </value>
-        public string NativeRequestUrl
-        {
-            get
-            {
-                return string.Format("http://{0}:{1}/", RequestHostname, NativeRequestPort);
-            }
-        }
-        #endregion
         #region IsCefThread
         /// <summary>
         /// Gets a value indicating whether this instance is cef thread.
@@ -257,6 +182,8 @@ namespace Samotorcan.HtmlUi.Core
             }
         }
         #endregion
+        internal readonly object SyncPropertiesLock = new object();
+        internal bool RenderProcessThreadCreated { get; set; }
 
         #endregion
         #region Private
@@ -326,8 +253,7 @@ namespace Samotorcan.HtmlUi.Core
             CommandLineArgsEnabled = settings.CommandLineArgsEnabled;
             ChromeViewsEnabled = settings.ChromeViewsEnabled;
             IncludeHtmUiScriptMapping = settings.IncludeHtmUiScriptMapping;
-
-            Logger.LogSeverity = settings.LogSeverity;
+            LogSeverity = settings.LogSeverity;
 
             MimeTypes = GetDefaultMimeTypes();
             SyncMaxDepth = 10;
@@ -534,7 +460,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">absoluteNativeRequestUrl</exception>
         /// <exception cref="System.ArgumentException">Invalid url.;absoluteContentUrl</exception>
-        public string GetNativeRequestPath(string absoluteNativeRequestUrl)
+        internal string GetNativeRequestPath(string absoluteNativeRequestUrl)
         {
             if (string.IsNullOrWhiteSpace(absoluteNativeRequestUrl))
                 throw new ArgumentNullException("absoluteNativeRequestUrl");
@@ -666,6 +592,23 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         protected virtual void OnShutdown() { }
         #endregion
+        protected override void SyncPropertyInternal(string name, object value)
+        {
+            if (RenderProcessThreadCreated)
+            {
+                SyncPropertyWithSendMessage(name, value);
+            }
+            else
+            {
+                lock (SyncPropertiesLock)
+                {
+                    if (RenderProcessThreadCreated)
+                    {
+                        SyncPropertyWithSendMessage(name, value);
+                    }
+                }
+            }
+        }
 
         #endregion
         #region Private
@@ -815,6 +758,11 @@ namespace Samotorcan.HtmlUi.Core
             return JsonConvert.DeserializeObject<Dictionary<string, string>>(ResourceUtility.GetResourceAsString("MimeTypes.json"));
         }
         #endregion
+
+        private void SyncPropertyWithSendMessage(string name, object value)
+        {
+            MessageUtility.SendMessage(CefProcessId.Renderer, Window.CefBrowser, "syncProperty", new SyncProperty { Name = name, Value = value });
+        }
 
         #endregion
         #endregion

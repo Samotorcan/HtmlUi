@@ -1,9 +1,6 @@
-﻿using Newtonsoft.Json;
-using Samotorcan.HtmlUi.Core.Browser.Handlers;
+﻿using Samotorcan.HtmlUi.Core.Browser.Handlers;
 using Samotorcan.HtmlUi.Core.Events;
-using Samotorcan.HtmlUi.Core.Messages;
 using System;
-using System.Collections.Generic;
 using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Browser
@@ -72,14 +69,14 @@ namespace Samotorcan.HtmlUi.Core.Browser
         private KeyboardHandler KeyboardHandler { get; set; }
         #endregion
 
-        #region V8NativeBrowserHandler
+        #region NativeMessageHandler
         /// <summary>
-        /// Gets or sets the v8 native browser handler.
+        /// Gets or sets the native message handler.
         /// </summary>
         /// <value>
-        /// The v8 native browser handler.
+        /// The native message handler.
         /// </value>
-        private V8NativeBrowserHandler V8NativeBrowserHandler { get; set; }
+        private NativeMessageHandler NativeMessageHandler { get; set; }
         #endregion
 
         #endregion
@@ -106,7 +103,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
             };
 
             // native calls
-            V8NativeBrowserHandler = new V8NativeBrowserHandler(NativeFunctionAttribute.GetMethods<Client, Func<string, object>>(this));
+            NativeMessageHandler = new NativeMessageHandler();
         }
 
         #endregion
@@ -178,100 +175,7 @@ namespace Samotorcan.HtmlUi.Core.Browser
             if (message == null)
                 throw new ArgumentNullException("message");
 
-            return V8NativeBrowserHandler.ProcessMessage(browser, sourceProcess, message);
-        }
-        #endregion
-
-        #endregion
-        #region Private
-
-        #region SyncControllerChanges
-        /// <summary>
-        /// Synchronizes the controller changes.
-        /// </summary>
-        /// <param name="json">The json.</param>
-        /// <returns></returns>
-        [NativeFunction]
-        private object SyncControllerChanges(string json)
-        {
-            var controllerChanges = JsonConvert.DeserializeObject<List<ControllerChange>>(json);
-
-            Application.Current.Window.SyncControllerChangesToNative(controllerChanges);
-
-            return Value.Undefined;
-        }
-        #endregion
-        #region GetControllerNames
-        /// <summary>
-        /// Gets the controller names.
-        /// </summary>
-        /// <param name="json">The json.</param>
-        /// <returns></returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "json", Justification = "It has to match to the delegate.")]
-        [NativeFunction]
-        private object GetControllerNames(string json)
-        {
-            return Application.Current.GetControllerNames();
-        }
-        #endregion
-        #region CreateController
-        /// <summary>
-        /// Creates the controller.
-        /// </summary>
-        /// <param name="json">The json.</param>
-        /// <returns></returns>
-        [NativeFunction]
-        private object CreateController(string json)
-        {
-            var createController = JsonConvert.DeserializeObject<CreateController>(json);
-            var controller = Application.Current.Window.CreateController(createController.Name);
-
-            return controller.GetControllerDescription();
-        }
-        #endregion
-        #region CreateObservableController
-        /// <summary>
-        /// Creates the observable controller.
-        /// </summary>
-        /// <param name="json">The json.</param>
-        /// <returns></returns>
-        [NativeFunction]
-        private object CreateObservableController(string json)
-        {
-            var createController = JsonConvert.DeserializeObject<CreateController>(json);
-            var observableController = Application.Current.Window.CreateObservableController(createController.Name);
-
-            return observableController.GetObservableControllerDescription();
-        }
-        #endregion
-        #region DestroyController
-        /// <summary>
-        /// Destroys the controller.
-        /// </summary>
-        /// <param name="json">The json.</param>
-        /// <returns></returns>
-        [NativeFunction]
-        private object DestroyController(string json)
-        {
-            var controllerId = JsonConvert.DeserializeObject<int>(json);
-
-            Application.Current.Window.DestroyController(controllerId);
-
-            return Value.Undefined;
-        }
-        #endregion
-        #region CallMethod
-        /// <summary>
-        /// Calls the method.
-        /// </summary>
-        /// <param name="json">The json.</param>
-        /// <returns></returns>
-        [NativeFunction]
-        private object CallMethod(string json)
-        {
-            var methodData = JsonConvert.DeserializeObject<CallMethod>(json);
-
-            return Application.Current.Window.CallMethod(methodData.Id, methodData.Name, methodData.Arguments, methodData.InternalMethod);
+            return NativeMessageHandler.ProcessMessage(browser, sourceProcess, message);
         }
         #endregion
 

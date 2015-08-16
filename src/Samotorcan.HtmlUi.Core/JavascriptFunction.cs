@@ -22,14 +22,14 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         public Guid Id { get; private set; }
         #endregion
-        #region CallbackFunction
+        #region Function
         /// <summary>
-        /// Gets the callback function.
+        /// Gets the function.
         /// </summary>
         /// <value>
-        /// The callback function.
+        /// The function.
         /// </value>
-        public CefV8Value CallbackFunction { get; private set; }
+        public CefV8Value Function { get; private set; }
         #endregion
         #region Context
         /// <summary>
@@ -64,7 +64,7 @@ namespace Samotorcan.HtmlUi.Core
                 throw new ArgumentNullException("context");
 
             Id = Guid.NewGuid();
-            CallbackFunction = function;
+            Function = function;
             Context = context;
         }
 
@@ -78,7 +78,7 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         public JToken Execute()
         {
-            return ParseCefV8Value(CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[0]));
+            return ParseCefV8Value(Function.ExecuteFunctionWithContext(Context, null, new CefV8Value[0]));
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="data">The data.</param>
         public JToken Execute(object data)
         {
-            return ParseCefV8Value(CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[] { CefV8Value.CreateString(JsonUtility.SerializeToJson(data)) }));
+            return ParseCefV8Value(Function.ExecuteFunctionWithContext(Context, null, new CefV8Value[] { CefV8Value.CreateString(JsonUtility.SerializeToJson(data)) }));
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace Samotorcan.HtmlUi.Core
         /// <param name="json">The json.</param>
         public JToken Execute(string json)
         {
-            return ParseCefV8Value(CallbackFunction.ExecuteFunctionWithContext(Context, null, new CefV8Value[] { CefV8Value.CreateString(json) }));
+            return ParseCefV8Value(Function.ExecuteFunctionWithContext(Context, null, new CefV8Value[] { CefV8Value.CreateString(json) }));
         }
         #endregion
 

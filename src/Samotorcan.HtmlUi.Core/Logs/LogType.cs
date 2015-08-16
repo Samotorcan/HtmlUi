@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Samotorcan.HtmlUi.Core
+namespace Samotorcan.HtmlUi.Core.Logs
 {
     /// <summary>
     /// Log type.
@@ -9,12 +9,12 @@ namespace Samotorcan.HtmlUi.Core
     {
         #region LogTypes
 
-        #region GeneralLog
+        #region Logger
         /// <summary>
-        /// The debug.
+        /// The logger.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "It's immutable.")]
-        public static readonly LogType GeneralLog = new LogType("GeneralLog");
+        public static readonly LogType Logger = new LogType("Logger");
         #endregion
 
         #endregion
@@ -61,8 +61,8 @@ namespace Samotorcan.HtmlUi.Core
             if (string.IsNullOrWhiteSpace(logType))
                 throw new ArgumentNullException("logType");
 
-            if (logType == LogType.GeneralLog.Value)
-                return LogType.GeneralLog;
+            if (logType == Logger.Value)
+                return Logger;
 
             throw new ArgumentException("Invalid log type.", "logType");
         }

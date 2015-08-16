@@ -4,8 +4,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using log4net;
-using log4net.Core;
+using System.Collections.Generic;
+using Samotorcan.HtmlUi.Core.Attributes;
+using Samotorcan.HtmlUi.Core.Metadata;
 
 namespace Samotorcan.HtmlUi.Core
 {
@@ -66,6 +67,83 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         public bool IsRunning { get; private set; }
         #endregion
+        #region RequestHostname
+        private string _requestHostname;
+        /// <summary>
+        /// Gets or sets the request hostname.
+        /// </summary>
+        /// <value>
+        /// The request hostname.
+        /// </value>
+        /// <exception cref="System.ArgumentException">Invalid request hostname.;RequestHostname</exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "Hostname", Justification = "Hostname is better.")]
+        [SyncProperty]
+        public string RequestHostname
+        {
+            get
+            {
+                return _requestHostname;
+            }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentNullException("value");
+
+                if (Uri.CheckHostName(value) != UriHostNameType.Dns)
+                    throw new ArgumentException("Invalid request hostname.", "value");
+
+                if (_requestHostname != value)
+                {
+                    _requestHostname = value;
+
+                    SyncProperty("RequestHostname", _requestHostname);
+                }
+            }
+        }
+        #endregion
+        #region IncludeHtmUiScriptMapping
+        private bool _includeHtmUiScriptMapping;
+        /// <summary>
+        /// Gets or sets a value indicating whether to include HTM UI script mapping.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> to include HTM UI script mapping; otherwise, <c>false</c>.
+        /// </value>
+        [SyncProperty]
+        public bool IncludeHtmUiScriptMapping
+        {
+            get
+            {
+                return _includeHtmUiScriptMapping;
+            }
+            protected set
+            {
+                if (_includeHtmUiScriptMapping != value)
+                {
+                    _includeHtmUiScriptMapping = value;
+
+                    SyncProperty("IncludeHtmUiScriptMapping", _includeHtmUiScriptMapping);
+                }
+            }
+        }
+        #endregion
+        [SyncProperty]
+        public LogSeverity LogSeverity
+        {
+            get
+            {
+                return Logger.LogSeverity;
+            }
+            protected set
+            {
+                if (Logger.LogSeverity != value)
+                {
+                    Logger.LogSeverity = value;
+
+                    SyncProperty("LogSeverity", Logger.LogSeverity);
+                }
+            }
+        }
 
         #endregion
         #region Internal
@@ -88,6 +166,51 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         internal string CacheDirectoryPath { get; set; }
         #endregion
+        #region NativeRequestPort
+        private int _nativeRequestPort;
+        /// <summary>
+        /// Gets or sets the native request port.
+        /// </summary>
+        /// <value>
+        /// The native request port.
+        /// </value>
+        /// <exception cref="System.ArgumentException">Invalid port.;Port</exception>
+        [SyncProperty]
+        internal int NativeRequestPort
+        {
+            get
+            {
+                return _nativeRequestPort;
+            }
+            set
+            {
+                if (value < 0 || value > 65535)
+                    throw new ArgumentException("Invalid port.", "value");
+
+                if (_nativeRequestPort != value)
+                {
+                    _nativeRequestPort = value;
+
+                    SyncProperty("NativeRequestPort", _nativeRequestPort);
+                }
+            }
+        }
+        #endregion
+        #region NativeRequestUrl
+        /// <summary>
+        /// Gets the native request URL.
+        /// </summary>
+        /// <value>
+        /// The native request URL.
+        /// </value>
+        public string NativeRequestUrl
+        {
+            get
+            {
+                return string.Format("http://{0}:{1}/", RequestHostname, NativeRequestPort);
+            }
+        }
+        #endregion
 
         #endregion
         #region Private
@@ -101,6 +224,14 @@ namespace Samotorcan.HtmlUi.Core
         /// </value>
         private int ThreadId { get; set; }
         #endregion
+        #region OneApplicationCheckLock
+        /// <summary>
+        /// The one application check lock.
+        /// </summary>
+        private static object OneApplicationCheckLock = new object();
+        #endregion
+        private bool SyncPropertyDisabled { get; set; }
+        private Dictionary<string, SyncProperty> SyncProperties { get; set; }
 
         #endregion
         #endregion
@@ -116,8 +247,13 @@ namespace Samotorcan.HtmlUi.Core
             if (settings == null)
                 throw new ArgumentNullException("settings");
 
-            if (Current != null)
-                throw new InvalidOperationException("You can only have one instance of Application at any given time.");
+            lock (OneApplicationCheckLock)
+            {
+                if (Current != null)
+                    throw new InvalidOperationException("You can only have one instance of Application at any given time.");
+
+                Current = this;
+            }
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
@@ -130,7 +266,8 @@ namespace Samotorcan.HtmlUi.Core
             EnsureCacheDirectory();
 
             ThreadId = Thread.CurrentThread.ManagedThreadId;
-            Current = this;
+
+            SyncProperties = SyncPropertyAttribute.GetProperties<BaseApplication>();
         }
 
         /// <summary>
@@ -181,6 +318,33 @@ namespace Samotorcan.HtmlUi.Core
             Logger.Info("Application Run ended.");
         }
         #endregion
+        internal void SetSyncProperty(string name, object value)
+        {
+            EnsureMainThread();
+
+            SyncPropertyDisabled = true;
+            try
+            {
+                SyncProperty property;
+                SyncProperties.TryGetValue(name, out property);
+
+                if (property == null)
+                    throw new ArgumentException("Sync property not found.", "name");
+
+                try
+                {
+                    property.SetDelegate.DynamicInvoke(this, ConvertUtility.ChangeType(value, property.SyncPropertyType));
+                }
+                catch
+                {
+                    throw new ArgumentException("Invalid sync property value.", "value");
+                }
+            }
+            finally
+            {
+                SyncPropertyDisabled = false;
+            }
+        }
 
         #endregion
         #region Protected
@@ -191,6 +355,14 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         protected abstract void RunInternal();
         #endregion
+        protected abstract void SyncPropertyInternal(string name, object value);
+        protected void SyncProperty(string name, object value)
+        {
+            EnsureMainThread();
+
+            if (!SyncPropertyDisabled)
+                SyncPropertyInternal(name, value);
+        }
 
         #endregion
         #region Private
@@ -236,9 +408,10 @@ namespace Samotorcan.HtmlUi.Core
             {
                 log4net.Config.XmlConfigurator.Configure(stream);
             }
-            log4net.GlobalContext.Properties["pid"] = Process.GetCurrentProcess().Id;
+            log4net.GlobalContext.Properties["process"] = HtmlUiRuntime.ApplicationType == ApplicationType.Application ? "MAIN" : "RENDER";
         }
         #endregion
+
 
         #endregion
         #endregion

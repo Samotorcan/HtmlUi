@@ -1,5 +1,4 @@
-﻿using System;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Samotorcan.Tests.Core;
 
 namespace Samotorcan.Tests

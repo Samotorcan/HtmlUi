@@ -1,5 +1,4 @@
 ﻿using System;
-using Xilium.CefGlue;
 
 namespace Samotorcan.HtmlUi.Core.Events
 {

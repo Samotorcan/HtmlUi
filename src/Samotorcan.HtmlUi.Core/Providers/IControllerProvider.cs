@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Samotorcan.HtmlUi.Core
+namespace Samotorcan.HtmlUi.Core.Providers
 {
     /// <summary>
     /// Controller provider interface.

@@ -6,7 +6,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Reflection;
 
-namespace Samotorcan.HtmlUi.Core
+namespace Samotorcan.HtmlUi.Core.Providers
 {
     /// <summary>
     /// Assembly controller provider.

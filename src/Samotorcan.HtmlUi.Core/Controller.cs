@@ -119,7 +119,7 @@ namespace Samotorcan.HtmlUi.Core
 
             var resultAction = Application.Current.Window.CallFunctionAsync("callClientFunction", new ClientFunction { ControllerId = Id, Name = name, Arguments = arguments });
 
-            return resultAction.ContinueWith<TResult>((task) =>
+            return resultAction.ContinueWith((task) =>
             {
                 var result = task.Result.ToObject<ClientFunctionResult>(JsonUtility.Serializer);
 

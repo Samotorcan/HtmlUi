@@ -1,4 +1,4 @@
-﻿namespace Samotorcan.HtmlUi.Core
+﻿namespace Samotorcan.HtmlUi.Core.Providers
 {
     /// <summary>
     /// Content provider interface.

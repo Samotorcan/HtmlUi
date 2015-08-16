@@ -15,53 +15,19 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
     /// </summary>
     internal class ProcessHandler : CefRenderProcessHandler
     {
+        public event EventHandler<BrowserCreatedEventArgs> BrowserCreated;
+
         #region Properties
         #region Private
 
-        #region CefBrowser
+        #region NativeMessageHandler
         /// <summary>
-        /// Gets or sets the cef browser.
+        /// Gets or sets the native message handler.
         /// </summary>
         /// <value>
-        /// The cef browser.
+        /// The native message handler.
         /// </value>
-        private CefBrowser CefBrowser { get; set; }
-        #endregion
-        #region NativeRequestUrl
-        /// <summary>
-        /// Gets or sets the native request URL.
-        /// </summary>
-        /// <value>
-        /// The native request URL.
-        /// </value>
-        private string NativeRequestUrl { get; set; }
-        #endregion
-        #region RequestHostname
-        /// <summary>
-        /// Gets or sets the request hostname.
-        /// </summary>
-        /// <value>
-        /// The request hostname.
-        /// </value>
-        public string RequestHostname { get; set; }
-        #endregion
-        #region NativeRequestPort
-        /// <summary>
-        /// Gets or sets the native request port.
-        /// </summary>
-        /// <value>
-        /// The native request port.
-        /// </value>
-        public int NativeRequestPort { get; set; }
-        #endregion
-        #region V8NativeHandler
-        /// <summary>
-        /// Gets or sets the v8 native handler.
-        /// </summary>
-        /// <value>
-        /// The v8 native handler.
-        /// </value>
-        private V8NativeHandler V8NativeHandler { get; set; }
+        private NativeMessageHandler NativeMessageHandler { get; set; }
         #endregion
         #region LoadHandler
         /// <summary>
@@ -72,15 +38,13 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </value>
         private LoadHandler LoadHandler { get; set; }
         #endregion
-        #region IncludeHtmUiScriptMapping
-        /// <summary>
-        /// Gets or sets a value indicating whether to include HTM UI script mapping.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> to include HTM UI script mapping; otherwise, <c>false</c>.
-        /// </value>
-        private bool IncludeHtmUiScriptMapping { get; set; }
-        #endregion
+        private ChildApplication Application
+        {
+            get
+            {
+                return ChildApplication.Current;
+            }
+        }
 
         #endregion
         #endregion
@@ -91,7 +55,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// </summary>
         public ProcessHandler()
         {
-            V8NativeHandler = new V8NativeHandler();
+            NativeMessageHandler = new NativeMessageHandler();
 
             LoadHandler = new LoadHandler();
             LoadHandler.OnLoadStartEvent += OnLoadStart;
@@ -139,7 +103,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             if (message == null)
                 throw new ArgumentNullException("message");
 
-            return V8NativeHandler.ProcessMessage(browser, sourceProcess, message);
+            return NativeMessageHandler.ProcessMessage(browser, sourceProcess, message);
         }
         #endregion
         #region OnBrowserCreated
@@ -151,8 +115,10 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// <param name="browser"></param>
         protected override void OnBrowserCreated(CefBrowser browser)
         {
-            CefBrowser = browser;
-            V8NativeHandler.CefBrowser = browser;
+            NativeMessageHandler.CefBrowser = browser;
+
+            if (BrowserCreated != null)
+                BrowserCreated(this, new BrowserCreatedEventArgs(browser));
         }
         #endregion
         #region OnBrowserDestroyed
@@ -162,7 +128,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         /// <param name="browser"></param>
         protected override void OnBrowserDestroyed(CefBrowser browser)
         {
-            CefBrowser = null;
+            
         }
         #endregion
         #region OnWebKitInitialized
@@ -173,10 +139,10 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
         {
             Logger.Info("WebKit initialized.");
 
-            CefRuntime.RegisterExtension("htmlUi.native", GetHtmlUiScript("native", false), V8NativeHandler);
+            CefRuntime.RegisterExtension("htmlUi.native", GetHtmlUiScript("native", false), NativeMessageHandler);
 
-            if (!IncludeHtmUiScriptMapping)
-                CefRuntime.RegisterExtension("htmlUi.main", GetHtmlUiScript("main", false), V8NativeHandler);
+            if (!Application.IncludeHtmUiScriptMapping)
+                CefRuntime.RegisterExtension("htmlUi.main", GetHtmlUiScript("main", false), NativeMessageHandler);
         }
         #endregion
         #region OnRenderThreadCreated
@@ -189,12 +155,10 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             if (extraInfo == null)
                 throw new ArgumentNullException("extraInfo");
 
-            NativeRequestUrl = extraInfo.GetString(0);
-            RequestHostname = extraInfo.GetString(1);
-            NativeRequestPort = extraInfo.GetInt(2);
-            IncludeHtmUiScriptMapping = extraInfo.GetBool(3);
+            var syncProperties = JsonConvert.DeserializeObject<Dictionary<string, object>>(extraInfo.GetString(0));
 
-            Logger.LogSeverity = (LogSeverity)extraInfo.GetInt(4);
+            foreach (var propertyName in syncProperties.Keys)
+                Application.SetSyncProperty(propertyName, syncProperties[propertyName]);
 
             Logger.Info("Render process thread created.");
         }
@@ -212,10 +176,10 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 
             if (frame.IsMain && IsLocalUrl(frame.Url))
             {
-                if (V8NativeHandler != null)
-                    V8NativeHandler.Reset();
+                if (NativeMessageHandler != null)
+                    NativeMessageHandler.Reset();
 
-                if (IncludeHtmUiScriptMapping)
+                if (Application.IncludeHtmUiScriptMapping)
                     EvalHtmlUiScript("main", context);
 
                 EvalHtmlUiScript("run", context, false);
@@ -249,7 +213,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             if (exception == null)
                 throw new ArgumentNullException("exception");
 
-            Logger.Error("Render process unhandled exception: " + exception.Message);
+            Logger.Error(string.Format("Unhandled exception: {0}", JsonConvert.SerializeObject(exception)));
         }
         #endregion
 
@@ -294,7 +258,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
 
             var constants = new string[]
             {
-                CreateStringConstant("_nativeRequestUrl", NativeRequestUrl)
+                CreateStringConstant("_nativeRequestUrl", Application.NativeRequestUrl)
             };
 
             var processedExtensionResource = script
@@ -307,8 +271,6 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             {
                 var typescriptName = string.Format("TypeScript/htmlUi.{0}.ts", name);
                 var typescript = ResourceUtility.GetResourceAsString(typescriptName);
-
-                Logger.Warn("Mapping" + typescriptName);
 
                 processedExtensionResource = Regex.Replace(processedExtensionResource, @"^//# sourceMappingURL=.*$", (match) =>
                 {
@@ -378,7 +340,7 @@ namespace Samotorcan.HtmlUi.Core.Renderer.Handlers
             if (string.IsNullOrWhiteSpace(url))
                 throw new ArgumentNullException("url");
 
-            return UrlUtility.IsLocalUrl(RequestHostname, NativeRequestPort, url);
+            return UrlUtility.IsLocalUrl(Application.RequestHostname, Application.NativeRequestPort, url);
         }
         #endregion
 

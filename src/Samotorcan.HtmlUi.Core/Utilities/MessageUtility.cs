@@ -15,18 +15,16 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <summary>
         /// Sends the message.
         /// </summary>
-        /// <typeparam name="TData">The type of the data.</typeparam>
         /// <param name="process">The process.</param>
         /// <param name="cefBrowser">The cef browser.</param>
         /// <param name="name">The name.</param>
-        /// <param name="callbackId">The callback identifier.</param>
         /// <param name="data">The data.</param>
         /// <exception cref="System.ArgumentNullException">
         /// cefBrowser
         /// or
         /// name
         /// </exception>
-        public static void SendMessage<TData>(CefProcessId process, CefBrowser cefBrowser, string name, Guid? callbackId, TData data)
+        public static void SendMessage(CefProcessId process, CefBrowser cefBrowser, string name, object data)
         {
             if (cefBrowser == null)
                 throw new ArgumentNullException("cefBrowser");
@@ -34,7 +32,7 @@ namespace Samotorcan.HtmlUi.Core.Utilities
             if (string.IsNullOrWhiteSpace("name"))
                 throw new ArgumentNullException("name");
 
-            var message = JsonUtility.SerializeToBson(new Message<TData>(callbackId, data));
+            var message = JsonUtility.SerializeToBson(data);
 
             SendBinaryMessage(process, cefBrowser, name, message);
         }
@@ -46,9 +44,9 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <typeparam name="TType">The type of the type.</typeparam>
         /// <param name="processMessage">The process message.</param>
         /// <returns></returns>
-        public static Message<TType> DeserializeMessage<TType>(CefProcessMessage processMessage)
+        public static TType DeserializeMessage<TType>(CefProcessMessage processMessage)
         {
-            return JsonUtility.DeserializeFromBson<Message<TType>>(processMessage.Arguments.GetBinary(0).ToArray());
+            return JsonUtility.DeserializeFromBson<TType>(processMessage.Arguments.GetBinary(0).ToArray());
         }
 
         /// <summary>
@@ -59,9 +57,9 @@ namespace Samotorcan.HtmlUi.Core.Utilities
         /// <param name="anonymousObject">The anonymous object.</param>
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "anonymousObject", Justification = "The type for anonymous object.")]
-        public static Message<TType> DeserializeMessage<TType>(CefProcessMessage processMessage, TType anonymousObject)
+        public static TType DeserializeMessage<TType>(CefProcessMessage processMessage, TType anonymousObject)
         {
-            return JsonUtility.DeserializeFromBson<Message<TType>>(processMessage.Arguments.GetBinary(0).ToArray());
+            return JsonUtility.DeserializeFromBson<TType>(processMessage.Arguments.GetBinary(0).ToArray());
         }
         #endregion
 

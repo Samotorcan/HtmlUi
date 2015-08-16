@@ -1,6 +1,7 @@
 ﻿using Samotorcan.HtmlUi.Core.Renderer.Handlers;
 using System;
 using Xilium.CefGlue;
+using Samotorcan.HtmlUi.Core.Events;
 
 namespace Samotorcan.HtmlUi.Core.Renderer
 {
@@ -9,6 +10,8 @@ namespace Samotorcan.HtmlUi.Core.Renderer
     /// </summary>
     internal class App : CefApp
     {
+        public event EventHandler<BrowserCreatedEventArgs> BrowserCreated;
+
         #region Properties
         #region Private
 
@@ -33,6 +36,11 @@ namespace Samotorcan.HtmlUi.Core.Renderer
             : base()
         {
             RenderProcessHandler = new ProcessHandler();
+            RenderProcessHandler.BrowserCreated += (s, e) =>
+            {
+                if (BrowserCreated != null)
+                    BrowserCreated(this, new BrowserCreatedEventArgs(e.CefBrowser));
+            };
         }
 
         #endregion

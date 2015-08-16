@@ -47,6 +47,12 @@ namespace Samotorcan.HtmlUi.Core.Logs
 
         #endregion
         #endregion
+
+        static Logger()
+        {
+            LogSeverity = LogSeverity.Debug;
+        }
+
         #region Methods
         #region Public
 
