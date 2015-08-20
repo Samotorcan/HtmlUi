@@ -1,7 +1,7 @@
 ﻿namespace Samotorcan.HtmlUi.WindowsForms
 {
     /// <summary>
-    /// Child application.
+    /// Windows forms child application.
     /// </summary>
     public abstract class ChildApplication : Core.ChildApplication
     {
@@ -31,14 +31,14 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="ChildApplication"/> class.
         /// </summary>
-        protected ChildApplication(ChildApplicationSettings settings)
+        protected ChildApplication(ChildApplicationContext settings)
             : base(settings) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChildApplication"/> class with default settings.
         /// </summary>
         protected ChildApplication()
-            : this(new ChildApplicationSettings()) { }
+            : this(new ChildApplicationContext()) { }
 
         #endregion
     }

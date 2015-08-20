@@ -1,27 +1,44 @@
-﻿namespace Samotorcan.HtmlUi.Core
+﻿using Samotorcan.HtmlUi.Core;
+
+namespace Samotorcan.HtmlUi.WindowsForms
 {
     /// <summary>
-    /// Child application settings.
+    /// Windows forms application context.
     /// </summary>
-    public class ChildApplicationSettings : BaseApplicationSettings
+    public class ApplicationContext : Core.ApplicationContext
     {
+        #region Properties
+        #region Public
+
+        #region WindowSettings
+        /// <summary>
+        /// Gets the window settings.
+        /// </summary>
+        /// <value>
+        /// The window settings.
+        /// </value>
+        public WindowSettings WindowSettings { get; protected set; }
+        #endregion
+
+        #endregion
+        #endregion
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ChildApplicationSettings"/> class.
+        /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Justification = "Using Initialize instead of a call to base constructor.")]
-        public ChildApplicationSettings()
+        public ApplicationContext()
         {
             Initialize();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ChildApplicationSettings"/> class.
+        /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
         /// </summary>
         /// <param name="settings">The settings.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Justification = "Using Initialize instead of a call to base constructor.")]
-        public ChildApplicationSettings(ChildApplicationSettings settings)
+        public ApplicationContext(ApplicationContext settings)
         {
             Initialize(settings);
         }
@@ -34,11 +51,16 @@
         /// <summary>
         /// Initializes this instance.
         /// </summary>
-        /// <param name="settings">The settings.</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "settings", Justification = "Might have additional code in the future.")]
-        private void InitializeSelf(ChildApplicationSettings settings)
+        private void InitializeSelf(ApplicationContext settings)
         {
-            
+            if (settings != null)
+            {
+                WindowSettings = settings.WindowSettings;
+            }
+            else
+            {
+                WindowSettings = new WindowSettings();
+            }
         }
         #endregion
 
@@ -50,7 +72,7 @@
         /// Initializes this instance.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        protected virtual void Initialize(ChildApplicationSettings settings)
+        protected virtual void Initialize(ApplicationContext settings)
         {
             base.Initialize(settings);
 
@@ -62,6 +84,17 @@
         /// </summary>
         /// <param name="settings">The settings.</param>
         protected override void Initialize(BaseApplicationSettings settings)
+        {
+            base.Initialize(settings);
+
+            InitializeSelf(null);
+        }
+
+        /// <summary>
+        /// Initializes this instance.
+        /// </summary>
+        /// <param name="settings">The settings.</param>
+        protected override void Initialize(Core.ApplicationContext settings)
         {
             base.Initialize(settings);
 

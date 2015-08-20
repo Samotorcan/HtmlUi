@@ -6,7 +6,7 @@ namespace Samotorcan.HtmlUi.Windows
     /// Windows application.
     /// </summary>
     [CLSCompliant(false)]
-    public class WindowsApplication : WindowsForms.Application
+    public class Application : WindowsForms.Application
     {
         #region Properties
         #region Public
@@ -18,11 +18,11 @@ namespace Samotorcan.HtmlUi.Windows
         /// <value>
         /// The current.
         /// </value>
-        public static new WindowsApplication Current
+        public static new Application Current
         {
             get
             {
-                return (WindowsApplication)WindowsForms.Application.Current;
+                return (Application)WindowsForms.Application.Current;
             }
         }
         #endregion
@@ -37,11 +37,11 @@ namespace Samotorcan.HtmlUi.Windows
         /// <value>
         /// The window.
         /// </value>
-        public new WindowsWindow Window
+        public new Window Window
         {
             get
             {
-                return (WindowsWindow)base.Window;
+                return (Window)base.Window;
             }
             protected set
             {
@@ -60,11 +60,11 @@ namespace Samotorcan.HtmlUi.Windows
         /// <value>
         /// The settings.
         /// </value>
-        protected new WindowsApplicationSettings Settings
+        protected new ApplicationContext Settings
         {
             get
             {
-                return (WindowsApplicationSettings)base.Settings;
+                return (ApplicationContext)base.Settings;
             }
             set
             {
@@ -78,9 +78,9 @@ namespace Samotorcan.HtmlUi.Windows
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WindowsApplication"/> class.
+        /// Initializes a new instance of the <see cref="Application"/> class.
         /// </summary>
-        internal WindowsApplication(WindowsApplicationSettings settings)
+        internal Application(ApplicationContext settings)
             : base(settings) { }
 
         #endregion
@@ -92,12 +92,12 @@ namespace Samotorcan.HtmlUi.Windows
         /// Runs the application.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        public static void Run(WindowsApplicationSettings settings)
+        public static void Run(ApplicationContext settings)
         {
             if (settings == null)
-                settings = new WindowsApplicationSettings();
+                settings = new ApplicationContext();
 
-            using (var application = new WindowsApplication(settings))
+            using (var application = new Application(settings))
             {
                 application.RunApplication();
             }
@@ -123,7 +123,7 @@ namespace Samotorcan.HtmlUi.Windows
         {
             InvokeOnUiAsync(() =>
             {
-                Window = new WindowsWindow(Settings.WindowSettings);
+                Window = new Window(Settings.WindowSettings);
                 Window.Form.Show();
             });
         }

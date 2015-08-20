@@ -1,5 +1,4 @@
 ﻿using Samotorcan.HtmlUi.Core;
-using Samotorcan.HtmlUi.Windows;
 
 namespace Samotorcan.Tests.Application
 {
@@ -9,16 +8,16 @@ namespace Samotorcan.Tests.Application
         {
             if (HtmlUiRuntime.ApplicationType == ApplicationType.ChildApplication)
             {
-                WindowsChildApplication.Run();
+                HtmlUi.Windows.ChildApplication.Run();
                 return;
             }
 
-            var settings = new WindowsApplicationSettings();
+            var settings = new HtmlUi.Windows.ApplicationContext();
             settings.CommandLineArgsEnabled = true;
             settings.ChromeViewsEnabled = true;
             settings.WindowSettings.View = "chrome://about";
 
-            WindowsApplication.Run(settings);
+            HtmlUi.Windows.Application.Run(settings);
         }
     }
 }

@@ -41,7 +41,7 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <param name="settings">The settings.</param>
         /// <exception cref="System.InvalidOperationException">Application must be run on child application process.</exception>
-        protected ChildApplication(ChildApplicationSettings settings)
+        protected ChildApplication(ChildApplicationContext settings)
             : base(settings)
         {
             if (HtmlUiRuntime.ApplicationType != ApplicationType.ChildApplication)
@@ -52,7 +52,7 @@ namespace Samotorcan.HtmlUi.Core
         /// Initializes a new instance of the <see cref="ChildApplication"/> class with default settings.
         /// </summary>
         protected ChildApplication()
-            : this(new ChildApplicationSettings()) { }
+            : this(new ChildApplicationContext()) { }
 
         #endregion
         #region Methods

@@ -3,9 +3,9 @@
 namespace Samotorcan.HtmlUi.Core
 {
     /// <summary>
-    /// Application settings.
+    /// Application context.
     /// </summary>
-    public class ApplicationSettings : BaseApplicationSettings
+    public class ApplicationContext : BaseApplicationSettings
     {
         #region Properties
         #region Public
@@ -70,20 +70,20 @@ namespace Samotorcan.HtmlUi.Core
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ApplicationSettings"/> class.
+        /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Justification = "Using Initialize instead of a call to base constructor.")]
-        public ApplicationSettings()
+        public ApplicationContext()
         {
             Initialize();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ApplicationSettings"/> class.
+        /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
         /// </summary>
         /// <param name="settings">The settings.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Justification = "Using Initialize instead of a call to base constructor.")]
-        public ApplicationSettings(ApplicationSettings settings)
+        public ApplicationContext(ApplicationContext settings)
         {
             Initialize(settings);
         }
@@ -97,7 +97,7 @@ namespace Samotorcan.HtmlUi.Core
         /// Initializes this instance.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        private void InitializeSelf(ApplicationSettings settings)
+        private void InitializeSelf(ApplicationContext settings)
         {
             if (settings != null)
             {
@@ -128,7 +128,7 @@ namespace Samotorcan.HtmlUi.Core
         /// Initializes this instance.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        protected virtual void Initialize(ApplicationSettings settings)
+        protected virtual void Initialize(ApplicationContext settings)
         {
             base.Initialize(settings);
 

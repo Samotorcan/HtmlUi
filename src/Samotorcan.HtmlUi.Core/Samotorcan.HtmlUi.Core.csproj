@@ -174,10 +174,10 @@
     <Compile Include="Attributes\ExcludeAttribute.cs" />
     <Compile Include="BaseApplication.cs" />
     <Compile Include="BaseApplicationSettings.cs" />
-    <Compile Include="ChildApplicationSettings.cs" />
+    <Compile Include="ChildApplicationContext.cs" />
     <Compile Include="Application.cs" />
     <Compile Include="ChildApplication.cs" />
-    <Compile Include="ApplicationSettings.cs" />
+    <Compile Include="ApplicationContext.cs" />
     <Compile Include="Events\ContextInitializedEventArgs.cs" />
     <Compile Include="Logs\LogSeverity.cs" />
     <Compile Include="Platform.cs" />

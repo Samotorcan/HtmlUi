@@ -1,9 +1,10 @@
-﻿namespace Samotorcan.HtmlUi.Linux
+﻿namespace Samotorcan.HtmlUi.Windows
 {
     /// <summary>
-    /// Linux child application.
+    /// Windows child application.
     /// </summary>
-    public class LinuxChildApplication : WindowsForms.ChildApplication
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1052:StaticHolderTypesShouldBeSealed", Justification = "It might not contain only static methods in the future.")]
+    public class ChildApplication : WindowsForms.ChildApplication
     {
         #region Properties
         #region Public
@@ -15,11 +16,11 @@
         /// <value>
         /// The current.
         /// </value>
-        public static new LinuxChildApplication Current
+        public static new ChildApplication Current
         {
             get
             {
-                return (LinuxChildApplication)WindowsForms.ChildApplication.Current;
+                return (ChildApplication)WindowsForms.ChildApplication.Current;
             }
         }
         #endregion
@@ -29,16 +30,10 @@
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LinuxChildApplication"/> class.
+        /// Initializes a new instance of the <see cref="ChildApplication"/> class.
         /// </summary>
-        public LinuxChildApplication(LinuxChildApplicationSettings settings)
+        private ChildApplication(ChildApplicationContext settings)
             : base(settings) { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LinuxChildApplication"/> class with default settings.
-        /// </summary>
-        public LinuxChildApplication()
-            : this(new LinuxChildApplicationSettings()) { }
 
         #endregion
         #region Methods
@@ -49,12 +44,12 @@
         /// Runs the application.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        public static void Run(LinuxChildApplicationSettings settings)
+        public static void Run(ChildApplicationContext settings)
         {
             if (settings == null)
-                settings = new LinuxChildApplicationSettings();
+                settings = new ChildApplicationContext();
 
-            using (var application = new LinuxChildApplication(settings))
+            using (var application = new ChildApplication(settings))
             {
                 application.RunApplication();
             }

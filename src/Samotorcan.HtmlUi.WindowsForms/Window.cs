@@ -7,7 +7,7 @@ using Samotorcan.HtmlUi.Core.Renderer;
 namespace Samotorcan.HtmlUi.WindowsForms
 {
     /// <summary>
-    /// Window.
+    /// Windows forms window.
     /// </summary>
     [CLSCompliant(false)]
     public class Window : Core.Window

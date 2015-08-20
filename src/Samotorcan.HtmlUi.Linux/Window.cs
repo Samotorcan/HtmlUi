@@ -9,25 +9,25 @@ namespace Samotorcan.HtmlUi.Linux
     /// Linux window
     /// </summary>
     [CLSCompliant(false)]
-    public class LinuxWindow : WindowsForms.Window
+    public class Window : WindowsForms.Window
     {
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LinuxWindow"/> class.
+        /// Initializes a new instance of the <see cref="Window"/> class.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        public LinuxWindow(LinuxWindowSettings settings)
+        public Window(WindowContext settings)
             : base(settings)
         {
             Resize += Window_Resize;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LinuxWindow"/> class with default settings.
+        /// Initializes a new instance of the <see cref="Window"/> class with default settings.
         /// </summary>
-        public LinuxWindow()
-            : this(new LinuxWindowSettings()) { }
+        public Window()
+            : this(new WindowContext()) { }
 
         #endregion
         #region Methods

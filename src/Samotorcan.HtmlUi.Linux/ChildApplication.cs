@@ -1,10 +1,9 @@
-﻿namespace Samotorcan.HtmlUi.Windows
+﻿namespace Samotorcan.HtmlUi.Linux
 {
     /// <summary>
-    /// Windows child application.
+    /// Linux child application.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1052:StaticHolderTypesShouldBeSealed", Justification = "It might not contain only static methods in the future.")]
-    public class WindowsChildApplication : WindowsForms.ChildApplication
+    public class ChildApplication : WindowsForms.ChildApplication
     {
         #region Properties
         #region Public
@@ -16,11 +15,11 @@
         /// <value>
         /// The current.
         /// </value>
-        public static new WindowsChildApplication Current
+        public static new ChildApplication Current
         {
             get
             {
-                return (WindowsChildApplication)WindowsForms.ChildApplication.Current;
+                return (ChildApplication)WindowsForms.ChildApplication.Current;
             }
         }
         #endregion
@@ -30,10 +29,16 @@
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WindowsChildApplication"/> class.
+        /// Initializes a new instance of the <see cref="ChildApplication"/> class.
         /// </summary>
-        private WindowsChildApplication(WindowsChildApplicationSettings settings)
+        public ChildApplication(ChildApplicationSettings settings)
             : base(settings) { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ChildApplication"/> class with default settings.
+        /// </summary>
+        public ChildApplication()
+            : this(new ChildApplicationSettings()) { }
 
         #endregion
         #region Methods
@@ -44,12 +49,12 @@
         /// Runs the application.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        public static void Run(WindowsChildApplicationSettings settings)
+        public static void Run(ChildApplicationSettings settings)
         {
             if (settings == null)
-                settings = new WindowsChildApplicationSettings();
+                settings = new ChildApplicationSettings();
 
-            using (var application = new WindowsChildApplication(settings))
+            using (var application = new ChildApplication(settings))
             {
                 application.RunApplication();
             }

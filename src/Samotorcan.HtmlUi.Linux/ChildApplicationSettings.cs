@@ -1,11 +1,11 @@
 ﻿using Samotorcan.HtmlUi.Core;
 
-namespace Samotorcan.HtmlUi.WindowsForms
+namespace Samotorcan.HtmlUi.Linux
 {
     /// <summary>
-    /// Child application settings.
+    /// Linux child application settings.
     /// </summary>
-    public class ChildApplicationSettings : Core.ChildApplicationSettings
+    public class ChildApplicationSettings : WindowsForms.ChildApplicationContext
     {
         #region Constructors
 
@@ -28,11 +28,41 @@ namespace Samotorcan.HtmlUi.WindowsForms
             Initialize(settings);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ChildApplicationSettings"/> class.
+        /// </summary>
+        /// <param name="settings">The settings.</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Justification = "Using Initialize instead of a call to base constructor.")]
+        public ChildApplicationSettings(Core.ChildApplicationContext settings)
+        {
+            if (settings != null)
+            {
+                var linuxChildApplicationSettings = settings as ChildApplicationSettings;
+
+                if (linuxChildApplicationSettings != null)
+                {
+                    Initialize(linuxChildApplicationSettings);
+                }
+                else
+                {
+                    var windowsFormsChildApplicationSettings = settings as WindowsForms.ChildApplicationContext;
+
+                    if (windowsFormsChildApplicationSettings != null)
+                        Initialize(windowsFormsChildApplicationSettings);
+                    else
+                        Initialize(settings);
+                }
+            }
+            else
+            {
+                Initialize();
+            }
+        }
+
         #endregion
         #region Methods
         #region Private
 
-        #region InitializeSelf
         /// <summary>
         /// Initializes this instance.
         /// </summary>
@@ -41,7 +71,6 @@ namespace Samotorcan.HtmlUi.WindowsForms
         {
             
         }
-        #endregion
 
         #endregion
         #region Protected
@@ -59,7 +88,7 @@ namespace Samotorcan.HtmlUi.WindowsForms
         }
 
         /// <summary>
-        /// Initializes this instance.
+        /// Initializes the specified settings.
         /// </summary>
         /// <param name="settings">The settings.</param>
         protected override void Initialize(BaseApplicationSettings settings)
@@ -70,10 +99,21 @@ namespace Samotorcan.HtmlUi.WindowsForms
         }
 
         /// <summary>
-        /// Initializes this instance.
+        /// Initializes the specified settings.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        protected override void Initialize(Core.ChildApplicationSettings settings)
+        protected override void Initialize(Core.ChildApplicationContext settings)
+        {
+            base.Initialize(settings);
+
+            InitializeSelf(null);
+        }
+
+        /// <summary>
+        /// Initializes the specified settings.
+        /// </summary>
+        /// <param name="settings">The settings.</param>
+        protected override void Initialize(WindowsForms.ChildApplicationContext settings)
         {
             base.Initialize(settings);
 

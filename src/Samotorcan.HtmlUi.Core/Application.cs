@@ -234,7 +234,7 @@ namespace Samotorcan.HtmlUi.Core
         /// </summary>
         /// <param name="settings">The settings.</param>
         /// <exception cref="System.InvalidOperationException">Application must be run on main application process.</exception>
-        protected Application(ApplicationSettings settings)
+        protected Application(ApplicationContext settings)
             : base(settings)
         {
             if (HtmlUiRuntime.ApplicationType != ApplicationType.Application)
@@ -263,7 +263,7 @@ namespace Samotorcan.HtmlUi.Core
         /// Initializes a new instance of the <see cref="Application"/> class with default settings.
         /// </summary>
         protected Application()
-            : this(new ApplicationSettings()) { }
+            : this(new ApplicationContext()) { }
 
         #endregion
         #region Methods

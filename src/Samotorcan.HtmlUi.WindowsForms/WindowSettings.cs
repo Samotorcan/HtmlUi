@@ -1,7 +1,7 @@
 ﻿namespace Samotorcan.HtmlUi.WindowsForms
 {
     /// <summary>
-    /// Window settings.
+    /// Windows forms window settings.
     /// </summary>
     public class WindowSettings : Core.WindowSettings
     {

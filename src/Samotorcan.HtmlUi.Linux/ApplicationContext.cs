@@ -3,9 +3,9 @@
 namespace Samotorcan.HtmlUi.Linux
 {
     /// <summary>
-    /// Linux application settings.
+    /// Linux application context.
     /// </summary>
-    public class LinuxApplicationSettings : WindowsForms.ApplicationSettings
+    public class ApplicationContext : WindowsForms.ApplicationContext
     {
         #region Properties
         #region Public
@@ -17,11 +17,11 @@ namespace Samotorcan.HtmlUi.Linux
         /// <value>
         /// The window settings.
         /// </value>
-        public new LinuxWindowSettings WindowSettings
+        public new WindowContext WindowSettings
         {
             get
             {
-                return (LinuxWindowSettings)base.WindowSettings;
+                return (WindowContext)base.WindowSettings;
             }
             protected set
             {
@@ -35,34 +35,34 @@ namespace Samotorcan.HtmlUi.Linux
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LinuxApplicationSettings"/> class.
+        /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Justification = "Using Initialize instead of a call to base constructor.")]
-        public LinuxApplicationSettings()
+        public ApplicationContext()
         {
             Initialize();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LinuxApplicationSettings"/> class.
+        /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
         /// </summary>
         /// <param name="settings">The settings.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Justification = "Using Initialize instead of a call to base constructor.")]
-        public LinuxApplicationSettings(LinuxApplicationSettings settings)
+        public ApplicationContext(ApplicationContext settings)
         {
             Initialize(settings);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LinuxApplicationSettings"/> class.
+        /// Initializes a new instance of the <see cref="ApplicationContext"/> class.
         /// </summary>
         /// <param name="settings">The settings.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Justification = "Using Initialize instead of a call to base constructor.")]
-        public LinuxApplicationSettings(ApplicationSettings settings)
+        public ApplicationContext(Core.ApplicationContext settings)
         {
             if (settings != null)
             {
-                var linuxApplicationSettings = settings as LinuxApplicationSettings;
+                var linuxApplicationSettings = settings as ApplicationContext;
 
                 if (linuxApplicationSettings != null)
                 {
@@ -70,7 +70,7 @@ namespace Samotorcan.HtmlUi.Linux
                 }
                 else
                 {
-                    var windowsFormsApplicationSettings = settings as WindowsForms.ApplicationSettings;
+                    var windowsFormsApplicationSettings = settings as WindowsForms.ApplicationContext;
 
                     if (windowsFormsApplicationSettings != null)
                         Initialize(windowsFormsApplicationSettings);
@@ -91,7 +91,7 @@ namespace Samotorcan.HtmlUi.Linux
         /// <summary>
         /// Initializes this instance.
         /// </summary>
-        private void InitializeSelf(LinuxApplicationSettings settings)
+        private void InitializeSelf(ApplicationContext settings)
         {
             if (settings != null)
             {
@@ -99,7 +99,7 @@ namespace Samotorcan.HtmlUi.Linux
             }
             else
             {
-                WindowSettings = new LinuxWindowSettings();
+                WindowSettings = new WindowContext();
             }
         }
 
@@ -111,7 +111,7 @@ namespace Samotorcan.HtmlUi.Linux
         /// Initializes this instance.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        protected virtual void Initialize(LinuxApplicationSettings settings)
+        protected virtual void Initialize(ApplicationContext settings)
         {
             base.Initialize(settings);
 
@@ -133,7 +133,7 @@ namespace Samotorcan.HtmlUi.Linux
         /// Initializes the specified settings.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        protected override void Initialize(ApplicationSettings settings)
+        protected override void Initialize(Core.ApplicationContext settings)
         {
             base.Initialize(settings);
 
@@ -144,7 +144,7 @@ namespace Samotorcan.HtmlUi.Linux
         /// Initializes the specified settings.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        protected override void Initialize(WindowsForms.ApplicationSettings settings)
+        protected override void Initialize(WindowsForms.ApplicationContext settings)
         {
             base.Initialize(settings);
 

@@ -8,7 +8,7 @@ using FormsApplication = System.Windows.Forms.Application;
 namespace Samotorcan.HtmlUi.WindowsForms
 {
     /// <summary>
-    /// Application.
+    /// Windows forms application.
     /// </summary>
     [CLSCompliant(false)]
     public abstract class Application : Core.Application
@@ -80,7 +80,7 @@ namespace Samotorcan.HtmlUi.WindowsForms
         /// <value>
         /// The settings.
         /// </value>
-        protected ApplicationSettings Settings { get; set; }
+        protected ApplicationContext Settings { get; set; }
         #endregion
 
         #endregion
@@ -112,7 +112,7 @@ namespace Samotorcan.HtmlUi.WindowsForms
         /// <summary>
         /// Initializes a new instance of the <see cref="Application"/> class.
         /// </summary>
-        protected Application(ApplicationSettings settings)
+        protected Application(ApplicationContext settings)
             : base(settings)
         {
             Settings = settings;
@@ -143,7 +143,7 @@ namespace Samotorcan.HtmlUi.WindowsForms
         /// Initializes a new instance of the <see cref="Application"/> class with default settings.
         /// </summary>
         protected Application()
-            : this(new ApplicationSettings()) { }
+            : this(new ApplicationContext()) { }
 
         #endregion
         #region Methods

@@ -1,54 +1,52 @@
-﻿using Samotorcan.HtmlUi.Core;
-
-namespace Samotorcan.HtmlUi.Windows
+﻿namespace Samotorcan.HtmlUi.Linux
 {
     /// <summary>
-    /// Windows child application settings.
+    /// Linux window context.
     /// </summary>
-    public class WindowsChildApplicationSettings : WindowsForms.ChildApplicationSettings
+    public class WindowContext : WindowsForms.WindowSettings
     {
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WindowsChildApplicationSettings"/> class.
+        /// Initializes a new instance of the <see cref="WindowContext"/> class.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Justification = "Using Initialize instead of a call to base constructor.")]
-        public WindowsChildApplicationSettings()
+        public WindowContext()
         {
             Initialize();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WindowsChildApplicationSettings"/> class.
+        /// Initializes a new instance of the <see cref="WindowContext"/> class.
         /// </summary>
         /// <param name="settings">The settings.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Justification = "Using Initialize instead of a call to base constructor.")]
-        public WindowsChildApplicationSettings(WindowsChildApplicationSettings settings)
+        public WindowContext(WindowContext settings)
         {
             Initialize(settings);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WindowsApplicationSettings"/> class.
+        /// Initializes a new instance of the <see cref="WindowContext"/> class.
         /// </summary>
         /// <param name="settings">The settings.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Justification = "Using Initialize instead of a call to base constructor.")]
-        public WindowsChildApplicationSettings(ChildApplicationSettings settings)
+        public WindowContext(Core.WindowSettings settings)
         {
             if (settings != null)
             {
-                var windowsChildApplicationSettings = settings as WindowsChildApplicationSettings;
+                var linuxWindowSettings = settings as WindowContext;
 
-                if (windowsChildApplicationSettings != null)
+                if (linuxWindowSettings != null)
                 {
-                    Initialize(windowsChildApplicationSettings);
+                    Initialize(linuxWindowSettings);
                 }
                 else
                 {
-                    var windowsFormsChildApplicationSettings = settings as WindowsForms.ChildApplicationSettings;
+                    var windowsFormsWindowSettings = settings as WindowsForms.WindowSettings;
 
-                    if (windowsFormsChildApplicationSettings != null)
-                        Initialize(windowsFormsChildApplicationSettings);
+                    if (windowsFormsWindowSettings != null)
+                        Initialize(windowsFormsWindowSettings);
                     else
                         Initialize(settings);
                 }
@@ -67,10 +65,11 @@ namespace Samotorcan.HtmlUi.Windows
         /// <summary>
         /// Initializes this instance.
         /// </summary>
+        /// <param name="settings">The settings.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "settings", Justification = "Might have additional code in the future.")]
-        private void InitializeSelf(WindowsChildApplicationSettings settings)
+        private void InitializeSelf(WindowContext settings)
         {
-            
+
         }
         #endregion
 
@@ -82,7 +81,7 @@ namespace Samotorcan.HtmlUi.Windows
         /// Initializes this instance.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        protected virtual void Initialize(WindowsChildApplicationSettings settings)
+        protected virtual void Initialize(WindowContext settings)
         {
             base.Initialize(settings);
 
@@ -93,7 +92,7 @@ namespace Samotorcan.HtmlUi.Windows
         /// Initializes this instance.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        protected override void Initialize(BaseApplicationSettings settings)
+        protected override void Initialize(Core.WindowSettings settings)
         {
             base.Initialize(settings);
 
@@ -104,18 +103,7 @@ namespace Samotorcan.HtmlUi.Windows
         /// Initializes this instance.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        protected override void Initialize(ChildApplicationSettings settings)
-        {
-            base.Initialize(settings);
-
-            InitializeSelf(null);
-        }
-
-        /// <summary>
-        /// Initializes this instance.
-        /// </summary>
-        /// <param name="settings">The settings.</param>
-        protected override void Initialize(WindowsForms.ChildApplicationSettings settings)
+        protected override void Initialize(WindowsForms.WindowSettings settings)
         {
             base.Initialize(settings);
 

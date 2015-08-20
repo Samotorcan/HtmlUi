@@ -6,7 +6,7 @@ namespace Samotorcan.HtmlUi.Linux
     /// Linux application.
     /// </summary>
     [CLSCompliant(false)]
-    public class LinuxApplication : WindowsForms.Application
+    public class Application : WindowsForms.Application
     {
         #region Properties
         #region Public
@@ -18,11 +18,11 @@ namespace Samotorcan.HtmlUi.Linux
         /// <value>
         /// The current.
         /// </value>
-        public static new LinuxApplication Current
+        public static new Application Current
         {
             get
             {
-                return (LinuxApplication)WindowsForms.Application.Current;
+                return (Application)WindowsForms.Application.Current;
             }
         }
         #endregion
@@ -37,11 +37,11 @@ namespace Samotorcan.HtmlUi.Linux
         /// <value>
         /// The window.
         /// </value>
-        public new LinuxWindow Window
+        public new Window Window
         {
             get
             {
-                return (LinuxWindow)base.Window;
+                return (Window)base.Window;
             }
             protected set
             {
@@ -60,11 +60,11 @@ namespace Samotorcan.HtmlUi.Linux
         /// <value>
         /// The settings.
         /// </value>
-        protected new LinuxApplicationSettings Settings
+        protected new ApplicationContext Settings
         {
             get
             {
-                return (LinuxApplicationSettings)base.Settings;
+                return (ApplicationContext)base.Settings;
             }
             set
             {
@@ -78,17 +78,17 @@ namespace Samotorcan.HtmlUi.Linux
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LinuxApplication"/> class.
+        /// Initializes a new instance of the <see cref="Application"/> class.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        public LinuxApplication(LinuxApplicationSettings settings)
+        public Application(ApplicationContext settings)
             : base(settings) { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LinuxApplication"/> class.
+        /// Initializes a new instance of the <see cref="Application"/> class.
         /// </summary>
-        public LinuxApplication()
-            : this(new LinuxApplicationSettings()) { }
+        public Application()
+            : this(new ApplicationContext()) { }
 
         #endregion
         #region Methods
@@ -99,12 +99,12 @@ namespace Samotorcan.HtmlUi.Linux
         /// Runs the application.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        public static void Run(LinuxApplicationSettings settings)
+        public static void Run(ApplicationContext settings)
         {
             if (settings == null)
-                settings = new LinuxApplicationSettings();
+                settings = new ApplicationContext();
 
-            using (var application = new LinuxApplication(settings))
+            using (var application = new Application(settings))
             {
                 application.RunApplication();
             }
@@ -130,7 +130,7 @@ namespace Samotorcan.HtmlUi.Linux
         {
             InvokeOnUiAsync(() =>
             {
-                Window = new LinuxWindow(Settings.WindowSettings);
+                Window = new Window(Settings.WindowSettings);
                 Window.Form.Show();
             });
         }

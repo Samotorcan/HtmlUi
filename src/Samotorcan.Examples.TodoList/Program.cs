@@ -14,7 +14,7 @@ namespace Samotorcan.Examples.TodoList
                 return;
             }
 
-            OSApplication.Run(new ApplicationSettings
+            OSApplication.Run(new ApplicationContext
             {
                 LogSeverity = LogSeverity.Debug
             });

@@ -1,7 +1,5 @@
 ﻿using System;
 using Samotorcan.HtmlUi.Core;
-using Samotorcan.HtmlUi.Linux;
-using Samotorcan.HtmlUi.Windows;
 
 namespace Samotorcan.HtmlUi.OS
 {
@@ -18,15 +16,15 @@ namespace Samotorcan.HtmlUi.OS
         /// Runs the application.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        public static void Run(ApplicationSettings settings)
+        public static void Run(ApplicationContext settings)
         {
             switch (HtmlUiRuntime.Platform)
             {
                 case Platform.Windows:
-                    WindowsApplication.Run(new WindowsApplicationSettings(settings));
+                    Windows.RunApplication(settings);
                     break;
                 case Platform.Linux:
-                    LinuxApplication.Run(new LinuxApplicationSettings(settings));
+                    Linux.RunApplication(settings);
                     break;
                 case Platform.OSX:
                     throw new NotSupportedException();

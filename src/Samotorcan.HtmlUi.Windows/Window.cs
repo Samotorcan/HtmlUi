@@ -8,25 +8,25 @@ namespace Samotorcan.HtmlUi.Windows
     /// Windows window.
     /// </summary>
     [CLSCompliant(false)]
-    public class WindowsWindow : WindowsForms.Window
+    public class Window : WindowsForms.Window
     {
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WindowsWindow"/> class.
+        /// Initializes a new instance of the <see cref="Window"/> class.
         /// </summary>
         /// <param name="settings">The settings.</param>
-        public WindowsWindow(WindowsWindowSettings settings)
+        public Window(WindowContext settings)
             : base(settings)
         {
             Resize += Window_Resize;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WindowsWindow"/> class with default settings.
+        /// Initializes a new instance of the <see cref="Window"/> class with default settings.
         /// </summary>
-        public WindowsWindow()
-            : this(new WindowsWindowSettings()) { }
+        public Window()
+            : this(new WindowContext()) { }
 
         #endregion
         #region Methods
